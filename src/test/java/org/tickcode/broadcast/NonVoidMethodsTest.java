@@ -47,7 +47,7 @@ public class NonVoidMethodsTest {
 			ThisClassAttemptedANonVoidBroadcastMethod _instance = new ThisClassAttemptedANonVoidBroadcastMethod();
 			_instance.myNonVoidMethod();
 			Assert.fail("We should be throwing an exception here because we tried to create a non-void broadcast method!");
-		}catch(RuntimeException ex){
+		}catch(NonVoidBroadcastMethodException ex){
 			// good
 		}
 		
