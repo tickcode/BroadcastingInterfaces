@@ -259,6 +259,11 @@ public class BroadcastManager {
 								+ _interface.getSimpleName() + "."
 								+ method.getName());
 					}
+					
+					if(!Void.TYPE.equals(method.getReturnType())){
+						throw new NonVoidBroadcastMethodException("You tried to implement a non-void broadcast method.  See "+_interface.getSimpleName()+"."+method.getName());
+					}
+					
 					BroadcastConsumersForAGivenInterface impl = interfacesByMethodName
 							.get(method.getName());
 					if (impl == null) {
