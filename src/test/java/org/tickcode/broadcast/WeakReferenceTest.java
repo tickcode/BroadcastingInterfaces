@@ -22,7 +22,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.tickcode.broadcast.Broadcast;
 import org.tickcode.broadcast.BroadcastConsumer;
-import org.tickcode.broadcast.BroadcastManager;
+import org.tickcode.broadcast.MessageBroker;
 import org.tickcode.broadcast.BroadcastProducer;
 
 public class WeakReferenceTest {
@@ -59,7 +59,7 @@ public class WeakReferenceTest {
 		Assert.assertEquals(1, consumer.count);
 		Assert.assertEquals(1, producer.count);
 		
-		BroadcastManager.getSingleton().setWeakReferencesToNull(consumer);
+		MessageBroker.getSingleton().setWeakReferencesToNull(consumer);
 		producer.whatAboutWeakReferences(); // broadcast
 		Assert.assertEquals(1, consumer.count); // nothing should change
 		Assert.assertEquals(2, producer.count); // of course the producer changes

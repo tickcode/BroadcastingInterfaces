@@ -28,26 +28,31 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.log4j.Logger;
 
-public class BroadcastManager {
+/**
+ * Inspired by http://www.eaipatterns.com/MessageBroker.html
+ * @author eyon
+ *
+ */
+public class MessageBroker {
 
 	private static Logger logger;
 	public static boolean loggingOn;
 
 	static {
 		logger = Logger
-				.getLogger(org.tickcode.broadcast.BroadcastManager.class);
+				.getLogger(org.tickcode.broadcast.MessageBroker.class);
 		loggingOn = (logger.getEffectiveLevel() != org.apache.log4j.Level.OFF);
 	}
 
-	private static BroadcastManager singleton;
+	private static MessageBroker singleton;
 
-	public static BroadcastManager getSingleton() {
+	public static MessageBroker getSingleton() {
 		if (singleton == null)
-			singleton = new BroadcastManager();
+			singleton = new MessageBroker();
 		return singleton;
 	}
 
-	private BroadcastManager() {
+	private MessageBroker() {
 	}
 
 	private boolean allowingBroadcastsToBroadcast = false;

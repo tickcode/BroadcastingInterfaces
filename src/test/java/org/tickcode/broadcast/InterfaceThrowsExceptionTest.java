@@ -22,7 +22,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.tickcode.broadcast.Broadcast;
 import org.tickcode.broadcast.BroadcastConsumer;
-import org.tickcode.broadcast.BroadcastManager;
+import org.tickcode.broadcast.MessageBroker;
 import org.tickcode.broadcast.BroadcastProducer;
 import org.tickcode.broadcast.ErrorHandler;
 
@@ -104,8 +104,8 @@ public class InterfaceThrowsExceptionTest {
 			Assert.assertTrue(badBehavior.lastErrorThrown == handler.ex);
 			Assert.assertTrue(badBehavior.lastErrorThrown == handler2.ex);
 		}finally{
-			BroadcastManager.getSingleton().unregister(handler);
-			BroadcastManager.getSingleton().unregister(handler2);
+			MessageBroker.getSingleton().unregister(handler);
+			MessageBroker.getSingleton().unregister(handler2);
 		}
 	}
 

@@ -22,7 +22,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.tickcode.broadcast.Broadcast;
 import org.tickcode.broadcast.BroadcastConsumer;
-import org.tickcode.broadcast.BroadcastManager;
+import org.tickcode.broadcast.MessageBroker;
 import org.tickcode.broadcast.BroadcastProducer;
 import org.tickcode.broadcast.ErrorHandler;
 

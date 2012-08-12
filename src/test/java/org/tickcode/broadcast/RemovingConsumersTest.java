@@ -22,7 +22,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.tickcode.broadcast.Broadcast;
 import org.tickcode.broadcast.BroadcastConsumer;
-import org.tickcode.broadcast.BroadcastManager;
+import org.tickcode.broadcast.MessageBroker;
 import org.tickcode.broadcast.BroadcastProducer;
 
 public class RemovingConsumersTest {
@@ -64,7 +64,7 @@ public class RemovingConsumersTest {
 		Assert.assertEquals(1, first.getCount());
 		Assert.assertEquals(1, second.getCount());
 		
-		BroadcastManager.getSingleton().unregister(second);
+		MessageBroker.getSingleton().unregister(second);
 		first.doThis();
 
 		Assert.assertEquals(2, first.getCount());

@@ -22,7 +22,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.tickcode.broadcast.Broadcast;
 import org.tickcode.broadcast.BroadcastConsumer;
-import org.tickcode.broadcast.BroadcastManager;
+import org.tickcode.broadcast.MessageBroker;
 import org.tickcode.broadcast.BroadcastProducer;
 import org.tickcode.broadcast.ErrorHandler;
 
@@ -100,7 +100,7 @@ public class BroadcastsWithinBroadcastsTest {
 	@Test
 	public void testAllowBroadcastingWithinBroadcasting() {
 
-		BroadcastManager.getSingleton().setAllowingBroadcastsToBroadcast(true);
+		MessageBroker.getSingleton().setAllowingBroadcastsToBroadcast(true);
 		MyErrorHandler handler = new MyErrorHandler();
 		MyFirstClass first = new MyFirstClass("first");
 		MyFirstClass second = new MyFirstClass("second");
@@ -117,9 +117,9 @@ public class BroadcastsWithinBroadcastsTest {
 			Assert.assertEquals("Are we getting a stack overflow?",
 					ex.getMessage());
 		} finally {
-			BroadcastManager.getSingleton().setAllowingBroadcastsToBroadcast(
+			MessageBroker.getSingleton().setAllowingBroadcastsToBroadcast(
 					false);
-			BroadcastManager.getSingleton().unregister(
+			MessageBroker.getSingleton().unregister(
 					handler);
 		}
 
