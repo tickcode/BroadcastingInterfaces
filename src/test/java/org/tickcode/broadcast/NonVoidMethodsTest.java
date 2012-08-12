@@ -49,6 +49,7 @@ public class NonVoidMethodsTest {
 			Assert.fail("We should be throwing an exception here because we tried to create a non-void broadcast method!");
 		}catch(NonVoidBroadcastMethodException ex){
 			// good
+			System.out.println(ex.getMessage());
 		}
 		
 	}

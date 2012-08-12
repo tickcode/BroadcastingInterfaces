@@ -83,9 +83,9 @@ public class BroadcastManager {
 			if (!weHave(consumer)) {
 				consumers.add(new WeakReference<Broadcast>(consumer));
 				if (loggingOn) {
-					logger.debug(consumer.getClass().getSimpleName()
+					logger.debug(consumer.getClass().getName()
 							+ " has implemented "
-							+ broadcastInterface.getSimpleName()
+							+ broadcastInterface.getName()
 							+ " and should consume these broadcasts.");
 				}
 			}
@@ -159,11 +159,9 @@ public class BroadcastManager {
 						if (consumer != producer) {
 							if (loggingOn) {
 								logger.debug("We are sending a broadcast to "
-										+ consumer.getClass().getSimpleName()
+										+ consumer.getClass().getName()
 										+ " on interface "
-										+ broadcastInterface.getSimpleName()
-										+ "." + method.getName() + "("
-										+ getArguments(params) + ")");
+										+ getReadableMethodString(broadcastInterface,method,params));
 							}
 							method.invoke(consumer, params);
 						}
@@ -172,15 +170,10 @@ public class BroadcastManager {
 							logger.error(
 									"The consumer "
 											+ consumer.getClass()
-													.getSimpleName()
+													.getName()
 											+ " on interface "
-											+ broadcastInterface
-													.getSimpleName()
-											+ "."
-											+ method.getName()
-											+ "("
-											+ getArguments(params)
-											+ ")  has an IllegalAccessException!",
+											+ getReadableMethodString(broadcastInterface,method,params)
+											+ " has an IllegalAccessException!",
 									ex);
 						}
 					} catch (InvocationTargetException ex) {
@@ -188,13 +181,10 @@ public class BroadcastManager {
 							logger.error(
 									"The consumer "
 											+ consumer.getClass()
-													.getSimpleName()
+													.getName()
 											+ " on interface "
-											+ broadcastInterface
-													.getSimpleName() + "."
-											+ method.getName() + "("
-											+ getArguments(params)
-											+ ")  has thrown an exception!", ex
+											+ getReadableMethodString(broadcastInterface,method,params)
+											+ " has thrown an exception!", ex
 											.getCause());
 						}
 						for (WeakReference<ErrorHandler> errorHandler : errorHandlers) {
@@ -256,12 +246,12 @@ public class BroadcastManager {
 				for (Method method : _interface.getMethods()) {
 					if (loggingOn) {
 						logger.debug("Broadcasting to "
-								+ _interface.getSimpleName() + "."
-								+ method.getName());
+								+ getReadableMethodString(_interface,method));
+
 					}
 					
 					if(!Void.TYPE.equals(method.getReturnType())){
-						throw new NonVoidBroadcastMethodException("You tried to implement a non-void broadcast method.  See "+_interface.getSimpleName()+"."+method.getName());
+						throw new NonVoidBroadcastMethodException("You tried to implement a non-void broadcast method.  See "+ getReadableMethodString(_interface,method));
 					}
 					
 					BroadcastConsumersForAGivenInterface impl = interfacesByMethodName
@@ -274,22 +264,14 @@ public class BroadcastManager {
 						methodsWithAnnotations.remove(method.getName());
 					} else if (impl.broadcastInterface != _interface) {
 						logger.error("We cannot have two methods with the same name! Please look at "
-								+ impl.broadcastInterface.getSimpleName()
-								+ "."
-								+ impl.method.getName()
+								+getReadableMethodString(impl.broadcastInterface,impl.method)
 								+ " and "
-								+ _interface.getSimpleName()
-								+ "."
-								+ method.getName());
+								+getReadableMethodString(_interface,method));
 						throw new DuplicateMethodException(
 								"We cannot have two methods from a Broadcast interface with the same name! Please look at "
-										+ impl.broadcastInterface.getName()
-										+ "."
-										+ impl.method.getName()
+										+getReadableMethodString(impl.broadcastInterface,impl.method)
 										+ " and "
-										+ _interface.getName()
-										+ "."
-										+ method.getName());
+										+getReadableMethodString(_interface,method));
 					} else {
 						impl.addBroadcastReceiver(_this);
 						methodsWithAnnotations.remove(method.getName());
@@ -302,10 +284,10 @@ public class BroadcastManager {
 					+ methodsWithAnnotations.get(methodName).getSimpleName();
 			throw new WrongUseOfAnnotationException(
 					"The method "
-							+ methodName
+							+ _this.getClass().getName() +"."+ methodName + "(...)" 
 							+ " has the annotation "
 							+ annotation
-							+ " but does not implement an interface that extends Broadcast");
+							+ " but does not implement an interface that extends "+Broadcast.class.getName());
 		}
 	}
 
@@ -347,6 +329,23 @@ public class BroadcastManager {
 		return false;
 	}
 
+	private String getReadableMethodString(Class _interface, Method method){
+		return _interface.getName() + "." + method.getName() +  "(" + getParamTypes(method.getParameterTypes()) + ")";
+	}
+	private String getReadableMethodString(Class _interface, Method method, Object[] args){
+		return _interface.getName() + "." + method.getName() + "(" + getArguments(args) + ")";
+	}
+	private String getParamTypes(Class[] argClasses){
+		StringBuffer buffer = new StringBuffer();
+		if (argClasses == null)
+			return "";
+		for (int i = 0; i < argClasses.length; i++) {
+			if (i > 0)
+				buffer.append(",");
+			buffer.append(argClasses[i].getSimpleName());
+		}
+		return buffer.toString();
+	}
 	private String getArguments(Object[] args) {
 		StringBuffer buffer = new StringBuffer();
 		if (args == null)
