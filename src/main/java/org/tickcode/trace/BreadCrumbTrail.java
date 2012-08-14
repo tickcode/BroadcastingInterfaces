@@ -11,7 +11,7 @@ public class BreadCrumbTrail {
 		}
 	};
 	
-	public static BreadCrumbTrail getActiveTrail(){
+	public static BreadCrumbTrail get(){
 		return activeTrail.get();
 	}
 	
@@ -19,6 +19,11 @@ public class BreadCrumbTrail {
 	public void add(BreadCrumb crumb){
 		trail.add(crumb);
 	}
+	
+	private BreadCrumbTrail(){
+		
+	}
+
 	
 	@Override
 	public String toString() {

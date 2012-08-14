@@ -100,7 +100,7 @@ public class BroadcastsWithinBroadcastsTest {
 	@Test
 	public void testAllowBroadcastingWithinBroadcasting() {
 
-		MessageBroker.getSingleton().setAllowingBroadcastsToBroadcast(true);
+		MessageBroker.get().setAllowingBroadcastsToBroadcast(true);
 		MyErrorHandler handler = new MyErrorHandler();
 		MyFirstClass first = new MyFirstClass("first");
 		MyFirstClass second = new MyFirstClass("second");
@@ -119,9 +119,9 @@ public class BroadcastsWithinBroadcastsTest {
 			Assert.assertTrue(20 < handler.trailSize);
 			//System.out.println(handler.trail);
 		} finally {
-			MessageBroker.getSingleton().setAllowingBroadcastsToBroadcast(
+			MessageBroker.get().setAllowingBroadcastsToBroadcast(
 					false);
-			MessageBroker.getSingleton().unregister(
+			MessageBroker.get().unregister(
 					handler);
 		}
 

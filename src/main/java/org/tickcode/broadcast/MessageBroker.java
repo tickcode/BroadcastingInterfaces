@@ -49,7 +49,7 @@ public class MessageBroker {
 
 	private static MessageBroker singleton;
 
-	public static MessageBroker getSingleton() {
+	public static MessageBroker get() {
 		if (singleton == null)
 			singleton = new MessageBroker();
 		return singleton;
@@ -160,7 +160,7 @@ public class MessageBroker {
 		}
 
 		public void broadcast(Broadcast producer, Object[] params) {
-			BreadCrumbTrail trail = BreadCrumbTrail.getActiveTrail();
+			BreadCrumbTrail trail = BreadCrumbTrail.get();
 			boolean cleanOutWeakReferences = false;
 			for (int i = 0; i < this.consumers.size(); i++) {
 				WeakReference<Broadcast> ref = this.consumers.get(i);

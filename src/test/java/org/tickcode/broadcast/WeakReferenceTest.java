@@ -59,7 +59,7 @@ public class WeakReferenceTest {
 		Assert.assertEquals(1, consumer.count);
 		Assert.assertEquals(1, producer.count);
 		
-		MessageBroker.getSingleton().setWeakReferencesToNull(consumer);
+		MessageBroker.get().setWeakReferencesToNull(consumer);
 		producer.whatAboutWeakReferences(); // broadcast
 		Assert.assertEquals(1, consumer.count); // nothing should change
 		Assert.assertEquals(2, producer.count); // of course the producer changes

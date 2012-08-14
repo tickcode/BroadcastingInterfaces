@@ -64,7 +64,7 @@ public class RemovingConsumersTest {
 		Assert.assertEquals(1, first.getCount());
 		Assert.assertEquals(1, second.getCount());
 		
-		MessageBroker.getSingleton().unregister(second);
+		MessageBroker.get().unregister(second);
 		first.doThis();
 
 		Assert.assertEquals(2, first.getCount());

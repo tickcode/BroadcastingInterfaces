@@ -48,7 +48,7 @@ public aspect BroadcastImpl {
 		  execution (ErrorHandler+.new(..)) && this(_this);
 
 	after(ErrorHandler _this) returning: createErrorHandler(_this){
-		MessageBroker.getSingleton().register(_this);
+		MessageBroker.get().register(_this);
 	}
 
 	/**
@@ -59,7 +59,7 @@ public aspect BroadcastImpl {
 		  execution (Broadcast+.new(..)) && this(_this);
 
 	after(Broadcast _this) returning: createBroadcast(_this){
-		MessageBroker.getSingleton().register(_this);
+		MessageBroker.get().register(_this);
 	}
 
 	pointcut broadcastPointcutWithArguments(Broadcast _this): 
@@ -72,7 +72,7 @@ public aspect BroadcastImpl {
 	 * Use this advice for methods with arguments
 	 */
 	after(Broadcast _this) returning: broadcastPointcutWithArguments(_this){
-		MessageBroker manager = MessageBroker.getSingleton();
+		MessageBroker manager = MessageBroker.get();
 
 		executingAdvice = !manager.isAllowingBroadcastsToBroadcast();
 
@@ -89,7 +89,7 @@ public aspect BroadcastImpl {
 	    && this(_this) && if(!executingAdvice);
 
 	after(Broadcast _this) returning: broadcastPointcutWithNoArguments(_this){
-		MessageBroker manager = MessageBroker.getSingleton();
+		MessageBroker manager = MessageBroker.get();
 
 		executingAdvice = !manager.isAllowingBroadcastsToBroadcast();
 		

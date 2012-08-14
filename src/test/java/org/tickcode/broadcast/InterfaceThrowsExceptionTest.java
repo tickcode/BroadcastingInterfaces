@@ -83,7 +83,7 @@ public class InterfaceThrowsExceptionTest {
 		}catch(RuntimeException ex){
 			// good
 		}finally{
-			MessageBroker.getSingleton().reset();
+			MessageBroker.get().reset();
 		}
 		
 		// Make sure that nothing has changed because the badBehavior was acting as the producer
@@ -108,9 +108,9 @@ public class InterfaceThrowsExceptionTest {
 			Assert.assertTrue(badBehavior.lastErrorThrown == handler.ex);
 			Assert.assertTrue(badBehavior.lastErrorThrown == handler2.ex);
 		}finally{
-			MessageBroker.getSingleton().unregister(handler);
-			MessageBroker.getSingleton().unregister(handler2);
-			MessageBroker.getSingleton().reset();
+			MessageBroker.get().unregister(handler);
+			MessageBroker.get().unregister(handler2);
+			MessageBroker.get().reset();
 		}
 	}
 
