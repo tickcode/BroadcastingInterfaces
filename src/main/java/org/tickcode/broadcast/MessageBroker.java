@@ -27,11 +27,15 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.log4j.Logger;
+import org.tickcode.trace.BreadCrumbTrail;
+import org.tickcode.trace.DefaultBreadCrumb;
+import org.tickcode.trace.MethodUtil;
 
 /**
  * Inspired by http://www.eaipatterns.com/MessageBroker.html
+ * 
  * @author eyon
- *
+ * 
  */
 public class MessageBroker {
 
@@ -39,8 +43,7 @@ public class MessageBroker {
 	public static boolean loggingOn;
 
 	static {
-		logger = Logger
-				.getLogger(org.tickcode.broadcast.MessageBroker.class);
+		logger = Logger.getLogger(org.tickcode.broadcast.MessageBroker.class);
 		loggingOn = (logger.getEffectiveLevel() != org.apache.log4j.Level.OFF);
 	}
 
@@ -64,9 +67,11 @@ public class MessageBroker {
 	}
 
 	/**
-	 * If you were running a multi-threaded application and you knew that there would be no infinite
-	 * loops where broadcasts call broadcasts, you need to set this variable to true.  Otherwise
-	 * one thread could prevent the broadcast of the other thread because of shared code.
+	 * If you were running a multi-threaded application and you knew that there
+	 * would be no infinite loops where broadcasts call broadcasts, you need to
+	 * set this variable to true. Otherwise one thread could prevent the
+	 * broadcast of the other thread because of shared code.
+	 * 
 	 * @param allowingInfiniteLoops
 	 */
 	public void setAllowingBroadcastsToBroadcast(boolean allowingInfiniteLoops) {
@@ -155,6 +160,7 @@ public class MessageBroker {
 		}
 
 		public void broadcast(Broadcast producer, Object[] params) {
+			BreadCrumbTrail trail = BreadCrumbTrail.getActiveTrail();
 			boolean cleanOutWeakReferences = false;
 			for (int i = 0; i < this.consumers.size(); i++) {
 				WeakReference<Broadcast> ref = this.consumers.get(i);
@@ -166,18 +172,29 @@ public class MessageBroker {
 								logger.debug("We are sending a broadcast to "
 										+ consumer.getClass().getName()
 										+ " on interface "
-										+ getReadableMethodString(broadcastInterface,method,params));
+										+ MethodUtil.getReadableMethodString(
+												broadcastInterface, method,
+												params));
 							}
+							trail.add(new DefaultBreadCrumb(
+									MethodUtil
+											.getReadableMethodString(
+													producer.getClass(),
+													method, params),
+									MethodUtil.getReadableMethodString(
+											consumer.getClass(), method)));
 							method.invoke(consumer, params);
 						}
 					} catch (IllegalAccessException ex) {
 						if (loggingOn) {
 							logger.error(
 									"The consumer "
-											+ consumer.getClass()
-													.getName()
+											+ consumer.getClass().getName()
 											+ " on interface "
-											+ getReadableMethodString(broadcastInterface,method,params)
+											+ MethodUtil
+													.getReadableMethodString(
+															broadcastInterface,
+															method, params)
 											+ " has an IllegalAccessException!",
 									ex);
 						}
@@ -185,17 +202,19 @@ public class MessageBroker {
 						if (loggingOn) {
 							logger.error(
 									"The consumer "
-											+ consumer.getClass()
-													.getName()
+											+ consumer.getClass().getName()
 											+ " on interface "
-											+ getReadableMethodString(broadcastInterface,method,params)
+											+ MethodUtil
+													.getReadableMethodString(
+															broadcastInterface,
+															method, params)
 											+ " has thrown an exception!", ex
 											.getCause());
 						}
 						for (WeakReference<ErrorHandler> errorHandler : errorHandlers) {
 							if (errorHandler.get() != null)
 								errorHandler.get().error(consumer,
-										ex.getCause());
+										ex.getCause(), trail);
 							else {
 								errorHandlers.remove(errorHandler);
 							}
@@ -209,15 +228,16 @@ public class MessageBroker {
 			if (cleanOutWeakReferences) {
 				cleanOutWeakReferences();
 			}
+			trail.reset();
 
 		}
 	}
 
 	public void broadcast(Broadcast _this, String methodName, Object[] params) {
 		if (loggingOn) {
-			logger.debug(methodName + "(" + getArguments(params) + ")");
+			logger.debug(methodName + "(" + MethodUtil.getArguments(params)
+					+ ")");
 		}
-
 		interfacesByMethodName.get(methodName).broadcast(_this, params);
 	}
 
@@ -251,32 +271,41 @@ public class MessageBroker {
 				for (Method method : _interface.getMethods()) {
 					if (loggingOn) {
 						logger.debug("Broadcasting to "
-								+ getReadableMethodString(_interface,method));
+								+ MethodUtil.getReadableMethodString(
+										_interface, method));
 
 					}
-					
-					if(!Void.TYPE.equals(method.getReturnType())){
-						throw new NonVoidBroadcastMethodException("You tried to implement a non-void broadcast method.  See "+ getReadableMethodString(_interface,method));
+
+					if (!Void.TYPE.equals(method.getReturnType())) {
+						throw new NonVoidBroadcastMethodException(
+								"You tried to implement a non-void broadcast method.  See "
+										+ MethodUtil.getReadableMethodString(
+												_interface, method));
 					}
-					
+
 					BroadcastConsumersForAGivenInterface impl = interfacesByMethodName
 							.get(method.getName());
 					if (impl == null) {
-						impl = new BroadcastConsumersForAGivenInterface(_interface,
-								method);
+						impl = new BroadcastConsumersForAGivenInterface(
+								_interface, method);
 						impl.addBroadcastReceiver(_this);
 						interfacesByMethodName.put(method.getName(), impl);
 						methodsWithAnnotations.remove(method.getName());
 					} else if (impl.broadcastInterface != _interface) {
 						logger.error("We cannot have two methods with the same name! Please look at "
-								+getReadableMethodString(impl.broadcastInterface,impl.method)
+								+ MethodUtil.getReadableMethodString(
+										impl.broadcastInterface, impl.method)
 								+ " and "
-								+getReadableMethodString(_interface,method));
+								+ MethodUtil.getReadableMethodString(
+										_interface, method));
 						throw new DuplicateMethodException(
 								"We cannot have two methods from a Broadcast interface with the same name! Please look at "
-										+getReadableMethodString(impl.broadcastInterface,impl.method)
+										+ MethodUtil.getReadableMethodString(
+												impl.broadcastInterface,
+												impl.method)
 										+ " and "
-										+getReadableMethodString(_interface,method));
+										+ MethodUtil.getReadableMethodString(
+												_interface, method));
 					} else {
 						impl.addBroadcastReceiver(_this);
 						methodsWithAnnotations.remove(method.getName());
@@ -287,12 +316,11 @@ public class MessageBroker {
 		for (String methodName : methodsWithAnnotations.keySet()) {
 			String annotation = "@"
 					+ methodsWithAnnotations.get(methodName).getSimpleName();
-			throw new WrongUseOfAnnotationException(
-					"The method "
-							+ _this.getClass().getName() +"."+ methodName + "(...)" 
-							+ " has the annotation "
-							+ annotation
-							+ " but does not implement an interface that extends "+Broadcast.class.getName());
+			throw new WrongUseOfAnnotationException("The method "
+					+ _this.getClass().getName() + "." + methodName + "(...)"
+					+ " has the annotation " + annotation
+					+ " but does not implement an interface that extends "
+					+ Broadcast.class.getName());
 		}
 	}
 
@@ -301,8 +329,8 @@ public class MessageBroker {
 			this.errorHandlers.add(new WeakReference<ErrorHandler>(handler));
 		}
 	}
-	
-	public void unregister(ErrorHandler handler){
+
+	public void unregister(ErrorHandler handler) {
 		for (WeakReference<ErrorHandler> h : this.errorHandlers) {
 			if (h.get() != null) {
 				if (h.get() == handler)
@@ -310,6 +338,11 @@ public class MessageBroker {
 			} else
 				errorHandlers.remove(h);
 		}
+	}
+	
+	public void reset(){
+		interfacesByMethodName.clear();
+		errorHandlers.clear();
 	}
 
 	/**
@@ -332,35 +365,6 @@ public class MessageBroker {
 				errorHandlers.remove(h);
 		}
 		return false;
-	}
-
-	private String getReadableMethodString(Class _interface, Method method){
-		return _interface.getName() + "." + method.getName() +  "(" + getParamTypes(method.getParameterTypes()) + ")";
-	}
-	private String getReadableMethodString(Class _interface, Method method, Object[] args){
-		return _interface.getName() + "." + method.getName() + "(" + getArguments(args) + ")";
-	}
-	private String getParamTypes(Class[] argClasses){
-		StringBuffer buffer = new StringBuffer();
-		if (argClasses == null)
-			return "";
-		for (int i = 0; i < argClasses.length; i++) {
-			if (i > 0)
-				buffer.append(",");
-			buffer.append(argClasses[i].getSimpleName());
-		}
-		return buffer.toString();
-	}
-	private String getArguments(Object[] args) {
-		StringBuffer buffer = new StringBuffer();
-		if (args == null)
-			return "";
-		for (int i = 0; i < args.length; i++) {
-			if (i > 0)
-				buffer.append(",");
-			buffer.append(args[i]);
-		}
-		return buffer.toString();
 	}
 
 }

@@ -19,6 +19,7 @@
 package org.tickcode.broadcast;
 
 import org.apache.log4j.Logger;
+import org.tickcode.trace.BreadCrumbTrail;
 
 /**
  * This aspect will provide behavior to any class implementing interfaces that
@@ -41,7 +42,7 @@ public aspect BroadcastImpl {
 
 	/**
 	 * When an instance of a Broadcast sub-interface is created, we will grab
-	 * the instance and add it to our HashMap of listeners.
+	 * the instance and add it to {@link MessageBroker}.
 	 */
 	pointcut createErrorHandler(ErrorHandler _this):
 		  execution (ErrorHandler+.new(..)) && this(_this);
@@ -52,7 +53,7 @@ public aspect BroadcastImpl {
 
 	/**
 	 * When an instance of a Broadcast sub-interface is created, we will grab
-	 * the instance and add it to our HashMap of listeners.
+	 * the instance and add it to {@link MessageBroker}.
 	 */
 	pointcut createBroadcast(Broadcast _this):
 		  execution (Broadcast+.new(..)) && this(_this);
@@ -91,7 +92,7 @@ public aspect BroadcastImpl {
 		MessageBroker manager = MessageBroker.getSingleton();
 
 		executingAdvice = !manager.isAllowingBroadcastsToBroadcast();
-
+		
 		String methodName = thisJoinPointStaticPart.getSignature().getName();
 		Object[] params = thisJoinPoint.getArgs();
 

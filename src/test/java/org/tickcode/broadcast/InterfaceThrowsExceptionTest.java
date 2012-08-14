@@ -20,11 +20,7 @@ package org.tickcode.broadcast;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.tickcode.broadcast.Broadcast;
-import org.tickcode.broadcast.BroadcastConsumer;
-import org.tickcode.broadcast.MessageBroker;
-import org.tickcode.broadcast.BroadcastProducer;
-import org.tickcode.broadcast.ErrorHandler;
+import org.tickcode.trace.BreadCrumbTrail;
 
 public class InterfaceThrowsExceptionTest {
 
@@ -34,8 +30,12 @@ public class InterfaceThrowsExceptionTest {
 
 	protected class MyErrorHandler implements ErrorHandler{
 		Throwable ex;
-		public void error(Broadcast broadcast, Throwable ex){
+		int trailSize;
+		String trailString;
+		public void error(Broadcast broadcast, Throwable ex, BreadCrumbTrail trail){
 			this.ex = ex;
+			this.trailSize = trail.size();
+			this.trailString = trail.toString();
 		}
 	}
 
@@ -82,7 +82,10 @@ public class InterfaceThrowsExceptionTest {
 			Assert.fail("We should be throwing an exception here because we are the producer and no consumers should be notified!");
 		}catch(RuntimeException ex){
 			// good
+		}finally{
+			MessageBroker.getSingleton().reset();
 		}
+		
 		// Make sure that nothing has changed because the badBehavior was acting as the producer
 		Assert.assertEquals(1, wellBehaved.getCount());
 		Assert.assertEquals(0, badBehavior.getCount());
@@ -101,11 +104,13 @@ public class InterfaceThrowsExceptionTest {
 			Assert.assertEquals(1, wellBehaved.getCount());
 			Assert.assertEquals(0, badBehavior.getCount());
 			
+			Assert.assertEquals(handler.trailString, 1, handler.trailSize);
 			Assert.assertTrue(badBehavior.lastErrorThrown == handler.ex);
 			Assert.assertTrue(badBehavior.lastErrorThrown == handler2.ex);
 		}finally{
 			MessageBroker.getSingleton().unregister(handler);
 			MessageBroker.getSingleton().unregister(handler2);
+			MessageBroker.getSingleton().reset();
 		}
 	}
 

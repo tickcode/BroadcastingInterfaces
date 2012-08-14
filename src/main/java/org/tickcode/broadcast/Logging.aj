@@ -29,7 +29,7 @@ import org.aspectj.lang.Signature;
 
 
 /**
- * Based on com.tickcode shown in
+ * Based on logging shown in
  * <u>Eclipse AspectJ</u> by Adrian Colyer, Andy Clement, George Harley and Matthew Webster.
  * Also includes changes posted on the user group aspectj-users@eclipse.org from Roland Kofler.
  */

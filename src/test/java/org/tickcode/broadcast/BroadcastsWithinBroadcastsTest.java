@@ -20,11 +20,7 @@ package org.tickcode.broadcast;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.tickcode.broadcast.Broadcast;
-import org.tickcode.broadcast.BroadcastConsumer;
-import org.tickcode.broadcast.MessageBroker;
-import org.tickcode.broadcast.BroadcastProducer;
-import org.tickcode.broadcast.ErrorHandler;
+import org.tickcode.trace.BreadCrumbTrail;
 
 public class BroadcastsWithinBroadcastsTest {
 
@@ -91,8 +87,12 @@ public class BroadcastsWithinBroadcastsTest {
 	}
 
 	protected class MyErrorHandler implements ErrorHandler {
+		int trailSize;
+		String trailString;
 		@Override
-		public void error(Broadcast broadcast, Throwable ex) {
+		public void error(Broadcast broadcast, Throwable ex, BreadCrumbTrail trail) {
+			this.trailString = trail.toString();
+			this.trailSize = trail.size();
 			throw new RuntimeException("Are we getting a stack overflow?", ex);
 		}
 	}
@@ -116,6 +116,8 @@ public class BroadcastsWithinBroadcastsTest {
 		} catch (RuntimeException ex) {
 			Assert.assertEquals("Are we getting a stack overflow?",
 					ex.getMessage());
+			Assert.assertTrue(20 < handler.trailSize);
+			//System.out.println(handler.trail);
 		} finally {
 			MessageBroker.getSingleton().setAllowingBroadcastsToBroadcast(
 					false);

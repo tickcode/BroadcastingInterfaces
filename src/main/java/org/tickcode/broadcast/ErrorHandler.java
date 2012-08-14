@@ -18,6 +18,8 @@
  ******************************************************************************/
 package org.tickcode.broadcast;
 
+import org.tickcode.trace.BreadCrumbTrail;
+
 public interface ErrorHandler {
-	public void error(Broadcast broadcast, Throwable ex);
+	public void error(Broadcast broadcast, Throwable ex, BreadCrumbTrail trail);
 }
