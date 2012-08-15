@@ -58,6 +58,7 @@ public class MessageBroker {
 	private MessageBroker() {
 	}
 
+	private boolean isUsingAspectJ = true;
 	private boolean allowingBroadcastsToBroadcast = false;
 	ConcurrentHashMap<String, BroadcastConsumersForAGivenInterface> interfacesByMethodName = new ConcurrentHashMap<String, BroadcastConsumersForAGivenInterface>();
 	ConcurrentLinkedQueue<WeakReference<ErrorHandler>> errorHandlers = new ConcurrentLinkedQueue<WeakReference<ErrorHandler>>();
@@ -365,6 +366,14 @@ public class MessageBroker {
 				errorHandlers.remove(h);
 		}
 		return false;
+	}
+
+	public boolean isUsingAspectJ() {
+		return isUsingAspectJ;
+	}
+
+	public void setUsingAspectJ(boolean isUsingAspectJ) {
+		this.isUsingAspectJ = isUsingAspectJ;
 	}
 
 }

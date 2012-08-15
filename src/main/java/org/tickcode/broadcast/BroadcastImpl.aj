@@ -32,6 +32,7 @@ public aspect BroadcastImpl {
 
 	private static Logger log;
 	public static boolean loggingOn;
+	public static boolean isUsingAspectJ;
 
 	static {
 		log = Logger.getLogger(org.tickcode.broadcast.Broadcast.class);
@@ -45,7 +46,7 @@ public aspect BroadcastImpl {
 	 * the instance and add it to {@link MessageBroker}.
 	 */
 	pointcut createErrorHandler(ErrorHandler _this):
-		  execution (ErrorHandler+.new(..)) && this(_this);
+		  execution (ErrorHandler+.new(..)) && this(_this) && if(MessageBroker.get().isUsingAspectJ());
 
 	after(ErrorHandler _this) returning: createErrorHandler(_this){
 		MessageBroker.get().register(_this);
@@ -56,7 +57,7 @@ public aspect BroadcastImpl {
 	 * the instance and add it to {@link MessageBroker}.
 	 */
 	pointcut createBroadcast(Broadcast _this):
-		  execution (Broadcast+.new(..)) && this(_this);
+		  execution (Broadcast+.new(..)) && this(_this) && if(MessageBroker.get().isUsingAspectJ());
 
 	after(Broadcast _this) returning: createBroadcast(_this){
 		MessageBroker.get().register(_this);
@@ -64,7 +65,7 @@ public aspect BroadcastImpl {
 
 	pointcut broadcastPointcutWithArguments(Broadcast _this): 
 		execution (@BroadcastProducer * *(*))
-	    && this(_this) && if(!executingAdvice);
+	    && this(_this) && if(MessageBroker.get().isUsingAspectJ()) && if(!executingAdvice);
 
 	static volatile boolean executingAdvice = false;
 
@@ -86,7 +87,7 @@ public aspect BroadcastImpl {
 
 	pointcut broadcastPointcutWithNoArguments(Broadcast _this): 
 		execution (@BroadcastProducer * *())
-	    && this(_this) && if(!executingAdvice);
+	    && this(_this)  && if(MessageBroker.get().isUsingAspectJ()) && if(!executingAdvice);
 
 	after(Broadcast _this) returning: broadcastPointcutWithNoArguments(_this){
 		MessageBroker manager = MessageBroker.get();

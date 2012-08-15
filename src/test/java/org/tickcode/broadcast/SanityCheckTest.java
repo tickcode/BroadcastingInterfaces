@@ -100,6 +100,7 @@ public class SanityCheckTest {
 		MyFirstClass first = new MyFirstClass();
 		MySecondClass second = new MySecondClass();
 
+		Assert.assertTrue(MessageBroker.get().isUsingAspectJ());
 		first.sanityCheckMethod1();
 		Assert.assertEquals(1, first.countMethod1);
 		Assert.assertEquals(1, second.countMethod1);
@@ -136,6 +137,56 @@ public class SanityCheckTest {
 		Assert.assertEquals(first, first.payload);
 		Assert.assertEquals(first, second.payload);
 
+	}
+
+	@Test
+	public void testSanityCheckWithoutAspectJ() {
+		MessageBroker.get().reset();
+		MessageBroker.get().setUsingAspectJ(false);
+		try{
+			MyFirstClass first = new MyFirstClass();
+			MySecondClass second = new MySecondClass();
+			ArbitraryMethods firstProxy = (ArbitraryMethods)BroadcastProxy.newInstance(first);
+			ArbitraryMethods secondProxy = (ArbitraryMethods)BroadcastProxy.newInstance(second);
+			
+			firstProxy.sanityCheckMethod1();
+			Assert.assertEquals(1, first.countMethod1);
+			Assert.assertEquals(1, second.countMethod1);
+			Assert.assertEquals(0, first.countMethod2);
+			Assert.assertEquals(0, second.countMethod2);
+			Assert.assertEquals(0, first.countMethod3);
+			Assert.assertEquals(0, second.countMethod3);
+			Assert.assertNull(first.message);
+			Assert.assertNull(second.message);
+			Assert.assertNull(first.payload);
+			Assert.assertNull(second.payload);
+	
+			firstProxy.sanityCheckMethod2("my message");
+			Assert.assertEquals(1, first.countMethod1);
+			Assert.assertEquals(1, second.countMethod1);
+			Assert.assertEquals(1, first.countMethod2);
+			Assert.assertEquals(1, second.countMethod2);
+			Assert.assertEquals(0, first.countMethod3);
+			Assert.assertEquals(0, second.countMethod3);
+			Assert.assertEquals("my message", first.message);
+			Assert.assertEquals("my message", second.message);
+			Assert.assertNull(first.payload);
+			Assert.assertNull(second.payload);
+	
+			firstProxy.sanityCheckMethod3(first);
+			Assert.assertEquals(1, first.countMethod1);
+			Assert.assertEquals(1, second.countMethod1);
+			Assert.assertEquals(1, first.countMethod2);
+			Assert.assertEquals(1, second.countMethod2);
+			Assert.assertEquals(1, first.countMethod3);
+			Assert.assertEquals(1, second.countMethod3);
+			Assert.assertEquals("my message", first.message);
+			Assert.assertEquals("my message", second.message);
+			Assert.assertEquals(first, first.payload);
+			Assert.assertEquals(first, second.payload);
+		}finally{
+			MessageBroker.get().setUsingAspectJ(true);
+		}
 	}
 
 }
