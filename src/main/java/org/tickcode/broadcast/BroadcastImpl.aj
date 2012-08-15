@@ -19,7 +19,6 @@
 package org.tickcode.broadcast;
 
 import org.apache.log4j.Logger;
-import org.tickcode.trace.BreadCrumbTrail;
 
 /**
  * This aspect will provide behavior to any class implementing interfaces that
@@ -37,7 +36,9 @@ public aspect BroadcastImpl {
 	static {
 		log = Logger.getLogger(org.tickcode.broadcast.Broadcast.class);
 		loggingOn = (log.getEffectiveLevel() != org.apache.log4j.Level.OFF);
+		MessageBroker.get().setUsingAspectJ(true);
 	}
+	
 
 	pointcut shouldLog() : !within(Logging) && if(loggingOn);
 
