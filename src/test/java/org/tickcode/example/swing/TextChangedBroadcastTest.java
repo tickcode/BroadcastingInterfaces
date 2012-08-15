@@ -25,6 +25,8 @@ import junit.framework.Assert;
 import org.junit.Test;
 import org.tickcode.broadcast.BroadcastConsumer;
 import org.tickcode.broadcast.BroadcastProducer;
+import org.tickcode.broadcast.BroadcastProxy;
+import org.tickcode.broadcast.MessageBroker;
 import org.tickcode.example.swing.TextChangedBroadcast;
 
 
@@ -54,8 +56,6 @@ public class TextChangedBroadcastTest {
 	
 	@Test
 	public void test() {
-		
-		
 		Producer producer = new Producer();
 		ProducerAndConsumer producerAndConsumer = new ProducerAndConsumer();
 		Consumer consumer = new Consumer();
@@ -75,8 +75,40 @@ public class TextChangedBroadcastTest {
 		producerAndConsumer.textChanged(expectedForConsumer);
 		Assert.assertEquals(expectedForProducerAndConsumer, producerAndConsumer.messageReceived);
 		Assert.assertEquals(expectedForConsumer, consumer.messageReceived);
+	}
+	
+	@Test
+	public void testUsingProxy(){
+		MessageBroker.get().reset();
+		MessageBroker.get().setUsingAspectJ(false);
+		try{
+			Producer producer = new Producer();
+			ProducerAndConsumer producerAndConsumer = new ProducerAndConsumer();
+			Consumer consumer = new Consumer();
+			
+			TextChangedBroadcast producerProxy = (TextChangedBroadcast) BroadcastProxy.newInstance(producer);
+			TextChangedBroadcast producerAndConsumerProxy = (TextChangedBroadcast) BroadcastProxy.newInstance(producerAndConsumer);
+			TextChangedBroadcast consumerProxy = (TextChangedBroadcast) BroadcastProxy.newInstance(consumer);
 
-		
+			String expected = null;
+			Assert.assertEquals(expected, producerAndConsumer.messageReceived);
+			Assert.assertEquals(expected, consumer.messageReceived);
+			
+			
+			expected = "Hello World from the Producer";
+			producerProxy.textChanged(expected);
+			Assert.assertEquals(expected, producerAndConsumer.messageReceived);
+			Assert.assertEquals(expected, consumer.messageReceived);
+			
+			String expectedForConsumer = "Hello World from the ProducerAndConsumer";
+			String expectedForProducerAndConsumer = expectedForConsumer;
+			producerAndConsumerProxy.textChanged(expectedForConsumer);
+			Assert.assertEquals(expectedForProducerAndConsumer, producerAndConsumer.messageReceived);
+			Assert.assertEquals(expectedForConsumer, consumer.messageReceived);
+
+		}finally{
+			MessageBroker.get().setUsingAspectJ(true);
+		}
 	}
 	
 	public void test100Consumers(){

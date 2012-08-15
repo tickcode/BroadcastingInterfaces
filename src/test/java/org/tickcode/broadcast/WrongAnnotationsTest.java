@@ -62,5 +62,27 @@ public class WrongAnnotationsTest {
 		}
 		
 	}
+	
+	@Test
+	public void testUsingProxy(){
+		MessageBroker.get().reset();
+		MessageBroker.get().setUsingAspectJ(false);
+		try{
+			try {
+				BroadcastProxy.newInstance(new MyTestClass()); // not working!
+				Assert.fail("We should have gotten an exception here!");
+			} catch (WrongUseOfAnnotationException err) {
+				// good
+			}
+			try {
+				BroadcastProxy.newInstance(new MyTestClass2()); // not working!
+				Assert.fail("We should have gotten an exception here!");
+			} catch (WrongUseOfAnnotationException err) {
+				// good
+			}
 
+		}finally{
+			MessageBroker.get().setUsingAspectJ(true);
+		}
+	}
 }

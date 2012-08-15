@@ -127,4 +127,35 @@ public class BroadcastsWithinBroadcastsTest {
 
 	}
 
+	@Test
+	public void testAllowBroadcastingWithinBroadcastingUsingProxy() {
+
+		MessageBroker.get().setAllowingBroadcastsToBroadcast(true);
+		MyErrorHandler handler = new MyErrorHandler();
+		MyFirstClass first = new MyFirstClass("first");
+		MyFirstClass second = new MyFirstClass("second");
+
+		Assert.assertEquals(0, first.method1);
+		Assert.assertEquals(0, first.method2);
+		Assert.assertEquals(0, second.method1);
+		Assert.assertEquals(0, second.method2);
+
+		try {
+			MessageBroker.get().reset();
+			MessageBroker.get().setUsingAspectJ(false);
+			MessageBroker.get().register(first);
+			MessageBroker.get().register(second);
+			MessageBroker.get().register(handler);
+			((InfiniteLoopInterface)BroadcastProxy.newInstance(first)).method1();
+			// proxy does not support broadcasts within broadcasts!
+		} finally {
+			MessageBroker.get().setAllowingBroadcastsToBroadcast(
+					false);
+			MessageBroker.get().unregister(
+					handler);
+			MessageBroker.get().setUsingAspectJ(true);
+		}
+
+	}
+	
 }

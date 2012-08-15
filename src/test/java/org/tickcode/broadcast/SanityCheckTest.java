@@ -28,6 +28,10 @@ import org.tickcode.broadcast.ErrorHandler;
 
 public class SanityCheckTest {
 
+	protected interface ArbitraryMethodsNoBroadcast{
+		public void sanityCheckMethod1();
+		public void shouldNotBroadcast();
+	}
 	protected interface ArbitraryMethods extends Broadcast {
 		public void sanityCheckMethod1();
 
@@ -36,10 +40,11 @@ public class SanityCheckTest {
 		public void sanityCheckMethod3(ArbitraryMethods myself);
 	}
 
-	protected class MyFirstClass implements ArbitraryMethods {
+	protected class MyFirstClass implements ArbitraryMethods,ArbitraryMethodsNoBroadcast {
 		int countMethod1;
 		int countMethod2;
 		int countMethod3;
+		int countShouldNotBroadcast;
 
 		String message;
 		ArbitraryMethods payload;
@@ -62,13 +67,19 @@ public class SanityCheckTest {
 		public void sanityCheckMethod3(ArbitraryMethods payload) {
 			countMethod3++;
 			this.payload = payload;
+		}
+		
+		@Override
+		public void shouldNotBroadcast() {
+			countShouldNotBroadcast++;
 		}
 	}
 
-	protected class MySecondClass implements ArbitraryMethods {
+	protected class MySecondClass implements ArbitraryMethods,ArbitraryMethodsNoBroadcast {
 		int countMethod1;
 		int countMethod2;
 		int countMethod3;
+		int countShouldNotBroadcast;
 
 		String message;
 		ArbitraryMethods payload;
@@ -91,6 +102,11 @@ public class SanityCheckTest {
 		public void sanityCheckMethod3(ArbitraryMethods payload) {
 			countMethod3++;
 			this.payload = payload;
+		}
+
+		@Override
+		public void shouldNotBroadcast() {
+			countShouldNotBroadcast++;
 		}
 
 	}
@@ -108,6 +124,8 @@ public class SanityCheckTest {
 		Assert.assertEquals(0, second.countMethod2);
 		Assert.assertEquals(0, first.countMethod3);
 		Assert.assertEquals(0, second.countMethod3);
+		Assert.assertEquals(0, first.countShouldNotBroadcast);
+		Assert.assertEquals(0, second.countShouldNotBroadcast);
 		Assert.assertNull(first.message);
 		Assert.assertNull(second.message);
 		Assert.assertNull(first.payload);
@@ -120,6 +138,8 @@ public class SanityCheckTest {
 		Assert.assertEquals(1, second.countMethod2);
 		Assert.assertEquals(0, first.countMethod3);
 		Assert.assertEquals(0, second.countMethod3);
+		Assert.assertEquals(0, first.countShouldNotBroadcast);
+		Assert.assertEquals(0, second.countShouldNotBroadcast);
 		Assert.assertEquals("my message", first.message);
 		Assert.assertEquals("my message", second.message);
 		Assert.assertNull(first.payload);
@@ -132,6 +152,8 @@ public class SanityCheckTest {
 		Assert.assertEquals(1, second.countMethod2);
 		Assert.assertEquals(1, first.countMethod3);
 		Assert.assertEquals(1, second.countMethod3);
+		Assert.assertEquals(0, first.countShouldNotBroadcast);
+		Assert.assertEquals(0, second.countShouldNotBroadcast);
 		Assert.assertEquals("my message", first.message);
 		Assert.assertEquals("my message", second.message);
 		Assert.assertEquals(first, first.payload);
@@ -140,7 +162,7 @@ public class SanityCheckTest {
 	}
 
 	@Test
-	public void testSanityCheckWithoutAspectJ() {
+	public void testSanityCheckUsingProxy() {
 		MessageBroker.get().reset();
 		MessageBroker.get().setUsingAspectJ(false);
 		try{
@@ -156,6 +178,8 @@ public class SanityCheckTest {
 			Assert.assertEquals(0, second.countMethod2);
 			Assert.assertEquals(0, first.countMethod3);
 			Assert.assertEquals(0, second.countMethod3);
+			Assert.assertEquals(0, first.countShouldNotBroadcast);
+			Assert.assertEquals(0, second.countShouldNotBroadcast);
 			Assert.assertNull(first.message);
 			Assert.assertNull(second.message);
 			Assert.assertNull(first.payload);
@@ -168,6 +192,8 @@ public class SanityCheckTest {
 			Assert.assertEquals(1, second.countMethod2);
 			Assert.assertEquals(0, first.countMethod3);
 			Assert.assertEquals(0, second.countMethod3);
+			Assert.assertEquals(0, first.countShouldNotBroadcast);
+			Assert.assertEquals(0, second.countShouldNotBroadcast);
 			Assert.assertEquals("my message", first.message);
 			Assert.assertEquals("my message", second.message);
 			Assert.assertNull(first.payload);
@@ -180,6 +206,8 @@ public class SanityCheckTest {
 			Assert.assertEquals(1, second.countMethod2);
 			Assert.assertEquals(1, first.countMethod3);
 			Assert.assertEquals(1, second.countMethod3);
+			Assert.assertEquals(0, first.countShouldNotBroadcast);
+			Assert.assertEquals(0, second.countShouldNotBroadcast);
 			Assert.assertEquals("my message", first.message);
 			Assert.assertEquals("my message", second.message);
 			Assert.assertEquals(first, first.payload);

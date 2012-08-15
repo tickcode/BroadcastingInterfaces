@@ -168,7 +168,7 @@ public class MessageBroker {
 				Broadcast consumer = ref.get();
 				if (consumer != null) {
 					try {
-						if (consumer != producer) {
+						if (BroadcastProxy.getImplementation(consumer) != BroadcastProxy.getImplementation(producer)) {
 							if (loggingOn) {
 								logger.debug("We are sending a broadcast to "
 										+ consumer.getClass().getName()
@@ -234,24 +234,26 @@ public class MessageBroker {
 		}
 	}
 
-	public void broadcast(Broadcast _this, String methodName, Object[] params) {
+	public void broadcast(Broadcast producer, String methodName, Object[] params) {
 		if (loggingOn) {
 			logger.debug(methodName + "(" + MethodUtil.getArguments(params)
 					+ ")");
 		}
-		interfacesByMethodName.get(methodName).broadcast(_this, params);
+		interfacesByMethodName.get(methodName).broadcast(producer, params);
 	}
 
 	public void unregister(Broadcast consumer) {
+		consumer = BroadcastProxy.getImplementation(consumer);
 		for (BroadcastConsumersForAGivenInterface imp : interfacesByMethodName
 				.values()) {
 			imp.remove(consumer);
 		}
 	}
 
-	public void register(Broadcast _this) {
+	public void register(Broadcast consumer) {
+		consumer = BroadcastProxy.getImplementation(consumer);
 		HashMap<String, Class> methodsWithAnnotations = new HashMap<String, Class>();
-		for (Method method : _this.getClass().getMethods()) {
+		for (Method method : consumer.getClass().getMethods()) {
 			if (method.isAnnotationPresent(BroadcastConsumer.class)) {
 				methodsWithAnnotations.put(method.getName(),
 						BroadcastConsumer.class);
@@ -262,12 +264,12 @@ public class MessageBroker {
 			}
 		}
 
-		for (Class _interface : _this.getClass().getInterfaces()) {
+		for (Class _interface : consumer.getClass().getInterfaces()) {
 			if (Broadcast.class.isAssignableFrom(_interface)
 					&& Broadcast.class != _interface) {
 				if (loggingOn) {
 					logger.debug("Interface: " + _interface.getSimpleName()
-							+ " added for " + _this.getClass().getSimpleName());
+							+ " added for " + consumer.getClass().getSimpleName());
 				}
 				for (Method method : _interface.getMethods()) {
 					if (loggingOn) {
@@ -289,7 +291,7 @@ public class MessageBroker {
 					if (impl == null) {
 						impl = new BroadcastConsumersForAGivenInterface(
 								_interface, method);
-						impl.addBroadcastReceiver(_this);
+						impl.addBroadcastReceiver(consumer);
 						interfacesByMethodName.put(method.getName(), impl);
 						methodsWithAnnotations.remove(method.getName());
 					} else if (impl.broadcastInterface != _interface) {
@@ -308,7 +310,7 @@ public class MessageBroker {
 										+ MethodUtil.getReadableMethodString(
 												_interface, method));
 					} else {
-						impl.addBroadcastReceiver(_this);
+						impl.addBroadcastReceiver(consumer);
 						methodsWithAnnotations.remove(method.getName());
 					}
 				}
@@ -318,7 +320,7 @@ public class MessageBroker {
 			String annotation = "@"
 					+ methodsWithAnnotations.get(methodName).getSimpleName();
 			throw new WrongUseOfAnnotationException("The method "
-					+ _this.getClass().getName() + "." + methodName + "(...)"
+					+ consumer.getClass().getName() + "." + methodName + "(...)"
 					+ " has the annotation " + annotation
 					+ " but does not implement an interface that extends "
 					+ Broadcast.class.getName());

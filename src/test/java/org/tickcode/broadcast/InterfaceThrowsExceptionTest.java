@@ -91,6 +91,42 @@ public class InterfaceThrowsExceptionTest {
 		Assert.assertEquals(0, badBehavior.getCount());
 		
 	}
+	
+	@Test
+	public void testExceptionDoesNotHurtOtherConsumersUsingProxy(){
+		MessageBroker.get().reset();
+		MessageBroker.get().setUsingAspectJ(false);
+		try{
+			ThisClassDoesNotThrowAnException wellBehaved = new ThisClassDoesNotThrowAnException();
+			ThisClassThrowsAnException badBehavior = new ThisClassThrowsAnException();
+			
+			MessageBroker.get().register(wellBehaved);
+			MessageBroker.get().register(badBehavior);
+			
+			DoSomethingInterface wellBehavedProxy = (DoSomethingInterface)BroadcastProxy.newInstance(wellBehaved);
+			wellBehavedProxy.doSomething();
+			// we are also testing the number of times a method get's invoked as expected here
+			Assert.assertEquals(1, wellBehaved.getCount());
+			Assert.assertEquals(0, badBehavior.getCount());
+			
+			try{
+				DoSomethingInterface badBehaviorProxy = (DoSomethingInterface)BroadcastProxy.newInstance(badBehavior);
+				badBehaviorProxy.doSomething();
+				Assert.fail("We should be throwing an exception here because we are the producer and no consumers should be notified!");
+			}catch(RuntimeException ex){
+				// good
+			}finally{
+				MessageBroker.get().reset();
+			}
+			
+			// Make sure that nothing has changed because the badBehavior was acting as the producer
+			Assert.assertEquals(1, wellBehaved.getCount());
+			Assert.assertEquals(0, badBehavior.getCount());
+
+		}finally{
+			MessageBroker.get().setUsingAspectJ(true);
+		}
+	}
 
 	@Test
 	public void testErrorHandler() {		
@@ -104,13 +140,46 @@ public class InterfaceThrowsExceptionTest {
 			Assert.assertEquals(1, wellBehaved.getCount());
 			Assert.assertEquals(0, badBehavior.getCount());
 			
-			Assert.assertEquals(handler.trailString, 1, handler.trailSize);
 			Assert.assertTrue(badBehavior.lastErrorThrown == handler.ex);
 			Assert.assertTrue(badBehavior.lastErrorThrown == handler2.ex);
+			Assert.assertEquals(handler.trailString, 1, handler.trailSize);
 		}finally{
 			MessageBroker.get().unregister(handler);
 			MessageBroker.get().unregister(handler2);
 			MessageBroker.get().reset();
+		}
+	}
+	
+	@Test
+	public void testErrorHandlerUsingProxy(){
+		MessageBroker.get().reset();
+		MessageBroker.get().setUsingAspectJ(false);
+		try{
+			MyErrorHandler handler = new MyErrorHandler();
+			MyErrorHandler handler2 = new MyErrorHandler();
+			try{
+				ThisClassDoesNotThrowAnException wellBehaved = new ThisClassDoesNotThrowAnException();
+				ThisClassThrowsAnException badBehavior = new ThisClassThrowsAnException();
+				MessageBroker.get().register(wellBehaved);
+				MessageBroker.get().register(badBehavior);
+				MessageBroker.get().register(handler);
+				MessageBroker.get().register(handler2);
+
+				((DoSomethingInterface)BroadcastProxy.newInstance(wellBehaved)).doSomething();
+				// we are also testing the number of times a method get's invoked as we expect here
+				Assert.assertEquals(1, wellBehaved.getCount());
+				Assert.assertEquals(0, badBehavior.getCount());
+				
+				Assert.assertTrue(badBehavior.lastErrorThrown == handler.ex);
+				Assert.assertTrue(badBehavior.lastErrorThrown == handler2.ex);
+				Assert.assertEquals(handler.trailString, 1, handler.trailSize);
+			}finally{
+				MessageBroker.get().unregister(handler);
+				MessageBroker.get().unregister(handler2);
+				MessageBroker.get().reset();
+			}
+		}finally{
+			MessageBroker.get().setUsingAspectJ(true);
 		}
 	}
 

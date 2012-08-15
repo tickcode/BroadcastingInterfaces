@@ -78,6 +78,46 @@ public class RemovingConsumersTest {
 		Assert.assertEquals(2, second.getCount());
 
 	}
+	
+	@Test
+	public void testUsingProxy(){
+		MessageBroker.get().reset();
+		MessageBroker.get().setUsingAspectJ(false);
+		try{
+			FirstImpl first = new FirstImpl();
+			SecondImpl second = new SecondImpl();
+			
+			DoSomethingInterface firstProxy = (DoSomethingInterface)BroadcastProxy.newInstance(first);
+			DoSomethingInterface secondProxy = (DoSomethingInterface)BroadcastProxy.newInstance(second);
+			
+			// these four methods are unnecessary but should not hurt anything
+			MessageBroker.get().register(first);
+			MessageBroker.get().register(second);
+			MessageBroker.get().register(firstProxy);
+			MessageBroker.get().register(secondProxy);
+			
+			firstProxy.doThis();
+			
+			Assert.assertEquals(1, first.getCount());
+			Assert.assertEquals(1, second.getCount());
+			
+			MessageBroker.get().unregister(secondProxy); // making sure we can unregister the proxy
+			firstProxy.doThis();
+
+			Assert.assertEquals(2, first.getCount());
+			Assert.assertEquals(1, second.getCount());
+
+			secondProxy.doThis();
+
+			Assert.assertEquals(3, first.getCount());
+			// second get's invoked because we explicitly call the method, not because
+			// it was invoked through the broadcast
+			Assert.assertEquals(2, second.getCount());
+			
+		}finally{
+			MessageBroker.get().setUsingAspectJ(true);
+		}
+	}
 
 
 }

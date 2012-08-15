@@ -51,7 +51,25 @@ public class NonVoidMethodsTest {
 			// good
 			System.out.println(ex.getMessage());
 		}
-		
 	}
 
+	@Test
+	public void testWeTriedToMakeANonVoidMethodUsingProxy() {
+		MessageBroker.get().reset();
+		MessageBroker.get().setUsingAspectJ(false);
+		try{
+		
+			try{
+				ThisClassAttemptedANonVoidBroadcastMethod _instance = new ThisClassAttemptedANonVoidBroadcastMethod();
+				BroadcastProxy.newInstance(_instance);
+				_instance.myNonVoidMethod();
+				Assert.fail("We should be throwing an exception here because we tried to create a non-void broadcast method!");
+			}catch(NonVoidBroadcastMethodException ex){
+				// good
+			}
+		}finally{
+			MessageBroker.get().setUsingAspectJ(true);
+		}
+	}
+	
 }
