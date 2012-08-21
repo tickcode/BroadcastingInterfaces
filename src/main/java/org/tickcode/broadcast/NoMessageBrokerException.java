@@ -18,8 +18,9 @@
  ******************************************************************************/
 package org.tickcode.broadcast;
 
-import org.tickcode.trace.BreadCrumbTrail;
+public class NoMessageBrokerException extends RuntimeException{
 
-public interface ErrorHandler {
-	public void error(MessageBroker broker, Broadcast broadcast, Throwable ex, BreadCrumbTrail trail);
+	public NoMessageBrokerException(String message){
+		super(message);
+	}
 }

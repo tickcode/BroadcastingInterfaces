@@ -20,10 +20,7 @@ package org.tickcode.broadcast;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.tickcode.broadcast.Broadcast;
-import org.tickcode.broadcast.BroadcastConsumer;
-import org.tickcode.broadcast.MessageBroker;
-import org.tickcode.broadcast.BroadcastProducer;
+import org.tickcode.broadcast.NoMessageBrokerException;
 
 public class RemovingConsumersTest {
 
@@ -57,51 +54,58 @@ public class RemovingConsumersTest {
 
 	@Test
 	public void test() {
+		AbstractMessageBroker.setUsingAspectJ(true);
+		VMMessageBroker broker = new VMMessageBroker();
 		FirstImpl first = new FirstImpl();
+		broker.add(first);
 		SecondImpl second = new SecondImpl();
+		broker.add(second);
 		first.doThis();
 		
 		Assert.assertEquals(1, first.getCount());
 		Assert.assertEquals(1, second.getCount());
 		
-		MessageBroker.get().unregister(second);
+		broker.remove(second);
 		first.doThis();
 
 		Assert.assertEquals(2, first.getCount());
 		Assert.assertEquals(1, second.getCount());
 
-		second.doThis();
-
-		Assert.assertEquals(3, first.getCount());
-		// second get's invoked because we explicitly call the method, not because
-		// it was invoked through the broadcast
+		try{
+			second.doThis();
+			Assert.fail("Should be getting NoMessageBrokerException");
+		}catch(NoMessageBrokerException ex){
+			// good
+		}
+		Assert.assertEquals(2, first.getCount());
 		Assert.assertEquals(2, second.getCount());
 
 	}
 	
 	@Test
 	public void testUsingProxy(){
-		MessageBroker.get().reset();
-		MessageBroker.get().setUsingAspectJ(false);
+		VMMessageBroker broker = new VMMessageBroker();
+		broker.clear();
+		broker.setUsingAspectJ(false);
 		try{
 			FirstImpl first = new FirstImpl();
 			SecondImpl second = new SecondImpl();
 			
-			DoSomethingInterface firstProxy = (DoSomethingInterface)BroadcastProxy.newInstance(first);
-			DoSomethingInterface secondProxy = (DoSomethingInterface)BroadcastProxy.newInstance(second);
+			DoSomethingInterface firstProxy = (DoSomethingInterface)BroadcastProxy.newInstance(broker, first);
+			DoSomethingInterface secondProxy = (DoSomethingInterface)BroadcastProxy.newInstance(broker, second);
 			
 			// these four methods are unnecessary but should not hurt anything
-			MessageBroker.get().register(first);
-			MessageBroker.get().register(second);
-			MessageBroker.get().register(firstProxy);
-			MessageBroker.get().register(secondProxy);
+			broker.add(first);
+			broker.add(second);
+			broker.add(firstProxy);
+			broker.add(secondProxy);
 			
 			firstProxy.doThis();
 			
 			Assert.assertEquals(1, first.getCount());
 			Assert.assertEquals(1, second.getCount());
 			
-			MessageBroker.get().unregister(secondProxy); // making sure we can unregister the proxy
+			broker.remove(secondProxy); // making sure we can unregister the proxy
 			firstProxy.doThis();
 
 			Assert.assertEquals(2, first.getCount());
@@ -115,7 +119,7 @@ public class RemovingConsumersTest {
 			Assert.assertEquals(2, second.getCount());
 			
 		}finally{
-			MessageBroker.get().setUsingAspectJ(true);
+			broker.setUsingAspectJ(true);
 		}
 	}
 

@@ -29,15 +29,17 @@ import javax.swing.UIManager;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.tickcode.example.swing.Main;
+import org.tickcode.broadcast.AbstractMessageBroker;
 
 
 public class MainTest {
 
 	@Test
 	public void test() throws Exception {
+		AbstractMessageBroker.setUsingAspectJ(true);
 		final Main main = new Main();
-		// At this point I'm expecting that WireFramework.aj did my dependency
+		
+		// At this point I'm expecting that DependencyInjection.aj did my dependency
 		// injection and that I have a fully functional GUI
 
 		try {

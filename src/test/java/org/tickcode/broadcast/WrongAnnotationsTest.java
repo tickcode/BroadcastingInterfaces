@@ -48,14 +48,15 @@ public class WrongAnnotationsTest {
 
 	@Test
 	public void test() {
+		VMMessageBroker broker = new VMMessageBroker();
 		try {
-			new MyTestClass(); // not working!
+			broker.add(new MyTestClass()); // not working!
 			Assert.fail("We should have gotten an exception here!");
 		} catch (WrongUseOfAnnotationException err) {
 			// good
 		}
 		try {
-			new MyTestClass2(); // not working!
+			broker.add(new MyTestClass2()); // not working!
 			Assert.fail("We should have gotten an exception here!");
 		} catch (WrongUseOfAnnotationException err) {
 			// good
@@ -65,24 +66,25 @@ public class WrongAnnotationsTest {
 	
 	@Test
 	public void testUsingProxy(){
-		MessageBroker.get().reset();
-		MessageBroker.get().setUsingAspectJ(false);
+		VMMessageBroker broker = new VMMessageBroker();
+		broker.clear();
+		broker.setUsingAspectJ(false);
 		try{
 			try {
-				BroadcastProxy.newInstance(new MyTestClass()); // not working!
+				BroadcastProxy.newInstance(broker, new MyTestClass()); // not working!
 				Assert.fail("We should have gotten an exception here!");
 			} catch (WrongUseOfAnnotationException err) {
 				// good
 			}
 			try {
-				BroadcastProxy.newInstance(new MyTestClass2()); // not working!
+				BroadcastProxy.newInstance(broker, new MyTestClass2()); // not working!
 				Assert.fail("We should have gotten an exception here!");
 			} catch (WrongUseOfAnnotationException err) {
 				// good
 			}
 
 		}finally{
-			MessageBroker.get().setUsingAspectJ(true);
+			broker.setUsingAspectJ(true);
 		}
 	}
 }

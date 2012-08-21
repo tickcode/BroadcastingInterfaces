@@ -26,7 +26,7 @@ import org.junit.Test;
 import org.tickcode.broadcast.BroadcastConsumer;
 import org.tickcode.broadcast.BroadcastProducer;
 import org.tickcode.broadcast.BroadcastProxy;
-import org.tickcode.broadcast.MessageBroker;
+import org.tickcode.broadcast.VMMessageBroker;
 import org.tickcode.example.swing.TextChangedBroadcast;
 
 
@@ -56,9 +56,14 @@ public class TextChangedBroadcastTest {
 	
 	@Test
 	public void test() {
-		Producer producer = new Producer();
-		ProducerAndConsumer producerAndConsumer = new ProducerAndConsumer();
-		Consumer consumer = new Consumer();
+		VMMessageBroker broker = new VMMessageBroker();
+		Producer producer = new Producer(); 
+		broker.add(producer);
+		ProducerAndConsumer producerAndConsumer = new ProducerAndConsumer(); 
+		broker.add(producerAndConsumer);
+		Consumer consumer = new Consumer(); 
+		broker.add(consumer);
+		
 
 		String expected = null;
 		Assert.assertEquals(expected, producerAndConsumer.messageReceived);
@@ -79,16 +84,17 @@ public class TextChangedBroadcastTest {
 	
 	@Test
 	public void testUsingProxy(){
-		MessageBroker.get().reset();
-		MessageBroker.get().setUsingAspectJ(false);
+		VMMessageBroker broker = new VMMessageBroker();
+		broker.clear();
+		broker.setUsingAspectJ(false);
 		try{
 			Producer producer = new Producer();
 			ProducerAndConsumer producerAndConsumer = new ProducerAndConsumer();
 			Consumer consumer = new Consumer();
 			
-			TextChangedBroadcast producerProxy = (TextChangedBroadcast) BroadcastProxy.newInstance(producer);
-			TextChangedBroadcast producerAndConsumerProxy = (TextChangedBroadcast) BroadcastProxy.newInstance(producerAndConsumer);
-			TextChangedBroadcast consumerProxy = (TextChangedBroadcast) BroadcastProxy.newInstance(consumer);
+			TextChangedBroadcast producerProxy = (TextChangedBroadcast) BroadcastProxy.newInstance(broker, producer);
+			TextChangedBroadcast producerAndConsumerProxy = (TextChangedBroadcast) BroadcastProxy.newInstance(broker, producerAndConsumer);
+			TextChangedBroadcast consumerProxy = (TextChangedBroadcast) BroadcastProxy.newInstance(broker, consumer);
 
 			String expected = null;
 			Assert.assertEquals(expected, producerAndConsumer.messageReceived);
@@ -107,7 +113,7 @@ public class TextChangedBroadcastTest {
 			Assert.assertEquals(expectedForConsumer, consumer.messageReceived);
 
 		}finally{
-			MessageBroker.get().setUsingAspectJ(true);
+			broker.setUsingAspectJ(true);
 		}
 	}
 	

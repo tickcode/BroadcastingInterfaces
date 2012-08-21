@@ -36,37 +36,37 @@ public aspect BroadcastImpl {
 	static {
 		log = Logger.getLogger(org.tickcode.broadcast.Broadcast.class);
 		loggingOn = (log.getEffectiveLevel() != org.apache.log4j.Level.OFF);
-		MessageBroker.get().setUsingAspectJ(true);
+		AbstractMessageBroker.setUsingAspectJ(true);
 	}
 	
 
 	pointcut shouldLog() : !within(Logging) && if(loggingOn);
 
-	/**
-	 * When an instance of a Broadcast sub-interface is created, we will grab
-	 * the instance and add it to {@link MessageBroker}.
-	 */
-	pointcut createErrorHandler(ErrorHandler _this):
-		  execution (ErrorHandler+.new(..)) && this(_this) && if(MessageBroker.get().isUsingAspectJ());
-
-	after(ErrorHandler _this) returning: createErrorHandler(_this){
-		MessageBroker.get().register(_this);
-	}
-
-	/**
-	 * When an instance of a Broadcast sub-interface is created, we will grab
-	 * the instance and add it to {@link MessageBroker}.
-	 */
-	pointcut createBroadcast(Broadcast _this):
-		  execution (Broadcast+.new(..)) && this(_this) && if(MessageBroker.get().isUsingAspectJ());
-
-	after(Broadcast _this) returning: createBroadcast(_this){
-		MessageBroker.get().register(_this);
-	}
+//	/**
+//	 * When an instance of a Broadcast sub-interface is created, we will grab
+//	 * the instance and add it to {@link AbstractMessageBroker}.
+//	 */
+//	pointcut createErrorHandler(ErrorHandler _this):
+//		  execution (ErrorHandler+.new(..)) && this(_this) && if(AbstractMessageBroker.get().isUsingAspectJ());
+//
+//	after(ErrorHandler _this) returning: createErrorHandler(_this){
+//		AbstractMessageBroker.get().add(_this);
+//	}
+//
+//	/**
+//	 * When an instance of a Broadcast sub-interface is created, we will grab
+//	 * the instance and add it to {@link AbstractMessageBroker}.
+//	 */
+//	pointcut createBroadcast(Broadcast _this):
+//		  execution (Broadcast+.new(..)) && this(_this) && if(AbstractMessageBroker.get().isUsingAspectJ());
+//
+//	after(Broadcast _this) returning: createBroadcast(_this){
+//		AbstractMessageBroker.get().add(_this);
+//	}
 
 	pointcut broadcastPointcutWithArguments(Broadcast _this): 
 		execution (@BroadcastProducer * *(*))
-	    && this(_this) && if(MessageBroker.get().isUsingAspectJ()) && if(!executingAdvice);
+	    && this(_this) && if(AbstractMessageBroker.isUsingAspectJ()) && if(!executingAdvice);
 
 	static volatile boolean executingAdvice = false;
 
@@ -74,32 +74,44 @@ public aspect BroadcastImpl {
 	 * Use this advice for methods with arguments
 	 */
 	after(Broadcast _this) returning: broadcastPointcutWithArguments(_this){
-		MessageBroker manager = MessageBroker.get();
+		MessageBroker broker = _this.getMessageBroker();
+		if(broker == null)
+			throw new NoMessageBrokerException("Did you forget to add " + _this.getClass().getName() + " to a message broker?");
 
-		executingAdvice = !manager.isAllowingBroadcastsToBroadcast();
+		executingAdvice = !broker.isAllowingBroadcastsToBroadcast();
 
 		String methodName = thisJoinPointStaticPart.getSignature().getName();
 		Object[] params = thisJoinPoint.getArgs();
 
-		manager.broadcast(_this, methodName, params);
+		broker.broadcast(_this, methodName, params);
 
 		executingAdvice = false;
 	}
 
 	pointcut broadcastPointcutWithNoArguments(Broadcast _this): 
 		execution (@BroadcastProducer * *())
-	    && this(_this)  && if(MessageBroker.get().isUsingAspectJ()) && if(!executingAdvice);
+	    && this(_this)  && if(AbstractMessageBroker.isUsingAspectJ()) && if(!executingAdvice);
 
 	after(Broadcast _this) returning: broadcastPointcutWithNoArguments(_this){
-		MessageBroker manager = MessageBroker.get();
+		MessageBroker broker = _this.getMessageBroker();
+		if(broker == null)
+			throw new NoMessageBrokerException("Did you forget to add " + _this.getClass().getName() + " to a message broker?");
 
-		executingAdvice = !manager.isAllowingBroadcastsToBroadcast();
+		executingAdvice = !broker.isAllowingBroadcastsToBroadcast();
 		
 		String methodName = thisJoinPointStaticPart.getSignature().getName();
 		Object[] params = thisJoinPoint.getArgs();
 
-		manager.broadcast(_this, methodName, params);
+		broker.broadcast(_this, methodName, params);
 		executingAdvice = false;
+	}
+	
+	private MessageBroker Broadcast.messageBroker;
+	public final MessageBroker Broadcast.getMessageBroker(){
+		return messageBroker;
+	}
+	public final void Broadcast.setMessageBroker(MessageBroker broker){
+		messageBroker = broker;
 	}
 
 }

@@ -22,7 +22,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.tickcode.broadcast.Broadcast;
 import org.tickcode.broadcast.BroadcastConsumer;
-import org.tickcode.broadcast.MessageBroker;
+import org.tickcode.broadcast.VMMessageBroker;
 import org.tickcode.broadcast.BroadcastProducer;
 import org.tickcode.broadcast.ErrorHandler;
 
@@ -113,10 +113,13 @@ public class SanityCheckTest {
 
 	@Test
 	public void testSanityCheck() {
+		VMMessageBroker broker = new VMMessageBroker();
 		MyFirstClass first = new MyFirstClass();
 		MySecondClass second = new MySecondClass();
+		broker.add(first);
+		broker.add(second);
 
-		Assert.assertTrue(MessageBroker.get().isUsingAspectJ());
+		Assert.assertTrue(broker.isUsingAspectJ());
 		first.sanityCheckMethod1();
 		Assert.assertEquals(1, first.countMethod1);
 		Assert.assertEquals(1, second.countMethod1);
@@ -160,16 +163,27 @@ public class SanityCheckTest {
 		Assert.assertEquals(first, second.payload);
 
 	}
+	
+	public void testWeForgotToUseAMessageBroker(){
+		try{
+			MyFirstClass first = new MyFirstClass();
+			first.sanityCheckMethod1();
+			Assert.fail("We should have gotten a NoMessageBrokerException");
+		}catch(NoMessageBrokerException ex){
+			// good
+		}
+	}
 
 	@Test
 	public void testSanityCheckUsingProxy() {
-		MessageBroker.get().reset();
-		MessageBroker.get().setUsingAspectJ(false);
+		VMMessageBroker broker = new VMMessageBroker();
+		broker.clear();
+		broker.setUsingAspectJ(false);
 		try{
 			MyFirstClass first = new MyFirstClass();
 			MySecondClass second = new MySecondClass();
-			ArbitraryMethods firstProxy = (ArbitraryMethods)BroadcastProxy.newInstance(first);
-			ArbitraryMethods secondProxy = (ArbitraryMethods)BroadcastProxy.newInstance(second);
+			ArbitraryMethods firstProxy = (ArbitraryMethods)BroadcastProxy.newInstance(broker, first);
+			ArbitraryMethods secondProxy = (ArbitraryMethods)BroadcastProxy.newInstance(broker, second);
 			
 			firstProxy.sanityCheckMethod1();
 			Assert.assertEquals(1, first.countMethod1);
@@ -213,7 +227,7 @@ public class SanityCheckTest {
 			Assert.assertEquals(first, first.payload);
 			Assert.assertEquals(first, second.payload);
 		}finally{
-			MessageBroker.get().setUsingAspectJ(true);
+			broker.setUsingAspectJ(true);
 		}
 	}
 

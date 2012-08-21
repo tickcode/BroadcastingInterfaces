@@ -22,7 +22,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.tickcode.broadcast.Broadcast;
 import org.tickcode.broadcast.BroadcastConsumer;
-import org.tickcode.broadcast.MessageBroker;
+import org.tickcode.broadcast.VMMessageBroker;
 import org.tickcode.broadcast.BroadcastProducer;
 import org.tickcode.broadcast.ErrorHandler;
 
@@ -43,9 +43,12 @@ public class NonVoidMethodsTest {
 
 	@Test
 	public void testWeTriedToMakeANonVoidMethod() {
+		VMMessageBroker broker = new VMMessageBroker();
 		try{
 			ThisClassAttemptedANonVoidBroadcastMethod _instance = new ThisClassAttemptedANonVoidBroadcastMethod();
+			broker.add(_instance);
 			_instance.myNonVoidMethod();
+			broker.add(_instance);
 			Assert.fail("We should be throwing an exception here because we tried to create a non-void broadcast method!");
 		}catch(NonVoidBroadcastMethodException ex){
 			// good
@@ -55,20 +58,21 @@ public class NonVoidMethodsTest {
 
 	@Test
 	public void testWeTriedToMakeANonVoidMethodUsingProxy() {
-		MessageBroker.get().reset();
-		MessageBroker.get().setUsingAspectJ(false);
+		VMMessageBroker broker = new VMMessageBroker();
+		broker.clear();
+		broker.setUsingAspectJ(false);
 		try{
 		
 			try{
 				ThisClassAttemptedANonVoidBroadcastMethod _instance = new ThisClassAttemptedANonVoidBroadcastMethod();
-				BroadcastProxy.newInstance(_instance);
+				BroadcastProxy.newInstance(broker, _instance);
 				_instance.myNonVoidMethod();
 				Assert.fail("We should be throwing an exception here because we tried to create a non-void broadcast method!");
 			}catch(NonVoidBroadcastMethodException ex){
 				// good
 			}
 		}finally{
-			MessageBroker.get().setUsingAspectJ(true);
+			broker.setUsingAspectJ(true);
 		}
 	}
 	

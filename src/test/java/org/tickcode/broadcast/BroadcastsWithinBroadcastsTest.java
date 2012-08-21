@@ -61,8 +61,12 @@ public class BroadcastsWithinBroadcastsTest {
 
 	@Test
 	public void testDefaultSettings() {
+		VMMessageBroker broker = new VMMessageBroker();
+
 		MyFirstClass first = new MyFirstClass("first");
 		MyFirstClass second = new MyFirstClass("second");
+		broker.add(first);
+		broker.add(second);
 
 		Assert.assertEquals(0, first.method1);
 		Assert.assertEquals(0, first.method2);
@@ -90,7 +94,7 @@ public class BroadcastsWithinBroadcastsTest {
 		int trailSize;
 		String trailString;
 		@Override
-		public void error(Broadcast broadcast, Throwable ex, BreadCrumbTrail trail) {
+		public void error(MessageBroker broker, Broadcast broadcast, Throwable ex, BreadCrumbTrail trail) {
 			this.trailString = trail.toString();
 			this.trailSize = trail.size();
 			throw new RuntimeException("Are we getting a stack overflow?", ex);
@@ -99,11 +103,14 @@ public class BroadcastsWithinBroadcastsTest {
 
 	@Test
 	public void testAllowBroadcastingWithinBroadcasting() {
-
-		MessageBroker.get().setAllowingBroadcastsToBroadcast(true);
+		VMMessageBroker broker = new VMMessageBroker();
+		broker.setAllowingBroadcastsToBroadcast(true);
 		MyErrorHandler handler = new MyErrorHandler();
+		broker.add(handler);
 		MyFirstClass first = new MyFirstClass("first");
 		MyFirstClass second = new MyFirstClass("second");
+		broker.add(first);
+		broker.add(second);
 
 		Assert.assertEquals(0, first.method1);
 		Assert.assertEquals(0, first.method2);
@@ -118,19 +125,14 @@ public class BroadcastsWithinBroadcastsTest {
 					ex.getMessage());
 			Assert.assertTrue(20 < handler.trailSize);
 			//System.out.println(handler.trail);
-		} finally {
-			MessageBroker.get().setAllowingBroadcastsToBroadcast(
-					false);
-			MessageBroker.get().unregister(
-					handler);
 		}
 
 	}
 
 	@Test
 	public void testAllowBroadcastingWithinBroadcastingUsingProxy() {
-
-		MessageBroker.get().setAllowingBroadcastsToBroadcast(true);
+		VMMessageBroker broker = new VMMessageBroker();
+		broker.setAllowingBroadcastsToBroadcast(true);
 		MyErrorHandler handler = new MyErrorHandler();
 		MyFirstClass first = new MyFirstClass("first");
 		MyFirstClass second = new MyFirstClass("second");
@@ -141,19 +143,19 @@ public class BroadcastsWithinBroadcastsTest {
 		Assert.assertEquals(0, second.method2);
 
 		try {
-			MessageBroker.get().reset();
-			MessageBroker.get().setUsingAspectJ(false);
-			MessageBroker.get().register(first);
-			MessageBroker.get().register(second);
-			MessageBroker.get().register(handler);
-			((InfiniteLoopInterface)BroadcastProxy.newInstance(first)).method1();
+			broker.clear();
+			broker.setUsingAspectJ(false);
+			broker.add(first);
+			broker.add(second);
+			broker.add(handler);
+			((InfiniteLoopInterface)BroadcastProxy.newInstance(broker, first)).method1();
 			// proxy does not support broadcasts within broadcasts!
 		} finally {
-			MessageBroker.get().setAllowingBroadcastsToBroadcast(
+			broker.setAllowingBroadcastsToBroadcast(
 					false);
-			MessageBroker.get().unregister(
+			broker.remove(
 					handler);
-			MessageBroker.get().setUsingAspectJ(true);
+			broker.setUsingAspectJ(true);
 		}
 
 	}

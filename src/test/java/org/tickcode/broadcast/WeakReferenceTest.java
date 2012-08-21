@@ -22,7 +22,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.tickcode.broadcast.Broadcast;
 import org.tickcode.broadcast.BroadcastConsumer;
-import org.tickcode.broadcast.MessageBroker;
+import org.tickcode.broadcast.VMMessageBroker;
 import org.tickcode.broadcast.BroadcastProducer;
 
 public class WeakReferenceTest {
@@ -51,8 +51,11 @@ public class WeakReferenceTest {
 
 	@Test
 	public void test() {
+		VMMessageBroker broker = new VMMessageBroker();
 		MyTestClass consumer = new MyTestClass();
+		broker.add(consumer);
 		MyTestClass2 producer = new MyTestClass2();
+		broker.add(producer);
 
 		Assert.assertEquals(0, consumer.count);
 		Assert.assertEquals(0, producer.count);
@@ -60,7 +63,7 @@ public class WeakReferenceTest {
 		Assert.assertEquals(1, consumer.count);
 		Assert.assertEquals(1, producer.count);
 
-		MessageBroker.get().setWeakReferencesToNull(consumer);
+		broker.setWeakReferencesToNull(consumer);
 		producer.whatAboutWeakReferences(); // broadcast
 		Assert.assertEquals(1, consumer.count); // nothing should change
 		Assert.assertEquals(2, producer.count); // of course the producer
@@ -71,14 +74,15 @@ public class WeakReferenceTest {
 	@Test
 	public void testUsngProxy() {
 		try {
-			MessageBroker.get().setUsingAspectJ(false);
+			VMMessageBroker broker = new VMMessageBroker();
+			broker.setUsingAspectJ(false);
 			MyTestClass consumer = new MyTestClass();
 			MyTestClass2 producer = new MyTestClass2();
 
 			WeakReferencesTestInterface consumerProxy = (WeakReferencesTestInterface) BroadcastProxy
-					.newInstance(consumer);
+					.newInstance(broker, consumer);
 			WeakReferencesTestInterface producerProxy = (WeakReferencesTestInterface) BroadcastProxy
-					.newInstance(producer);
+					.newInstance(broker, producer);
 
 			Assert.assertEquals(0, consumer.count);
 			Assert.assertEquals(0, producer.count);
@@ -86,14 +90,14 @@ public class WeakReferenceTest {
 			Assert.assertEquals(1, consumer.count);
 			Assert.assertEquals(1, producer.count);
 
-			MessageBroker.get().setWeakReferencesToNull(consumer);
+			broker.setWeakReferencesToNull(consumer);
 			producerProxy.whatAboutWeakReferences(); // broadcast
 			Assert.assertEquals(1, consumer.count); // nothing should change
 			Assert.assertEquals(2, producer.count); // of course the producer
 													// changes
 
 		} finally {
-			MessageBroker.get().setUsingAspectJ(true);
+			VMMessageBroker.setUsingAspectJ(true);
 		}
 	}
 

@@ -56,7 +56,8 @@ public class DuplicateMethodNameTest {
 	@Test
 	public void test() {
 		try {
-			new MyTestClass();
+			VMMessageBroker broker = new VMMessageBroker();
+			broker.add(new MyTestClass());
 			Assert.fail("We should have gotten an exception here!");
 		} catch (DuplicateMethodException err) {
 			// good
@@ -66,21 +67,21 @@ public class DuplicateMethodNameTest {
 	@Test
 	public void testUsingProxy() {
 		try {
-			MessageBroker.get().setUsingAspectJ(false);
-			BroadcastProxy.newInstance(new MyTestClass());
+			VMMessageBroker broker = new VMMessageBroker();
+			broker.setUsingAspectJ(false);
+			BroadcastProxy.newInstance(broker, new MyTestClass());
 			Assert.fail("We should have gotten an exception here!");
 		} catch (DuplicateMethodException err) {
 			// good
-		} finally {
-			MessageBroker.get().setUsingAspectJ(true);
 		}
 	}
 
 	@Test
 	public void testDuplicatesBetweenInterfaces() {
-		new TestFirstClass();
+		VMMessageBroker broker = new VMMessageBroker();
+		broker.add(new TestFirstClass());
 		try {
-			new TestSecondClass();
+			broker.add(new TestSecondClass());
 			Assert.fail("We should have gotten an exception here!");
 		} catch (DuplicateMethodException err) {
 			// good
@@ -89,15 +90,14 @@ public class DuplicateMethodNameTest {
 
 	@Test
 	public void testDuplicatesBetweenInterfacesUsingProxy() {
-		new TestFirstClass();
+		VMMessageBroker broker = new VMMessageBroker();
+		broker.add(new TestFirstClass());
 		try {
-			MessageBroker.get().setUsingAspectJ(false);
-			BroadcastProxy.newInstance(new TestSecondClass());
+			AbstractMessageBroker.setUsingAspectJ(false);
+			BroadcastProxy.newInstance(broker, new TestSecondClass());
 			Assert.fail("We should have gotten an exception here!");
 		} catch (DuplicateMethodException err) {
 			// good
-		} finally {
-			MessageBroker.get().setUsingAspectJ(true);
 		}
 
 	}

@@ -26,4 +26,6 @@ package org.tickcode.broadcast;
  * @author Eyon
  */
 public interface Broadcast {
+	public MessageBroker getMessageBroker();
+	public void setMessageBroker(MessageBroker broker);
 }

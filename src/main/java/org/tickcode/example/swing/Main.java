@@ -28,6 +28,7 @@ import javax.swing.JPanel;
 
 import org.tickcode.broadcast.BroadcastConsumer;
 import org.tickcode.broadcast.BroadcastProducer;
+import org.tickcode.broadcast.MessageBroker;
 
 
 
@@ -113,5 +114,6 @@ public class Main extends JFrame implements ShuttingDownBroadcast {
 	public void shuttingDown() {
 		this.setVisible(false);
 	}
+
 
 }

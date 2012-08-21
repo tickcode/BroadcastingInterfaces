@@ -18,6 +18,13 @@
  ******************************************************************************/
 package org.tickcode.example.swing;
 
+import javax.swing.JComponent;
+
+import org.tickcode.broadcast.AbstractMessageBroker;
+import org.tickcode.broadcast.Broadcast;
+import org.tickcode.broadcast.MessageBroker;
+import org.tickcode.broadcast.VMMessageBroker;
+
 
 
 
@@ -34,21 +41,25 @@ package org.tickcode.example.swing;
  * @author Eyon Land
  */
 public aspect DependencyInjection {
-	/**
-	 * When an instance of TextChangedNotice is created, we 
-	 * will grab the instance and add it to our HashSet of 
-	 * listeners.
-	 */
 	pointcut createMain(Main _this):
 		  execution (Main+.new(..)) && this(_this);
 	after(Main _this) returning: createMain(_this){
 		
+		MessageBroker broker = new VMMessageBroker();		
+		_this.setMessageBroker(broker);
 		MenuBar menuBar = new org.tickcode.example.swing.MenuBar();
-		
 		_this.setJMenuBar(menuBar);
-		_this.setLeft(new org.tickcode.example.swing.ProducerPanel());
-		_this.setMiddle(new org.tickcode.example.swing.ConsumeAndProducePanel());
-		_this.setRight(new org.tickcode.example.swing.ConsumerPanel());
+		broker.add(menuBar);
+		Broadcast panel = null;
+		panel = new org.tickcode.example.swing.ProducerPanel();
+		broker.add(panel);
+		_this.setLeft((JComponent)panel);
+		panel = new org.tickcode.example.swing.ConsumeAndProducePanel();
+		broker.add(panel);
+		_this.setMiddle((JComponent)panel);
+		panel = new org.tickcode.example.swing.ConsumerPanel();
+		broker.add(panel);
+		_this.setRight((JComponent)panel);
 		_this.initialize();
 		_this.pack();
 	}
