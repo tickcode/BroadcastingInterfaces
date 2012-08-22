@@ -42,28 +42,6 @@ public aspect BroadcastImpl {
 
 	pointcut shouldLog() : !within(Logging) && if(loggingOn);
 
-//	/**
-//	 * When an instance of a Broadcast sub-interface is created, we will grab
-//	 * the instance and add it to {@link AbstractMessageBroker}.
-//	 */
-//	pointcut createErrorHandler(ErrorHandler _this):
-//		  execution (ErrorHandler+.new(..)) && this(_this) && if(AbstractMessageBroker.get().isUsingAspectJ());
-//
-//	after(ErrorHandler _this) returning: createErrorHandler(_this){
-//		AbstractMessageBroker.get().add(_this);
-//	}
-//
-//	/**
-//	 * When an instance of a Broadcast sub-interface is created, we will grab
-//	 * the instance and add it to {@link AbstractMessageBroker}.
-//	 */
-//	pointcut createBroadcast(Broadcast _this):
-//		  execution (Broadcast+.new(..)) && this(_this) && if(AbstractMessageBroker.get().isUsingAspectJ());
-//
-//	after(Broadcast _this) returning: createBroadcast(_this){
-//		AbstractMessageBroker.get().add(_this);
-//	}
-
 	pointcut broadcastPointcutWithArguments(Broadcast _this): 
 		execution (@BroadcastProducer * *(*))
 	    && this(_this) && if(AbstractMessageBroker.isUsingAspectJ()) && if(!executingAdvice);
