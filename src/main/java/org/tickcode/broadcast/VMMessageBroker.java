@@ -22,6 +22,7 @@ import java.lang.ref.WeakReference;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -257,15 +258,17 @@ public class VMMessageBroker extends AbstractMessageBroker {
 	public void add(Broadcast consumer) {
 		consumer = BroadcastProxy.getImplementation(consumer);
 		consumer.setMessageBroker(this);
+		HashSet<String> broadcastConsumerMethods = new HashSet<String>();
 		HashMap<String, Class> methodsWithAnnotations = new HashMap<String, Class>();
 		for (Method method : consumer.getClass().getMethods()) {
 			if (method.isAnnotationPresent(BroadcastConsumer.class)) {
 				methodsWithAnnotations.put(method.getName(),
 						BroadcastConsumer.class);
+				broadcastConsumerMethods.add(method.getName());
 			}
 			if (method.isAnnotationPresent(BroadcastProducer.class)) {
 				methodsWithAnnotations.put(method.getName(),
-						BroadcastConsumer.class);
+						BroadcastProducer.class);
 			}
 		}
 
@@ -296,7 +299,8 @@ public class VMMessageBroker extends AbstractMessageBroker {
 					if (impl == null) {
 						impl = new BroadcastConsumersForAGivenInterface(
 								_interface, method);
-						impl.addBroadcastReceiver(consumer);
+						if(broadcastConsumerMethods.contains(method.getName()))
+							impl.addBroadcastReceiver(consumer);
 						interfacesByMethodName.put(method.getName(), impl);
 						methodsWithAnnotations.remove(method.getName());
 					} else if(
@@ -321,7 +325,8 @@ public class VMMessageBroker extends AbstractMessageBroker {
 										+ MethodUtil.getReadableMethodString(
 												_interface, method));
 					} else {
-						impl.addBroadcastReceiver(consumer);
+						if(broadcastConsumerMethods.contains(method.getName()))
+							impl.addBroadcastReceiver(consumer);
 						methodsWithAnnotations.remove(method.getName());
 					}
 				}

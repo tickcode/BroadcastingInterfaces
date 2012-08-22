@@ -33,9 +33,11 @@ import org.tickcode.example.swing.TextChangedBroadcast;
 public class TextChangedBroadcastTest {
 
 	protected class Producer implements TextChangedBroadcast{
+		protected String messageReceived;
 		@Override
 		@BroadcastProducer
 		public void textChanged(String text) {
+			this.messageReceived = text;
 		}
 	};
 	protected class ProducerAndConsumer implements TextChangedBroadcast{
@@ -77,9 +79,12 @@ public class TextChangedBroadcastTest {
 		
 		String expectedForConsumer = "Hello World from the ProducerAndConsumer";
 		String expectedForProducerAndConsumer = expectedForConsumer;
+		producer.messageReceived = null;
 		producerAndConsumer.textChanged(expectedForConsumer);
 		Assert.assertEquals(expectedForProducerAndConsumer, producerAndConsumer.messageReceived);
 		Assert.assertEquals(expectedForConsumer, consumer.messageReceived);
+		Assert.assertNull(producer.messageReceived);
+		
 	}
 	
 	@Test
