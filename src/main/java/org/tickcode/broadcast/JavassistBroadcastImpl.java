@@ -15,7 +15,7 @@
  *   
  *  Contact ask@tickcode.org if any conditions of this licensing 
  *  are not clear to you.
- ******************************************************************************/package org.tickcode.broadcast;
+ ******************************************************************************/
 package org.tickcode.broadcast;
 
 import java.io.IOException;
