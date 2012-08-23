@@ -1,0 +1,102 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.tickcode</groupId>
+    <artifactId>BroadcastingInterfaces</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+
+    <properties>
+        <org.aspectj-version>1.6.11</org.aspectj-version>
+	<maven.compiler.source>6</maven.compiler.source>
+   	<maven.compiler.target>6</maven.compiler.target>
+	<project.build.java.target>1.6</project.build.java.target>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.aspectj</groupId>
+            <artifactId>aspectjrt</artifactId>
+            <version>${org.aspectj-version}</version>
+        </dependency>
+		<dependency>
+			<groupId>javassist</groupId>
+			<artifactId>javassist</artifactId>
+			<version>3.12.1.GA</version>
+		</dependency>
+        <dependency>        
+	    <groupId>log4j</groupId>
+	    <artifactId>log4j</artifactId>
+	    <version>1.2.17</version>
+	</dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.7</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+				<version>2.5.1</version>
+		<configuration>
+          	<source>1.6</source>
+          	<target>1.6</target>
+        	</configuration>
+		<executions>
+          	<execution>
+            <!-- Modifying output directory of default compile because non-weaved classes must be stored
+                 in separate folder to not confuse ajc by reweaving already woven classes (which leads to
+                 to ajc error message like "bad weaverState.Kind: -115") -->
+            	<id>default-compile</id>
+            	<configuration>
+              	<compilerArguments>
+                	<d>${project.build.directory}/unwoven-classes</d>
+              	</compilerArguments>
+            	</configuration>
+          	</execution>
+        	</executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>install</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>sources</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>aspectj-maven-plugin</artifactId>
+                <version>1.4</version>
+		<configuration>
+	   	<weaveDirectories>
+            	<weaveDirectory>${project.build.directory}/unwoven-classes</weaveDirectory>
+          	</weaveDirectories>
+            	<ajdtBuildDefFile>build-1-5.ajproperties</ajdtBuildDefFile>
+		<source>1.6</source>
+		<target>1.6</target>
+        	</configuration>
+		<executions>
+          		<execution>
+<!-- Compile and weave aspects after all classes compiled by javac -->
+            <phase>process-classes</phase>
+            		<goals>
+              		<goal>compile</goal>       <!-- use this goal to weave all your main classes -->
+              		<goal>test-compile</goal>  <!-- use this goal to weave all your test classes -->
+            		</goals>
+          		</execution>
+		</executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

@@ -1,0 +1,25 @@
+Download eclipse from http://eclipse.org
+Figure out where you want your eclipse workspace to be.  
+Grab a copy of maven from http://maven.apache.org/download.html
+On the command line go to the directory where you want your
+workspace to be and execute: mvn -Declipse.workspace="your Eclipse Workspace" eclipse:configure-workspace
+this will setup your M2_REPO variables
+
+Use github to clone the project onto your computer from https://github.com/tickcode/BroadcastingInterfaces
+and pick a location other than your workspace
+Under the BroadcastingInterfaces github clone directory
+execute: mvn clean
+execute: mvn -DdownloadSources=true aspectj:compile aspectJ:compile-test
+Note: for mor info about the aspectj-maven-plugin see http://mojo.codehaus.org/aspectj-maven-plugin/index.html
+
+Launch eclipse...
+Goto Help, Eclipse Marketplace
+Within the "Find" text box search for "ajdt"
+Select the Install button for "AspectJ Development Tools (Juno)"
+Click "Next >" and follow the prompts to install the AJDT
+You will then be prompted to restart eclipse.
+Within eclipse import an existing project from: 
+		File, General, Import Existing Projects into Workspace
+		select the "BroadcastingInterfaces" from the directory where you cloned from github
+
+To run the unit tests within eclipse smply click right click on the project, select "Run As", "JUnit Test"

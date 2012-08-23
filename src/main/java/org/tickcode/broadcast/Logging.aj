@@ -53,7 +53,7 @@ public aspect Logging {
 	pointcut publicReturnMethods(Broadcast _this) :
 		shouldLog() 
 		    && 
-		  	execution(public * com.tickcode.broadcast.Broadcast+.*(..))		  	
+		  	execution(public * org.tickcode.broadcast.Broadcast+.*(..))		  	
 		  	&& 
 		  	this(_this);
 	before(Broadcast _this) : publicReturnMethods(_this) {

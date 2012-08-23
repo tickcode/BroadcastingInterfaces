@@ -8,6 +8,11 @@ import javassist.CtClass;
 import javassist.CtMethod;
 import javassist.NotFoundException;
 
+/**
+ * Still a work in progress....
+ * @author eyon
+ *
+ */
 public class JavassistBroadcastImpl {
 	public void enhance(ClassPool classPool, String className){
 		try{
