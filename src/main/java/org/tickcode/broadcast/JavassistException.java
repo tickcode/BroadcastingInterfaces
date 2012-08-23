@@ -17,6 +17,11 @@
  *  are not clear to you.
  ******************************************************************************/package org.tickcode.broadcast;
 
+/** This is a work in progress 
+ */
+ * @author eyon
+ *
+ */
 public class JavassistException extends RuntimeException{
 	public JavassistException(Exception ex){
 		super(ex);
