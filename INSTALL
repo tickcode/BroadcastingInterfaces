@@ -22,4 +22,4 @@ Within eclipse import an existing project from:
 		File, General, Import Existing Projects into Workspace
 		select the "BroadcastingInterfaces" from the directory where you cloned from github
 
-To run the unit tests within eclipse smply click right click on the project, select "Run As", "JUnit Test"
+To run the unit tests within eclipse simply click right click on the project, select "Run As", "JUnit Test"
