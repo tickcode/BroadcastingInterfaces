@@ -8,8 +8,8 @@ this will setup your M2_REPO variables
 Use github to clone the project onto your computer from https://github.com/tickcode/BroadcastingInterfaces
 and pick a location other than your workspace
 Under the BroadcastingInterfaces github clone directory
-execute: mvn clean
-execute: mvn -DdownloadSources=true aspectj:compile aspectj:test-compile
+execute: mvn clean eclipse:clean
+execute: mvn -DdownloadSources=true aspectj:compile aspectj:test-compile eclipse:eclipse
 Note: for mor info about the aspectj-maven-plugin see http://mojo.codehaus.org/aspectj-maven-plugin/index.html
 
 Launch eclipse...
@@ -21,5 +21,6 @@ You will then be prompted to restart eclipse.
 Within eclipse import an existing project from: 
 		File, General, Import Existing Projects into Workspace
 		select the "BroadcastingInterfaces" from the directory where you cloned from github
+Make sure you do a Project, Clean... and get yourself a clean build.
 
 To run the unit tests within eclipse simply click right click on the project, select "Run As", "JUnit Test"
