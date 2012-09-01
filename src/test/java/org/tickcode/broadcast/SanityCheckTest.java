@@ -113,11 +113,13 @@ public class SanityCheckTest {
 
 	@Test
 	public void testSanityCheck() {
+		VMMessageBroker.setSettingVMMessageBrokerForAll(true);
 		VMMessageBroker broker = new VMMessageBroker();
 		MyFirstClass first = new MyFirstClass();
 		MySecondClass second = new MySecondClass();
-		broker.add(first);
-		broker.add(second);
+// this is not necessary because we have VMMessageBroker.setSettingVMMessageBrokerForAll(true);
+//		broker.add(first);
+//		broker.add(second);
 
 		Assert.assertTrue(broker.isUsingAspectJ());
 		first.sanityCheckMethod1();
@@ -161,6 +163,9 @@ public class SanityCheckTest {
 		Assert.assertEquals("my message", second.message);
 		Assert.assertEquals(first, first.payload);
 		Assert.assertEquals(first, second.payload);
+		
+		VMMessageBroker.setSettingVMMessageBrokerForAll(false);
+
 
 	}
 	

@@ -41,7 +41,8 @@ import org.tickcode.trace.MethodUtil;
 public class VMMessageBroker extends AbstractMessageBroker {
 
 	private static Logger logger;
-	public static boolean loggingOn;
+	private static boolean loggingOn;
+	private static boolean settingVMMessageBrokerForAll;
 
 	static {
 		logger = Logger.getLogger(org.tickcode.broadcast.VMMessageBroker.class);
@@ -396,6 +397,15 @@ public class VMMessageBroker extends AbstractMessageBroker {
 				errorHandlers.remove(h);
 		}
 		return false;
+	}
+
+	public static boolean isSettingVMMessageBrokerForAll() {
+		return settingVMMessageBrokerForAll;
+	}
+
+	public static void setSettingVMMessageBrokerForAll(
+			boolean settingVMMessageBrokerForAll) {
+		VMMessageBroker.settingVMMessageBrokerForAll = settingVMMessageBrokerForAll;
 	}
 
 }
