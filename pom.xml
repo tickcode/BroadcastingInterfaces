@@ -8,9 +8,9 @@
 
     <properties>
         <org.aspectj-version>1.6.11</org.aspectj-version>
-	<maven.compiler.source>6</maven.compiler.source>
-   	<maven.compiler.target>6</maven.compiler.target>
-	<project.build.java.target>1.6</project.build.java.target>
+		<maven.compiler.source>6</maven.compiler.source>
+   		<maven.compiler.target>6</maven.compiler.target>
+		<project.build.java.target>1.6</project.build.java.target>
     </properties>
 
     <dependencies>
@@ -19,10 +19,20 @@
             <artifactId>aspectjrt</artifactId>
             <version>${org.aspectj-version}</version>
         </dependency>
+        <dependency>
+			<groupId>org.aspectj</groupId>
+			<artifactId>aspectjweaver</artifactId>
+			<version>${org.aspectj-version}</version>
+		</dependency>
 		<dependency>
 			<groupId>javassist</groupId>
 			<artifactId>javassist</artifactId>
 			<version>3.12.1.GA</version>
+		</dependency>
+		<dependency>
+			<groupId>redis.clients</groupId>
+			<artifactId>jedis</artifactId>
+			<version>2.1.0</version>
 		</dependency>
         <dependency>        
 	    <groupId>log4j</groupId>
@@ -39,6 +49,13 @@
 
     <build>
         <plugins>
+            <plugin>
+				 <groupId>org.apache.maven.plugins</groupId>
+				 <artifactId>maven-eclipse-plugin</artifactId>
+				 <configuration>
+				     <ajdtVersion>none</ajdtVersion>
+				 </configuration>
+			</plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -82,7 +99,7 @@
 	   	<weaveDirectories>
             	<weaveDirectory>${project.build.directory}/unwoven-classes</weaveDirectory>
           	</weaveDirectories>
-            	<ajdtBuildDefFile>build-1-5.ajproperties</ajdtBuildDefFile>
+            	<ajdtBuildDefFile>build-1-6.ajproperties</ajdtBuildDefFile>
 		<source>1.6</source>
 		<target>1.6</target>
         	</configuration>
