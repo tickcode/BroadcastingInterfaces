@@ -2,7 +2,7 @@ package org.tickcode.broadcast;
 
 import java.lang.reflect.Method;
 
-public class BroadcastProxy implements java.lang.reflect.InvocationHandler {
+public class BroadcastProxy implements java.lang.reflect.InvocationHandler, GetProxyImplementation {
 
 	private Broadcast implementation;
 	private MessageBroker messageBroker;
@@ -20,17 +20,18 @@ public class BroadcastProxy implements java.lang.reflect.InvocationHandler {
 		this.messageBroker = broker;
 	}
 	
-	public static Broadcast getImplementation(Broadcast proxy){
-		if(proxy instanceof java.lang.reflect.Proxy){
-			return ((BroadcastProxy)((java.lang.reflect.Proxy)proxy).getInvocationHandler(proxy)).getImp();
-		}
-		else
-			return proxy;
-	}
+//	public static Broadcast getImplementation(Broadcast proxy){
+//		if(proxy instanceof java.lang.reflect.Proxy){
+//			return ((BroadcastProxy)((java.lang.reflect.Proxy)proxy).getInvocationHandler(proxy)).getImp();
+//		}
+//		else
+//			return proxy;
+//	}
 	
-	private Broadcast getImp(){
+	public Broadcast getBroadcastImplementation(){
 		return implementation;
 	}
+	
 	public static MessageBroker getMessageBroker(Broadcast proxy){
 		return ((BroadcastProxy)((java.lang.reflect.Proxy)proxy).getInvocationHandler(proxy)).getBroker();
 	}
@@ -43,7 +44,7 @@ public class BroadcastProxy implements java.lang.reflect.InvocationHandler {
 			throws Throwable {
 		Object result;
 		result = m.invoke(implementation, args);
-		getMessageBroker((Broadcast)proxy).broadcast(implementation, m.getName(), args);
+		messageBroker.broadcast(implementation, m.getName(), args);
 		return result;
 	}
 

@@ -94,9 +94,6 @@ public class RemovingConsumersTest {
 			DoSomethingInterface firstProxy = (DoSomethingInterface)BroadcastProxy.newInstance(broker, first);
 			DoSomethingInterface secondProxy = (DoSomethingInterface)BroadcastProxy.newInstance(broker, second);
 			
-			// these four methods are unnecessary but should not hurt anything
-			broker.add(first);
-			broker.add(second);
 			broker.add(firstProxy);
 			broker.add(secondProxy);
 			

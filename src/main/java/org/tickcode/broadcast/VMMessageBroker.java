@@ -19,6 +19,7 @@
 package org.tickcode.broadcast;
 
 import java.lang.ref.WeakReference;
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -53,8 +54,8 @@ public class VMMessageBroker extends AbstractMessageBroker {
 	}
 
 	private boolean allowingBroadcastsToBroadcast = false;
-	ConcurrentHashMap<String, BroadcastConsumersForAGivenInterface> interfacesByMethodName = new ConcurrentHashMap<String, BroadcastConsumersForAGivenInterface>();
-	ConcurrentLinkedQueue<WeakReference<ErrorHandler>> errorHandlers = new ConcurrentLinkedQueue<WeakReference<ErrorHandler>>();
+	protected ConcurrentHashMap<String, BroadcastConsumersForAGivenInterface> interfacesByMethodName = new ConcurrentHashMap<String, BroadcastConsumersForAGivenInterface>();
+	protected ConcurrentLinkedQueue<WeakReference<ErrorHandler>> errorHandlers = new ConcurrentLinkedQueue<WeakReference<ErrorHandler>>();
 
 	/* (non-Javadoc)
 	 * @see org.tickcode.broadcast.MessageBroker#isAllowingBroadcastsToBroadcast()
@@ -82,7 +83,7 @@ public class VMMessageBroker extends AbstractMessageBroker {
 			broadcastInterface = _interface;
 			this.method = method;
 		}
-
+		
 		public void addBroadcastReceiver(Broadcast consumer) {
 			if (!weHave(consumer)) {
 				consumers.add(new WeakReference<Broadcast>(consumer));
@@ -161,7 +162,7 @@ public class VMMessageBroker extends AbstractMessageBroker {
 				Broadcast consumer = ref.get();
 				if (consumer != null) {
 					try {
-						if (BroadcastProxy.getImplementation(consumer) != BroadcastProxy.getImplementation(producer)) {
+						if (getBroadcastImplementation(consumer) != getBroadcastImplementation(producer)) {
 							if (loggingOn) {
 								logger.debug("We are sending a broadcast to "
 										+ consumer.getClass().getName()
@@ -244,7 +245,7 @@ public class VMMessageBroker extends AbstractMessageBroker {
 	 */
 	@Override
 	public void remove(Broadcast consumer) {
-		consumer = BroadcastProxy.getImplementation(consumer);
+		consumer = getBroadcastImplementation(consumer);
 		for (BroadcastConsumersForAGivenInterface imp : interfacesByMethodName
 				.values()) {
 			imp.remove(consumer);
@@ -257,7 +258,7 @@ public class VMMessageBroker extends AbstractMessageBroker {
 	 */
 	@Override
 	public void add(Broadcast consumer) {
-		consumer = BroadcastProxy.getImplementation(consumer);
+		consumer = getBroadcastImplementation(consumer);
 		consumer.setMessageBroker(this);
 		HashSet<String> broadcastConsumerMethods = new HashSet<String>();
 		HashMap<String, Class> methodsWithAnnotations = new HashMap<String, Class>();
@@ -407,5 +408,16 @@ public class VMMessageBroker extends AbstractMessageBroker {
 			boolean settingVMMessageBrokerForAll) {
 		VMMessageBroker.settingVMMessageBrokerForAll = settingVMMessageBrokerForAll;
 	}
+	
+	public static Broadcast getBroadcastImplementation(Broadcast broadcast){
+		if(broadcast instanceof java.lang.reflect.Proxy){
+			InvocationHandler handler = ((java.lang.reflect.Proxy)broadcast).getInvocationHandler(broadcast);
+			if(handler instanceof GetProxyImplementation){
+				return ((GetProxyImplementation)handler).getBroadcastImplementation();
+			}
+		}
+		return broadcast;
+	}
+
 
 }
