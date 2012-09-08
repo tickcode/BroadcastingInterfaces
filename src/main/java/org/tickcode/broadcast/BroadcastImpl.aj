@@ -51,45 +51,22 @@ public aspect BroadcastImpl {
 	pointcut shouldLog() : !within(Logging) && if(loggingOn);
 
 	pointcut broadcastPointcutWithArguments(Broadcast _this): 
-		execution (@BroadcastProducer * *(*))
-	    && this(_this) && if(AbstractMessageBroker.isUsingAspectJ()) && if(!executingAdvice);
-
-	static volatile boolean executingAdvice = false;
+		execution(@BroadcastProducer public * org.tickcode.broadcast.Broadcast+.*(..))		  	
+	    && this(_this) && if(AbstractMessageBroker.isUsingAspectJ());
 
 	/**
-	 * Use this advice for methods with arguments
+	 * Use this advice for methods with @BroadcastProducer annotations
 	 */
 	after(Broadcast _this) returning: broadcastPointcutWithArguments(_this){
 		MessageBroker broker = _this.getMessageBroker();
 		if(broker == null)
 			throw new NoMessageBrokerException("Did you forget to add " + _this.getClass().getName() + " to a message broker?");
 
-		executingAdvice = !broker.isAllowingBroadcastsToBroadcast();
-
 		String methodName = thisJoinPointStaticPart.getSignature().getName();
 		Object[] params = thisJoinPoint.getArgs();
 
 		broker.broadcast(_this, methodName, params);
 
-		executingAdvice = false;
-	}
-
-	pointcut broadcastPointcutWithNoArguments(Broadcast _this): 
-		execution (@BroadcastProducer * *())
-	    && this(_this)  && if(AbstractMessageBroker.isUsingAspectJ()) && if(!executingAdvice);
-
-	after(Broadcast _this) returning: broadcastPointcutWithNoArguments(_this){
-		MessageBroker broker = _this.getMessageBroker();
-		if(broker == null)
-			throw new NoMessageBrokerException("Did you forget to add " + _this.getClass().getName() + " to a message broker?");
-
-		executingAdvice = !broker.isAllowingBroadcastsToBroadcast();
-		
-		String methodName = thisJoinPointStaticPart.getSignature().getName();
-		Object[] params = thisJoinPoint.getArgs();
-
-		broker.broadcast(_this, methodName, params);
-		executingAdvice = false;
 	}
 	
 	private MessageBroker Broadcast.messageBroker;

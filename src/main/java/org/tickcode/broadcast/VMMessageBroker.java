@@ -61,30 +61,17 @@ public class VMMessageBroker extends AbstractMessageBroker {
 	public VMMessageBroker() {
 	}
 
-	private boolean allowingBroadcastsToBroadcast = false;
+	protected ThreadLocal<HashSet<String>> methodsOnTheThread = new ThreadLocal<HashSet<String>>(){
+		protected java.util.HashSet<String> initialValue() {
+			return new HashSet<String>();
+		};
+	};
 	protected ConcurrentHashMap<String, BroadcastConsumersForAGivenInterface> interfacesByMethodName = new ConcurrentHashMap<String, BroadcastConsumersForAGivenInterface>();
 	protected ConcurrentLinkedQueue<WeakReference<ErrorHandler>> errorHandlers = new ConcurrentLinkedQueue<WeakReference<ErrorHandler>>();
-
-	/* (non-Javadoc)
-	 * @see org.tickcode.broadcast.MessageBroker#isAllowingBroadcastsToBroadcast()
-	 */
-	@Override
-	public boolean isAllowingBroadcastsToBroadcast() {
-		return allowingBroadcastsToBroadcast;
-	}
-
-	/* (non-Javadoc)
-	 * @see org.tickcode.broadcast.MessageBroker#setAllowingBroadcastsToBroadcast(boolean)
-	 */
-	@Override
-	public void setAllowingBroadcastsToBroadcast(boolean allowingInfiniteLoops) {
-		this.allowingBroadcastsToBroadcast = allowingInfiniteLoops;
-	}
 
 	protected class BroadcastConsumersForAGivenInterface {
 		Class broadcastInterface;
 		Method method;
-
 		CopyOnWriteArrayList<WeakReference<Broadcast>> consumers = new CopyOnWriteArrayList<WeakReference<Broadcast>>();
 
 		BroadcastConsumersForAGivenInterface(Class _interface, Method method) {
@@ -241,11 +228,24 @@ public class VMMessageBroker extends AbstractMessageBroker {
 	 */
 	@Override
 	public void broadcast(Broadcast producer, String methodName, Object[] params) {
-		if (loggingOn) {
-			logger.debug(methodName + "(" + MethodUtil.getArguments(params)
-					+ ")");
+		HashSet<String> methodsOnTheCurrentThreadStack = methodsOnTheThread.get();
+		if(!methodsOnTheCurrentThreadStack.contains(methodName)){
+			if (loggingOn) {
+				logger.debug(methodName + "(" + MethodUtil.getArguments(params)
+						+ ")");
+			}
+			methodsOnTheCurrentThreadStack.add(methodName);
+			beginBroadcasting(producer, methodName, params);
+			interfacesByMethodName.get(methodName).broadcast(producer, params);	
+			finishedBroadcasting(producer, methodName,params);
+			methodsOnTheCurrentThreadStack.remove(methodName);
 		}
-		interfacesByMethodName.get(methodName).broadcast(producer, params);
+	}
+	protected void beginBroadcasting(Broadcast producer, String methodName, Object[] params) {
+		// available for subclasses
+	}
+	protected void finishedBroadcasting(Broadcast producer, String methodName, Object[] params) {
+		// available for subclasses
 	}
 
 	/* (non-Javadoc)

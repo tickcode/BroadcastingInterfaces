@@ -30,6 +30,7 @@ public class Parameters {
 
 	String channel;
 	Object[] arguments;
+	String thumbprint;
 	
 	public Parameters(){
 	}
@@ -48,5 +49,13 @@ public class Parameters {
 
 	public void setArguments(Object[] arguments) {
 		this.arguments = arguments;
+	}
+
+	public String getThumbprint() {
+		return thumbprint;
+	}
+
+	public void setThumbprint(String thumbprint) {
+		this.thumbprint = thumbprint;
 	}
 }

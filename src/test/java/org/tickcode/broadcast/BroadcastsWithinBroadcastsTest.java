@@ -67,37 +67,6 @@ public class BroadcastsWithinBroadcastsTest {
 		}
 	}
 
-	@Test
-	public void testDefaultSettings() {
-		VMMessageBroker broker = new VMMessageBroker();
-
-		MyFirstClass first = new MyFirstClass("first");
-		MyFirstClass second = new MyFirstClass("second");
-		broker.add(first);
-		broker.add(second);
-
-		Assert.assertEquals(0, first.method1);
-		Assert.assertEquals(0, first.method2);
-		Assert.assertEquals(0, second.method1);
-		Assert.assertEquals(0, second.method2);
-		first.method1();
-		// method1 gets invoked and then method2 on the first instance
-		// then method2 gets broadcasted on the second instance because it has
-		// the annotation @BroadcastConsumer
-		// and because the advice is after (meaning at the top of the stack)
-		// then the method1 gets broadcasted on the second instance because it
-		// has the annotation @BroadcastConsumer
-		// finally method2 on the second instance get's invoked within method1
-		// but it is within the broadcasting
-		// so we stop here
-
-		Assert.assertEquals(1, first.method1);
-		Assert.assertEquals(1, first.method2);
-		Assert.assertEquals(1, second.method1);
-		Assert.assertEquals(2, second.method2);
-
-	}
-
 	protected class MyErrorHandler implements ErrorHandler {
 		int trailSize;
 		String trailString;
@@ -112,7 +81,6 @@ public class BroadcastsWithinBroadcastsTest {
 	@Test
 	public void testAllowBroadcastingWithinBroadcasting() {
 		VMMessageBroker broker = new VMMessageBroker();
-		broker.setAllowingBroadcastsToBroadcast(true);
 		MyErrorHandler handler = new MyErrorHandler();
 		broker.add(handler);
 		MyFirstClass first = new MyFirstClass("first");
@@ -127,7 +95,21 @@ public class BroadcastsWithinBroadcastsTest {
 
 		try {
 			first.method1();
-			Assert.fail("We should have an exception here!");
+			/**
+			 * first.method1()  first.method1 == 1
+			 * 		first.method2()  first.method2 == 1
+			 *      second.method2() (from broadcast)  second.method2 == 1
+			 * second.method1()  (from broadcast)  second.method1 == 1
+			 * 		second.method2() second.method2 == 2
+			 * 		first.method2()  (from broadcast) first.method2 == 2
+			 */
+			
+
+			Assert.assertEquals(1, first.method1);
+			Assert.assertEquals(2, first.method2);
+			Assert.assertEquals(1, second.method1);
+			Assert.assertEquals(2, second.method2);
+			
 		} catch (RuntimeException ex) {
 			Assert.assertEquals("Are we getting a stack overflow?",
 					ex.getMessage());
@@ -140,7 +122,6 @@ public class BroadcastsWithinBroadcastsTest {
 	@Test
 	public void testAllowBroadcastingWithinBroadcastingUsingProxy() {
 		VMMessageBroker broker = new VMMessageBroker();
-		broker.setAllowingBroadcastsToBroadcast(true);
 		MyErrorHandler handler = new MyErrorHandler();
 		MyFirstClass first = new MyFirstClass("first");
 		MyFirstClass second = new MyFirstClass("second");
@@ -159,8 +140,6 @@ public class BroadcastsWithinBroadcastsTest {
 			((InfiniteLoopInterface)BroadcastProxy.newInstance(broker, first)).method1();
 			// proxy does not support broadcasts within broadcasts!
 		} finally {
-			broker.setAllowingBroadcastsToBroadcast(
-					false);
 			broker.remove(
 					handler);
 			broker.setUsingAspectJ(true);
