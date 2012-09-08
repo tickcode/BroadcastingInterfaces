@@ -31,7 +31,7 @@ public aspect SettingRedisMessageBrokerForAll {
 	
 	/** Watch for new instances of RedisMessageBroker **/
 	pointcut createRedisMessageBroker(RedisMessageBroker _this):
-		execution (RedisMessageBroker+.new(..)) && this(_this) && if(RedisMessageBroker.isSettingRedisMessageBrokerForAll());
+		execution (RedisMessageBroker.new(..)) && this(_this) && if(RedisMessageBroker.isSettingRedisMessageBrokerForAll());
 	
 	after(RedisMessageBroker _this) returning: createRedisMessageBroker(_this){
 		lastInstanceCreated = _this;

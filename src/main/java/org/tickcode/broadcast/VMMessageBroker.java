@@ -258,7 +258,6 @@ public class VMMessageBroker extends AbstractMessageBroker {
 				.values()) {
 			imp.remove(consumer);
 		}
-		consumer.setMessageBroker(null);
 	}
 
 	/* (non-Javadoc)
@@ -267,7 +266,6 @@ public class VMMessageBroker extends AbstractMessageBroker {
 	@Override
 	public void add(Broadcast consumer) {
 		consumer = getBroadcastImplementation(consumer);
-		consumer.setMessageBroker(this);
 		HashSet<String> broadcastConsumerMethods = new HashSet<String>();
 		HashMap<String, Class> methodsWithAnnotations = new HashMap<String, Class>();
 		for (Method method : consumer.getClass().getMethods()) {
@@ -416,16 +414,5 @@ public class VMMessageBroker extends AbstractMessageBroker {
 			boolean settingVMMessageBrokerForAll) {
 		VMMessageBroker.settingVMMessageBrokerForAll = settingVMMessageBrokerForAll;
 	}
-	
-	public static Broadcast getBroadcastImplementation(Broadcast broadcast){
-		if(broadcast instanceof java.lang.reflect.Proxy){
-			InvocationHandler handler = ((java.lang.reflect.Proxy)broadcast).getInvocationHandler(broadcast);
-			if(handler instanceof GetProxyImplementation){
-				return ((GetProxyImplementation)handler).getBroadcastImplementation();
-			}
-		}
-		return broadcast;
-	}
-
 
 }

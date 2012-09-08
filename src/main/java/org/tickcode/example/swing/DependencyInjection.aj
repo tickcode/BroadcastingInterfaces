@@ -53,7 +53,6 @@ public aspect DependencyInjection {
 	after(Main _this) returning: createMain(_this){
 		
 		MessageBroker broker = new VMMessageBroker();		
-		_this.setMessageBroker(broker);
 		MenuBar menuBar = new org.tickcode.example.swing.MenuBar();
 		_this.setJMenuBar(menuBar);
 		broker.add(menuBar);

@@ -58,7 +58,7 @@ public aspect BroadcastImpl {
 	 * Use this advice for methods with @BroadcastProducer annotations
 	 */
 	after(Broadcast _this) returning: broadcastPointcutWithArguments(_this){
-		MessageBroker broker = _this.getMessageBroker();
+		MessageBroker broker = _this.messageBroker;
 		if(broker == null)
 			throw new NoMessageBrokerException("Did you forget to add " + _this.getClass().getName() + " to a message broker?");
 
@@ -68,13 +68,23 @@ public aspect BroadcastImpl {
 		broker.broadcast(_this, methodName, params);
 
 	}
+
 	
+	pointcut messageBrokerAddPointcut(MessageBroker _this, Broadcast consumer): 
+		execution(public void org.tickcode.broadcast.MessageBroker+.add(Broadcast))		  	
+	    && this(_this) && args(consumer) && if(AbstractMessageBroker.isUsingAspectJ());
+	before(MessageBroker _this, Broadcast consumer) : messageBrokerAddPointcut(_this, consumer){
+		consumer = AbstractMessageBroker.getBroadcastImplementation(consumer);
+		consumer.messageBroker = _this;
+	}
+	
+	pointcut messageBrokerRemovePointcut(MessageBroker _this, Broadcast consumer): 
+		execution(public void org.tickcode.broadcast.MessageBroker+.remove(Broadcast))		  	
+	    && this(_this) && args(consumer) && if(AbstractMessageBroker.isUsingAspectJ());
+	after(MessageBroker _this, Broadcast consumer) returning : messageBrokerRemovePointcut(_this, consumer){
+		consumer.messageBroker = null;
+	}
+
 	private MessageBroker Broadcast.messageBroker;
-	public final MessageBroker Broadcast.getMessageBroker(){
-		return messageBroker;
-	}
-	public final void Broadcast.setMessageBroker(MessageBroker broker){
-		messageBroker = broker;
-	}
 
 }

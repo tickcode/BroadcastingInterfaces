@@ -26,6 +26,8 @@
  ******************************************************************************/
 package org.tickcode.broadcast;
 
+import java.lang.reflect.InvocationHandler;
+
 
 public abstract class AbstractMessageBroker implements MessageBroker{
 	private static boolean isUsingAspectJ = false;
@@ -36,5 +38,16 @@ public abstract class AbstractMessageBroker implements MessageBroker{
 	public static void setUsingAspectJ(boolean usingAspectJ) {
 		isUsingAspectJ = usingAspectJ;
 	}
+	
+	public static Broadcast getBroadcastImplementation(Broadcast broadcast){
+		if(broadcast instanceof java.lang.reflect.Proxy){
+			InvocationHandler handler = ((java.lang.reflect.Proxy)broadcast).getInvocationHandler(broadcast);
+			if(handler instanceof GetProxyImplementation){
+				return ((GetProxyImplementation)handler).getBroadcastImplementation();
+			}
+		}
+		return broadcast;
+	}
+
 
 }

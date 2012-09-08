@@ -57,7 +57,7 @@ public aspect Logging {
 	public static String lastMessageInBeforeAdvice;
 	public static String lastMessageInAfterAdvice;
 	
-	/** Here we look for the public methods used by the Notice interfaces */
+	/** Here we look for the public methods used by the Broadcast interfaces */
 	pointcut publicReturnMethods(Broadcast _this) :
 		shouldLog() 
 		    && 

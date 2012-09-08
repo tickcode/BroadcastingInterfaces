@@ -66,7 +66,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 	private Jedis subscriberJedis;
 	private String thumbprint = UUID.randomUUID().toString();
 	private volatile String methodBeingBroadcastedFromRedis;
-	
+
 	MyBinarySubscriber subscriber = new MyBinarySubscriber();
 
 	class MyBinarySubscriber extends BinaryJedisPubSub {
@@ -110,16 +110,17 @@ public class RedisMessageBroker extends VMMessageBroker {
 				String methodName = channel.substring(lastPeriod + 1);
 
 				producerProxy = getRedisBroadcastProxy(channel);
-				if (producerProxy == null) // we don't have any Broadcast consumers
+				if (producerProxy == null) // we don't have any Broadcast
+											// consumers
 					return;
 
 				ByteArrayInputStream bais = new ByteArrayInputStream(message);
 				ObjectMapper mapper = new ObjectMapper(new BsonFactory());
 				Parameters args = mapper.readValue(bais, Parameters.class);
-				if(!thumbprint.equals(args.getThumbprint())){
+				if (!thumbprint.equals(args.getThumbprint())) {
 					methodBeingBroadcastedFromRedis = methodName;
-					RedisMessageBroker.super.broadcast(producerProxy, methodName,
-						args.getArguments());
+					RedisMessageBroker.super.broadcast(producerProxy,
+							methodName, args.getArguments());
 					methodBeingBroadcastedFromRedis = null;
 				}
 
@@ -145,8 +146,9 @@ public class RedisMessageBroker extends VMMessageBroker {
 		this.jedisPool = jedisPool;
 	}
 
-	public void finishedBroadcasting(Broadcast producer, String methodName, Object[] params) {
-		if(!methodName.equals(methodBeingBroadcastedFromRedis))
+	public void finishedBroadcasting(Broadcast producer, String methodName,
+			Object[] params) {
+		if (!methodName.equals(methodBeingBroadcastedFromRedis))
 			broadcastToRedisServer(thumbprint, producer, methodName, params);
 	}
 
@@ -154,8 +156,8 @@ public class RedisMessageBroker extends VMMessageBroker {
 		return broadcastProxyByChannel.get(channel);
 	}
 
-	protected void broadcastToRedisServer(String thumbprint, Broadcast producer,
-			String methodName, Object[] params) {
+	protected void broadcastToRedisServer(String thumbprint,
+			Broadcast producer, String methodName, Object[] params) {
 		// broadcast to Redis
 		BroadcastConsumersForAGivenInterface b = interfacesByMethodName
 				.get(methodName);
@@ -335,11 +337,6 @@ public class RedisMessageBroker extends VMMessageBroker {
 		RedisMessageBroker broker = new RedisMessageBroker("LocalTest",
 				jedisPool);
 
-		if (RedisMessageBroker.isUsingAspectJ())
-			logger.info("We are using AspectJ");
-		else
-			logger.warn("Where is AspectJ?");
-
 		try {
 			broker.start();
 
@@ -347,7 +344,12 @@ public class RedisMessageBroker extends VMMessageBroker {
 			CountDownLatch latch = new CountDownLatch(totalPings);
 			WatchPingMessages consumer = new WatchPingMessages(latch);
 			broker.add(consumer);
-			
+
+			if (RedisMessageBroker.isUsingAspectJ())
+				logger.info("We are using AspectJ");
+			else
+				logger.warn("Where is AspectJ?");
+
 			String channel = broker.createChannelName(
 					PingRedisMessageBroker.class.getName(), "ping");
 			Broadcast broadcastProxy = broker.getRedisBroadcastProxy(channel);
@@ -356,7 +358,8 @@ public class RedisMessageBroker extends VMMessageBroker {
 			// Redis
 			String thumbprint = UUID.randomUUID().toString();
 			for (int i = 0; i < totalPings; i++)
-				broker.broadcastToRedisServer(thumbprint, broadcastProxy, "ping",
+				broker.broadcastToRedisServer(thumbprint, broadcastProxy,
+						"ping",
 						new Object[] { "Pong", System.currentTimeMillis() });
 			latch.await(5, TimeUnit.SECONDS);
 			if (latch.getCount() > 0) {
@@ -376,7 +379,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 			if (redisServerWorking)
 				checkInternalPing(broker);
 
-		}catch(Exception ex){			
+		} catch (Exception ex) {
 			ex.printStackTrace();
 		} finally {
 			broker.stop();
@@ -399,11 +402,9 @@ public class RedisMessageBroker extends VMMessageBroker {
 				logger.error("We are getting too many ping messages internally.");
 				throw new Exception(
 						"We are getting too many ping messages internally.");
-			}
-			else if(producer.getCount() == 1 && consumer.getCount() == 1){
+			} else if (producer.getCount() == 1 && consumer.getCount() == 1) {
 				logger.info("Internal broadcasting looks OK.");
-			}
-			else{
+			} else {
 				logger.error("There's something wrong with the internal broadcasting.");
 			}
 		}

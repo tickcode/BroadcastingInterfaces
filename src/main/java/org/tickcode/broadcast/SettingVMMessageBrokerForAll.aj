@@ -31,7 +31,7 @@ public aspect SettingVMMessageBrokerForAll {
 	
 	/** Watch for new instances of VMMessageBroker **/
 	pointcut createVMMessageBroker(VMMessageBroker _this):
-		execution (VMMessageBroker+.new(..)) && this(_this) && if(VMMessageBroker.isSettingVMMessageBrokerForAll());
+		execution (VMMessageBroker.new(..)) && this(_this) && if(VMMessageBroker.isSettingVMMessageBrokerForAll());
 	
 	after(VMMessageBroker _this) returning: createVMMessageBroker(_this){
 		lastInstanceCreated = _this;
