@@ -40,7 +40,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 import org.tickcode.trace.BreadCrumbTrail;
-import org.tickcode.trace.MethodUtil;
 
 import redis.clients.jedis.BinaryJedisPubSub;
 import redis.clients.jedis.Jedis;
@@ -56,6 +55,7 @@ import de.undercouch.bson4jackson.BsonGenerator;
 public class RedisMessageBroker extends VMMessageBroker {
 	private static Logger logger = Logger
 			.getLogger(org.tickcode.broadcast.RedisMessageBroker.class);
+	private static boolean settingRedisMessageBrokerForAll;
 
 	private String name;
 	private JedisPool jedisPool;
@@ -73,20 +73,14 @@ public class RedisMessageBroker extends VMMessageBroker {
 
 		@Override
 		public void onMessage(byte[] channel, byte[] message) {
-			// TODO Auto-generated method stub
-
 		}
 
 		@Override
 		public void onSubscribe(byte[] channel, int subscribedChannels) {
-			// TODO Auto-generated method stub
-
 		}
 
 		@Override
 		public void onUnsubscribe(byte[] channel, int subscribedChannels) {
-			// TODO Auto-generated method stub
-
 		}
 
 		@Override
@@ -96,8 +90,6 @@ public class RedisMessageBroker extends VMMessageBroker {
 
 		@Override
 		public void onPSubscribe(byte[] pattern, int subscribedChannels) {
-			// TODO Auto-generated method stub
-
 		}
 
 		public void onPMessage(byte[] pattern, byte[] _channel, byte[] message) {
@@ -280,6 +272,15 @@ public class RedisMessageBroker extends VMMessageBroker {
 		return readableMethodName;
 	}
 
+	public static boolean isSettingRedisMessageBrokerForAll() {
+		return settingRedisMessageBrokerForAll;
+	}
+
+	public static void setSettingRedisMessageBrokerForAll(
+			boolean settingRedisMessageBrokerForAll) {
+		RedisMessageBroker.settingRedisMessageBrokerForAll = settingRedisMessageBrokerForAll;
+	}
+
 	protected interface PingRedisMessageBroker extends Broadcast {
 		public void ping(String message, long timeSent);
 	}
@@ -321,11 +322,6 @@ public class RedisMessageBroker extends VMMessageBroker {
 
 	public static void main(String[] args) throws Exception {
 
-		if (RedisMessageBroker.isUsingAspectJ())
-			logger.info("We are using AspectJ");
-		else
-			logger.warn("Where is AspectJ?");
-
 		JedisPoolConfig poolConfig = new JedisPoolConfig();
 		poolConfig.maxActive = 10;
 		poolConfig.maxIdle = 5;
@@ -338,6 +334,11 @@ public class RedisMessageBroker extends VMMessageBroker {
 		JedisPool jedisPool = new JedisPool(poolConfig, "localhost", 6379, 0);
 		RedisMessageBroker broker = new RedisMessageBroker("LocalTest",
 				jedisPool);
+
+		if (RedisMessageBroker.isUsingAspectJ())
+			logger.info("We are using AspectJ");
+		else
+			logger.warn("Where is AspectJ?");
 
 		try {
 			broker.start();

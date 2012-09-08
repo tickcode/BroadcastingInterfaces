@@ -35,7 +35,6 @@ import org.tickcode.broadcast.BroadcastConsumer;
 import org.tickcode.broadcast.BroadcastProducer;
 import org.tickcode.broadcast.BroadcastProxy;
 import org.tickcode.broadcast.VMMessageBroker;
-import org.tickcode.example.swing.TextChangedBroadcast;
 
 
 public class TextChangedBroadcastTest {

@@ -35,6 +35,7 @@ public aspect SettingVMMessageBrokerForAll {
 	
 	after(VMMessageBroker _this) returning: createVMMessageBroker(_this){
 		lastInstanceCreated = _this;
+		AbstractMessageBroker.setUsingAspectJ(true);
 	}
 	
 	/** Watch for new instances of Broadcast and if the static variable is set, automatically provide the

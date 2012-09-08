@@ -28,7 +28,6 @@ package org.tickcode.example.swing;
 
 import javax.swing.JComponent;
 
-import org.tickcode.broadcast.AbstractMessageBroker;
 import org.tickcode.broadcast.Broadcast;
 import org.tickcode.broadcast.MessageBroker;
 import org.tickcode.broadcast.VMMessageBroker;

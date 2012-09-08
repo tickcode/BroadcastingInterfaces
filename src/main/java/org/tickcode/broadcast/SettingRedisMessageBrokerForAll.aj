@@ -26,57 +26,27 @@
  ******************************************************************************/
 package org.tickcode.broadcast;
 
-import org.junit.Assert;
-import org.junit.Test;
-
-public class NonVoidMethodsTest {
-
-	protected interface NonVoidMethod extends Broadcast {
-		public int myNonVoidMethod();
-	}
-
-	protected class ThisClassAttemptedANonVoidBroadcastMethod implements NonVoidMethod{
-		@BroadcastConsumer
-		@BroadcastProducer
-		public int myNonVoidMethod() {
-			return 0;
-		}
-	}
-
-
-	@Test
-	public void testWeTriedToMakeANonVoidMethod() {
-		VMMessageBroker broker = new VMMessageBroker();
-		try{
-			ThisClassAttemptedANonVoidBroadcastMethod _instance = new ThisClassAttemptedANonVoidBroadcastMethod();
-			broker.add(_instance);
-			_instance.myNonVoidMethod();
-			broker.add(_instance);
-			Assert.fail("We should be throwing an exception here because we tried to create a non-void broadcast method!");
-		}catch(NonVoidBroadcastMethodException ex){
-			// good
-			System.out.println(ex.getMessage());
-		}
-	}
-
-	@Test
-	public void testWeTriedToMakeANonVoidMethodUsingProxy() {
-		VMMessageBroker broker = new VMMessageBroker();
-		broker.clear();
-		broker.setUsingAspectJ(false);
-		try{
-		
-			try{
-				ThisClassAttemptedANonVoidBroadcastMethod _instance = new ThisClassAttemptedANonVoidBroadcastMethod();
-				BroadcastProxy.newInstance(broker, _instance);
-				_instance.myNonVoidMethod();
-				Assert.fail("We should be throwing an exception here because we tried to create a non-void broadcast method!");
-			}catch(NonVoidBroadcastMethodException ex){
-				// good
-			}
-		}finally{
-			broker.setUsingAspectJ(true);
-		}
+public aspect SettingRedisMessageBrokerForAll {
+	RedisMessageBroker lastInstanceCreated;
+	
+	/** Watch for new instances of RedisMessageBroker **/
+	pointcut createRedisMessageBroker(RedisMessageBroker _this):
+		execution (RedisMessageBroker+.new(..)) && this(_this) && if(RedisMessageBroker.isSettingRedisMessageBrokerForAll());
+	
+	after(RedisMessageBroker _this) returning: createRedisMessageBroker(_this){
+		lastInstanceCreated = _this;
+		AbstractMessageBroker.setUsingAspectJ(true);
 	}
 	
+	/** Watch for new instances of Broadcast and if the static variable is set, automatically provide the
+	 *  new instance of RedisMessageBroker to them.
+	 * @param _this
+	 */
+	pointcut createBroadcast(Broadcast _this):
+		execution (Broadcast+.new(..)) && this(_this) && if(RedisMessageBroker.isSettingRedisMessageBrokerForAll());
+	
+	after(Broadcast _this) returning: createBroadcast(_this){
+		if(lastInstanceCreated != null)
+			lastInstanceCreated.add(_this);
+	}
 }

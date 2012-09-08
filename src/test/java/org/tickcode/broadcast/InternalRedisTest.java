@@ -29,7 +29,10 @@ package org.tickcode.broadcast;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class SanityCheckTest {
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
+
+public class InternalRedisTest {
 
 	protected interface ArbitraryMethodsNoBroadcast{
 		public void sanityCheckMethod1();
@@ -113,14 +116,18 @@ public class SanityCheckTest {
 		}
 
 	}
+	
 
 	@Test
 	public void testSanityCheck() {
-		VMMessageBroker.setSettingVMMessageBrokerForAll(true);
-		VMMessageBroker broker = new VMMessageBroker();
+		RedisMessageBroker.setSettingRedisMessageBrokerForAll(true);
+		JedisPoolConfig poolConfig = new JedisPoolConfig();
+		JedisPool jedisPool = new JedisPool(poolConfig, "localhost", 6379, 0);
+		RedisMessageBroker broker = new RedisMessageBroker("LocalTest",
+				jedisPool);
 		MyFirstClass first = new MyFirstClass();
 		MySecondClass second = new MySecondClass();
-// this is not necessary because we have VMMessageBroker.setSettingVMMessageBrokerForAll(true);
+// this is not necessary because we have RedisMessageBroker.setSettingRedisMessageBrokerForAll(true);
 //		broker.add(first);
 //		broker.add(second);
 
@@ -167,7 +174,7 @@ public class SanityCheckTest {
 		Assert.assertEquals(first, first.payload);
 		Assert.assertEquals(first, second.payload);
 		
-		VMMessageBroker.setSettingVMMessageBrokerForAll(false);
+		RedisMessageBroker.setSettingRedisMessageBrokerForAll(false);
 
 
 	}
@@ -184,7 +191,10 @@ public class SanityCheckTest {
 
 	@Test
 	public void testSanityCheckUsingProxy() {
-		VMMessageBroker broker = new VMMessageBroker();
+		JedisPoolConfig poolConfig = new JedisPoolConfig();
+		JedisPool jedisPool = new JedisPool(poolConfig, "localhost", 6379, 0);
+		RedisMessageBroker broker = new RedisMessageBroker("LocalTest",
+				jedisPool);
 		broker.clear();
 		broker.setUsingAspectJ(false);
 		try{

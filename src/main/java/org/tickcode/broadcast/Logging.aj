@@ -66,14 +66,14 @@ public aspect Logging {
 		  	this(_this);
 	before(Broadcast _this) : publicReturnMethods(_this) {
 		lastMessageInBeforeAdvice = logParamValues(logger,_this, thisJoinPointStaticPart, thisJoinPoint.getArgs());
-		logger.info(lastMessageInBeforeAdvice);
+		logger.debug(lastMessageInBeforeAdvice);
     }
 	
 	after(Broadcast _this) returning(Object o): publicReturnMethods(_this){		
         // Object returnValue= thisJoinPoint.getArgs()[0];		
-		if (logger.isEnabledFor(Level.INFO)){
+		if (logger.isEnabledFor(Level.DEBUG)){
 			lastMessageInAfterAdvice = _this.getClass().getName() + "." + thisJoinPointStaticPart.getSignature().getName() + " returns"; 
-			logger.info(lastMessageInAfterAdvice);
+			logger.debug(lastMessageInAfterAdvice);
 		     //Note: If the notice methods had a return value you would want to append the 'o'
 		     //return value here.  
 		}
@@ -84,7 +84,7 @@ public aspect Logging {
 			Broadcast notice,
 			JoinPoint.StaticPart joinPointStaticPart,
 			Object[] paramValues) {
-		if (logger.isEnabledFor(Level.INFO)) { // you can even gain perfomance by using the (otherwise unsexy) fast if clause
+		if (logger.isEnabledFor(Level.DEBUG)) { // you can even gain perfomance by using the (otherwise unsexy) fast if clause
 			StringBuffer buffer = new StringBuffer();
 			buffer.append(notice.getClass().getName());
 			buffer.append(".");

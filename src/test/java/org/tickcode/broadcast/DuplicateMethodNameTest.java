@@ -28,9 +28,6 @@ package org.tickcode.broadcast;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.tickcode.broadcast.Broadcast;
-import org.tickcode.broadcast.BroadcastConsumer;
-import org.tickcode.broadcast.DuplicateMethodException;
 
 public class DuplicateMethodNameTest {
 

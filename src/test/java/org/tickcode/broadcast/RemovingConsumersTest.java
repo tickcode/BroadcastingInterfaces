@@ -28,7 +28,6 @@ package org.tickcode.broadcast;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.tickcode.broadcast.NoMessageBrokerException;
 
 public class RemovingConsumersTest {
 
