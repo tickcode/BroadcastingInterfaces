@@ -28,17 +28,39 @@ package org.tickcode.broadcast;
 
 import java.lang.reflect.InvocationHandler;
 
-
+/**
+ * Provides static methods used primarily by the aspect BroadcastImpl.aj
+ * @author Eyon Land
+ *
+ */
 public abstract class AbstractMessageBroker implements MessageBroker{
 	private static boolean isUsingAspectJ = false;
+	
+	/**
+	 * Used by aspects so they know whether they can be involved with building the desired mix-ins.
+	 * @return
+	 */
 	public static boolean isUsingAspectJ() {
 		return isUsingAspectJ;
 	}
 
+	/**
+	 * Can be called explicitly to avoid using aspects.  
+	 * Normally this would only be used in testing new ideas where AspectJ
+	 * is substituted for javassist or asm/cglib technology.
+	 * @param usingAspectJ
+	 */
 	public static void setUsingAspectJ(boolean usingAspectJ) {
 		isUsingAspectJ = usingAspectJ;
 	}
 	
+	/**
+	 * For a java.lang.reflect.Proxy, if the InvocationHandler happens to implement GetProxyImplementation
+	 * then this provides a way to get the underlying implementation.  This would be used for example
+	 * if the {@link BroadcastProxy} were being used to provide the broadcast behavior to the implementation.
+	 * @param broadcast
+	 * @return
+	 */
 	public static Broadcast getBroadcastImplementation(Broadcast broadcast){
 		if(broadcast instanceof java.lang.reflect.Proxy){
 			InvocationHandler handler = ((java.lang.reflect.Proxy)broadcast).getInvocationHandler(broadcast);

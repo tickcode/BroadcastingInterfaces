@@ -28,6 +28,12 @@ package org.tickcode.broadcast;
 
 import java.lang.reflect.Method;
 
+/**
+ * Unlike {@link BroadcastProxy}, RedisBroadcastProxy has no underlying implementation and
+ * is simply a placeholder for incomming messages from the Redis server.
+ * @author Eyon Land
+ *
+ */
 public class RedisBroadcastProxy implements java.lang.reflect.InvocationHandler {
 
 	private RedisMessageBroker messageBroker;
@@ -42,10 +48,6 @@ public class RedisBroadcastProxy implements java.lang.reflect.InvocationHandler 
 	private RedisBroadcastProxy(RedisMessageBroker broker) {
 		this.messageBroker = broker;
 	}
-	
-//	public static MessageBroker getMessageBroker(Broadcast proxy){
-//		return ((RedisBroadcastProxy)((java.lang.reflect.Proxy)proxy).getInvocationHandler(proxy)).getBroker();
-//	}
 	
 	private MessageBroker getBroker(){
 		return messageBroker;

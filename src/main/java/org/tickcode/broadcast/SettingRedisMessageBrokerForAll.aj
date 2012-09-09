@@ -35,7 +35,6 @@ public aspect SettingRedisMessageBrokerForAll {
 	
 	after(RedisMessageBroker _this) returning: createRedisMessageBroker(_this){
 		lastInstanceCreated = _this;
-		AbstractMessageBroker.setUsingAspectJ(true);
 	}
 	
 	/** Watch for new instances of Broadcast and if the static variable is set, automatically provide the
@@ -43,7 +42,7 @@ public aspect SettingRedisMessageBrokerForAll {
 	 * @param _this
 	 */
 	pointcut createBroadcast(Broadcast _this):
-		execution (Broadcast+.new(..)) && this(_this) && if(RedisMessageBroker.isSettingRedisMessageBrokerForAll());
+		execution (Broadcast+.new(..)) && this(_this) && if(RedisMessageBroker.isSettingRedisMessageBrokerForAll()) && if(AbstractMessageBroker.isUsingAspectJ());
 	
 	after(Broadcast _this) returning: createBroadcast(_this){
 		if(lastInstanceCreated != null)

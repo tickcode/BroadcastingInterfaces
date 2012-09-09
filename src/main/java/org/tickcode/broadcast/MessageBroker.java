@@ -26,6 +26,14 @@
  ******************************************************************************/
 package org.tickcode.broadcast;
 
+/**
+ * Provides the expected interface for any MessageBroker.  The interface will be
+ * most useful to classes that are trying to automatically provide the mix-in for
+ * {@link Broadcast} behavior.  For example {@link BroadcastProxy} and the 
+ * aspect BroadcastImpl.aj.
+ * @author Eyon Land
+ *
+ */
 public interface MessageBroker {
 
 	public abstract void broadcast(Broadcast producer, String methodName,
@@ -40,5 +48,7 @@ public interface MessageBroker {
 	public abstract void remove(ErrorHandler handler);
 
 	public abstract void clear();
+	
+	public abstract int size();
 
 }

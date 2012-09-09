@@ -83,6 +83,7 @@ public class RemovingConsumersTest {
 			Assert.fail("Should be getting NoMessageBrokerException");
 		}catch(NoMessageBrokerException ex){
 			// good
+			ex.printStackTrace();
 		}
 		Assert.assertEquals(2, first.getCount());
 		Assert.assertEquals(2, second.getCount());
@@ -100,9 +101,6 @@ public class RemovingConsumersTest {
 			
 			DoSomethingInterface firstProxy = (DoSomethingInterface)BroadcastProxy.newInstance(broker, first);
 			DoSomethingInterface secondProxy = (DoSomethingInterface)BroadcastProxy.newInstance(broker, second);
-			
-			broker.add(firstProxy);
-			broker.add(secondProxy);
 			
 			firstProxy.doThis();
 			

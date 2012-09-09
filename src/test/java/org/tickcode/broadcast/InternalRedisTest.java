@@ -179,6 +179,7 @@ public class InternalRedisTest {
 
 	}
 	
+	@Test
 	public void testWeForgotToUseAMessageBroker(){
 		try{
 			MyFirstClass first = new MyFirstClass();

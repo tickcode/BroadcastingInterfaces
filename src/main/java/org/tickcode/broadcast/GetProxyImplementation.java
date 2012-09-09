@@ -26,6 +26,11 @@
  ******************************************************************************/
 package org.tickcode.broadcast;
 
+/**
+ * Used so that {@link VMMessageBroker} can grab the actual implementation instead of the proxy.
+ * @author Eyon Land
+ *
+ */
 public interface GetProxyImplementation {
   public Broadcast getBroadcastImplementation();
 }

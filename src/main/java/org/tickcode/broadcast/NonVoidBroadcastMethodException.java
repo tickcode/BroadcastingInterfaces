@@ -26,6 +26,12 @@
  ******************************************************************************/
 package org.tickcode.broadcast;
 
+/**
+ * Thrown by {@link VMMessageBroker} when two methods were created between two different interfaces
+ * that happened to have the same name.
+ * @author Eyon Land
+ *
+ */
 public class NonVoidBroadcastMethodException extends RuntimeException{
 
 	public NonVoidBroadcastMethodException(String message){

@@ -20,7 +20,7 @@ and pick a location other than your workspace
 Under the BroadcastingInterfaces github clone directory
 execute: mvn clean eclipse:clean
 execute: mvn -DdownloadSources=true aspectj:compile aspectj:test-compile eclipse:eclipse
-Note: for mor info about the aspectj-maven-plugin see http://mojo.codehaus.org/aspectj-maven-plugin/index.html
+Note: for more info about the aspectj-maven-plugin see http://mojo.codehaus.org/aspectj-maven-plugin/index.html
 
 Launch eclipse...
 Within eclipse import an existing project from: 

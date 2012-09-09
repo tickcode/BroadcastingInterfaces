@@ -134,11 +134,9 @@ public class BroadcastsWithinBroadcastsTest {
 		try {
 			broker.clear();
 			broker.setUsingAspectJ(false);
-			broker.add(first);
 			broker.add(second);
 			broker.add(handler);
 			((InfiniteLoopInterface)BroadcastProxy.newInstance(broker, first)).method1();
-			// proxy does not support broadcasts within broadcasts!
 		} finally {
 			broker.remove(
 					handler);

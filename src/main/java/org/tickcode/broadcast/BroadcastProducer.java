@@ -29,7 +29,12 @@ package org.tickcode.broadcast;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-@Retention(RetentionPolicy.RUNTIME) 
+/**
+ * This annotation is used for any class implementing a method expected to broadcast 
+ * from an interface that extends the {@Broadcast} interface.
+ * @author Eyon Land
+ *
+ */@Retention(RetentionPolicy.RUNTIME) 
 public @interface BroadcastProducer {
 
 }

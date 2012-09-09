@@ -110,7 +110,6 @@ public class InterfaceThrowsExceptionTest {
 			ThisClassDoesNotThrowAnException wellBehaved = new ThisClassDoesNotThrowAnException();
 			ThisClassThrowsAnException badBehavior = new ThisClassThrowsAnException();
 			
-			broker.add(wellBehaved);
 			broker.add(badBehavior);
 			
 			DoSomethingInterface wellBehavedProxy = (DoSomethingInterface)BroadcastProxy.newInstance(broker, wellBehaved);
@@ -176,7 +175,6 @@ public class InterfaceThrowsExceptionTest {
 			try{
 				ThisClassDoesNotThrowAnException wellBehaved = new ThisClassDoesNotThrowAnException();
 				ThisClassThrowsAnException badBehavior = new ThisClassThrowsAnException();
-				broker.add(wellBehaved);
 				broker.add(badBehavior);
 				broker.add(handler);
 				broker.add(handler2);

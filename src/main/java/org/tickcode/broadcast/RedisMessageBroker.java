@@ -52,6 +52,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.undercouch.bson4jackson.BsonFactory;
 import de.undercouch.bson4jackson.BsonGenerator;
 
+/**
+ * Provides support for getting messages broadcasted through Redis (See <a href="http://redis.io/">http://redis.io/</a> for details).
+ * At the moment we are using bson4jackson (See <a href="http://www.michel-kraemer.com/binary-json-with-bson4jackson">http://www.michel-kraemer.com/binary-json-with-bson4jackson</a> for details) to move our {@link Parameters} class into a BSON data representation.
+ * and broadcast to other RedisMessageBrokers.
+ * @author Eyon Land
+ *
+ */
 public class RedisMessageBroker extends VMMessageBroker {
 	private static Logger logger = Logger
 			.getLogger(org.tickcode.broadcast.RedisMessageBroker.class);
@@ -283,6 +290,10 @@ public class RedisMessageBroker extends VMMessageBroker {
 		RedisMessageBroker.settingRedisMessageBrokerForAll = settingRedisMessageBrokerForAll;
 	}
 
+	
+//  From here down we are providing a way to check a live Redis system.	
+	
+	
 	protected interface PingRedisMessageBroker extends Broadcast {
 		public void ping(String message, long timeSent);
 	}

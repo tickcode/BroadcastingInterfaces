@@ -31,10 +31,12 @@ import org.junit.Test;
 
 public class SanityCheckTest {
 
-	protected interface ArbitraryMethodsNoBroadcast{
+	protected interface ArbitraryMethodsNoBroadcast {
 		public void sanityCheckMethod1();
+
 		public void shouldNotBroadcast();
 	}
+
 	protected interface ArbitraryMethods extends Broadcast {
 		public void sanityCheckMethod1();
 
@@ -43,7 +45,8 @@ public class SanityCheckTest {
 		public void sanityCheckMethod3(ArbitraryMethods myself);
 	}
 
-	protected class MyFirstClass implements ArbitraryMethods,ArbitraryMethodsNoBroadcast {
+	protected class MyFirstClass implements ArbitraryMethods,
+			ArbitraryMethodsNoBroadcast {
 		int countMethod1;
 		int countMethod2;
 		int countMethod3;
@@ -71,14 +74,15 @@ public class SanityCheckTest {
 			countMethod3++;
 			this.payload = payload;
 		}
-		
+
 		@Override
 		public void shouldNotBroadcast() {
 			countShouldNotBroadcast++;
 		}
 	}
 
-	protected class MySecondClass implements ArbitraryMethods,ArbitraryMethodsNoBroadcast {
+	protected class MySecondClass implements ArbitraryMethods,
+			ArbitraryMethodsNoBroadcast {
 		int countMethod1;
 		int countMethod2;
 		int countMethod3;
@@ -119,10 +123,14 @@ public class SanityCheckTest {
 		VMMessageBroker.setSettingVMMessageBrokerForAll(true);
 		VMMessageBroker broker = new VMMessageBroker();
 		MyFirstClass first = new MyFirstClass();
+		Assert.assertEquals(1, broker.size());
+
 		MySecondClass second = new MySecondClass();
-// this is not necessary because we have VMMessageBroker.setSettingVMMessageBrokerForAll(true);
-//		broker.add(first);
-//		broker.add(second);
+		Assert.assertEquals(2, broker.size());
+		// this is not necessary because we have
+		// VMMessageBroker.setSettingVMMessageBrokerForAll(true);
+		// broker.add(first);
+		// broker.add(second);
 
 		Assert.assertTrue(broker.isUsingAspectJ());
 		first.sanityCheckMethod1();
@@ -166,18 +174,32 @@ public class SanityCheckTest {
 		Assert.assertEquals("my message", second.message);
 		Assert.assertEquals(first, first.payload);
 		Assert.assertEquals(first, second.payload);
-		
+
 		VMMessageBroker.setSettingVMMessageBrokerForAll(false);
 
-
 	}
-	
-	public void testWeForgotToUseAMessageBroker(){
-		try{
+
+	@Test
+	public void testWeForgotToUseAMessageBroker() {
+		try {
 			MyFirstClass first = new MyFirstClass();
 			first.sanityCheckMethod1();
 			Assert.fail("We should have gotten a NoMessageBrokerException");
-		}catch(NoMessageBrokerException ex){
+		} catch (NoMessageBrokerException ex) {
+			// good
+		}
+	}
+
+	@Test
+	public void testWeTriedToAddTwoMessageBrokers() {
+		try {
+			VMMessageBroker broker1 = new VMMessageBroker();
+			VMMessageBroker broker2 = new VMMessageBroker();			
+			MyFirstClass first = new MyFirstClass();			
+			broker1.add(first);
+			broker2.add(first);
+			Assert.fail("We should have gotten a OnlyOneMessageBrokerSupportedException");
+		} catch (OnlyOneMessageBrokerSupportedException ex) {
 			// good
 		}
 	}
@@ -187,12 +209,29 @@ public class SanityCheckTest {
 		VMMessageBroker broker = new VMMessageBroker();
 		broker.clear();
 		broker.setUsingAspectJ(false);
-		try{
+		try {
 			MyFirstClass first = new MyFirstClass();
 			MySecondClass second = new MySecondClass();
-			ArbitraryMethods firstProxy = (ArbitraryMethods)BroadcastProxy.newInstance(broker, first);
-			ArbitraryMethods secondProxy = (ArbitraryMethods)BroadcastProxy.newInstance(broker, second);
-			
+			ArbitraryMethods firstProxy = (ArbitraryMethods) BroadcastProxy
+					.newInstance(broker, first);
+			Assert.assertEquals(1, broker.size());
+			ArbitraryMethods secondProxy = (ArbitraryMethods) BroadcastProxy
+					.newInstance(broker, second);
+			Assert.assertEquals(2, broker.size());
+
+			try {
+				broker.add(first);
+				Assert.fail("Our first implementation should have already been added by the firstProxy.");
+			} catch (ProxyImplementationException ex) {
+				// good
+			}
+			try {
+				broker.add(firstProxy);
+				Assert.fail("Our first implementation should have already been added by the firstProxy.");
+			} catch (ProxyImplementationException ex) {
+				// good
+			}
+
 			firstProxy.sanityCheckMethod1();
 			Assert.assertEquals(1, first.countMethod1);
 			Assert.assertEquals(1, second.countMethod1);
@@ -206,7 +245,7 @@ public class SanityCheckTest {
 			Assert.assertNull(second.message);
 			Assert.assertNull(first.payload);
 			Assert.assertNull(second.payload);
-	
+
 			firstProxy.sanityCheckMethod2("my message");
 			Assert.assertEquals(1, first.countMethod1);
 			Assert.assertEquals(1, second.countMethod1);
@@ -220,7 +259,7 @@ public class SanityCheckTest {
 			Assert.assertEquals("my message", second.message);
 			Assert.assertNull(first.payload);
 			Assert.assertNull(second.payload);
-	
+
 			firstProxy.sanityCheckMethod3(first);
 			Assert.assertEquals(1, first.countMethod1);
 			Assert.assertEquals(1, second.countMethod1);
@@ -234,7 +273,7 @@ public class SanityCheckTest {
 			Assert.assertEquals("my message", second.message);
 			Assert.assertEquals(first, first.payload);
 			Assert.assertEquals(first, second.payload);
-		}finally{
+		} finally {
 			broker.setUsingAspectJ(true);
 		}
 	}

@@ -26,6 +26,13 @@
  ******************************************************************************/
 package org.tickcode.broadcast;
 
+/**
+ * Used by {@link VMMessageBroker#add(Broadcast)} to help the developer detect when they accidently use an
+ * {@link BroadcastConsumer} or {@link BroadcastProducer} annotation on a method that is not defined in an
+ * interface that extends {@link Broadcast}.
+ * @author Eyon Land
+ *
+ */
 public class WrongUseOfAnnotationException extends RuntimeException{
 
 	public WrongUseOfAnnotationException(String message){

@@ -26,33 +26,40 @@
  ******************************************************************************/
 package org.tickcode.broadcast;
 
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.util.HashSet;
 
+/**
+ * The point of this class is to show how you might avoid using Aspects, Javassist, asm/cglib.  In some sense
+ * it exposes the limitation of java proxies in that you cannot simply use the proxy as though it were
+ * the original class.  You are limited to using only the interfaces the proxy has been defined for.
+ * @author Eyon Land
+ *
+ */
 public class BroadcastProxy implements java.lang.reflect.InvocationHandler, GetProxyImplementation {
 
 	private Broadcast implementation;
 	private MessageBroker messageBroker;
+	private HashSet<String> broadcastMethods = new HashSet<String>();
 
 	public static Broadcast newInstance(MessageBroker broker, Broadcast implementation) {
-		broker.add(implementation);
 		Broadcast proxy = (Broadcast)java.lang.reflect.Proxy.newProxyInstance(implementation.getClass()
 				.getClassLoader(), implementation.getClass().getInterfaces(),
 				new BroadcastProxy(broker, implementation));
+		broker.add(proxy);
 		return proxy;
 	}
 
 	private BroadcastProxy(MessageBroker broker, Broadcast implementation) {
 		this.implementation = implementation;
 		this.messageBroker = broker;
+		for (Method method : implementation.getClass().getMethods()) {
+			if (method.isAnnotationPresent(BroadcastProducer.class)) {
+				broadcastMethods.add(method.getName());
+			}
+		}
 	}
-	
-//	public static Broadcast getImplementation(Broadcast proxy){
-//		if(proxy instanceof java.lang.reflect.Proxy){
-//			return ((BroadcastProxy)((java.lang.reflect.Proxy)proxy).getInvocationHandler(proxy)).getImp();
-//		}
-//		else
-//			return proxy;
-//	}
 	
 	public Broadcast getBroadcastImplementation(){
 		return implementation;
@@ -70,7 +77,8 @@ public class BroadcastProxy implements java.lang.reflect.InvocationHandler, GetP
 			throws Throwable {
 		Object result;
 		result = m.invoke(implementation, args);
-		messageBroker.broadcast(implementation, m.getName(), args);
+		if(broadcastMethods.contains(m.getName()))
+			messageBroker.broadcast((Broadcast)proxy, m.getName(), args);
 		return result;
 	}
 

@@ -94,7 +94,7 @@ public class WeakReferenceTest {
 			Assert.assertEquals(1, consumer.count);
 			Assert.assertEquals(1, producer.count);
 
-			broker.setWeakReferencesToNull(consumer);
+			broker.setWeakReferencesToNull(consumerProxy);
 			producerProxy.whatAboutWeakReferences(); // broadcast
 			Assert.assertEquals(1, consumer.count); // nothing should change
 			Assert.assertEquals(2, producer.count); // of course the producer

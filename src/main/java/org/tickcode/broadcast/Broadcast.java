@@ -28,10 +28,10 @@ package org.tickcode.broadcast;
 
 
 /**
- * All interfaces that extends this interface will be provided broadcast functionality by {@link BroadcastImpl}.
+ * All interfaces that extends this interface will be provided broadcast functionality by the BroadcastImpl.aj aspect.
  * Each interface must have unique method names within the interface that extends Broadcast.  In other words, there
  * can be no overloading within the collection interfaces or the method signatures will not be processed correctly.
- * @author Eyon
+ * @author Eyon Land
  */
 public interface Broadcast {
 }

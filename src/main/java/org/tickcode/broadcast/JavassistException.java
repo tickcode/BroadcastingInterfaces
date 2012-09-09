@@ -26,9 +26,10 @@
  ******************************************************************************/
 package org.tickcode.broadcast;
 
-/** This is a work in progress 
+/** 
+ * This is a work in progress 
  *
- * @author eyon
+ * @author Eyon Land
  *
  */
 public class JavassistException extends RuntimeException{

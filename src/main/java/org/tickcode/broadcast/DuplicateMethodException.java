@@ -26,6 +26,13 @@
  ******************************************************************************/
 package org.tickcode.broadcast;
 
+/**
+ * When an interface that extends Broadcast has defined a method with the same name
+ * as a method in another interface (or even within itself), the implementing {@link MessageBroker}
+ * should throw this exception the developer becomes aware of their mistake.
+ * @author Eyon Land
+ *
+ */
 public class DuplicateMethodException extends RuntimeException{
 
 	public DuplicateMethodException(String message){

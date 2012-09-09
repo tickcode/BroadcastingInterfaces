@@ -73,18 +73,35 @@ public aspect BroadcastImpl {
 	pointcut messageBrokerAddPointcut(MessageBroker _this, Broadcast consumer): 
 		execution(public void org.tickcode.broadcast.MessageBroker+.add(Broadcast))		  	
 	    && this(_this) && args(consumer) && if(AbstractMessageBroker.isUsingAspectJ());
+	/**
+	 * This advice will be ensure that the field messageBroker this aspect provides get's set
+	 * when the implementation is added to a {@link MessageBroker} implementation.
+	 * @param _this
+	 * @param consumer
+	 */
 	before(MessageBroker _this, Broadcast consumer) : messageBrokerAddPointcut(_this, consumer){
-		consumer = AbstractMessageBroker.getBroadcastImplementation(consumer);
+		if(consumer.messageBroker != null && consumer.messageBroker != _this)
+			throw new OnlyOneMessageBrokerSupportedException("You can only have one MessageBroker for each implementation.");
 		consumer.messageBroker = _this;
 	}
 	
 	pointcut messageBrokerRemovePointcut(MessageBroker _this, Broadcast consumer): 
 		execution(public void org.tickcode.broadcast.MessageBroker+.remove(Broadcast))		  	
 	    && this(_this) && args(consumer) && if(AbstractMessageBroker.isUsingAspectJ());
+	/**
+	 * When the {@link MessageBroker} removes this implementation of Broadcast, we make sure
+	 * our internal messageBroker field gets set to null.
+	 * @param _this
+	 * @param consumer
+	 */
 	after(MessageBroker _this, Broadcast consumer) returning : messageBrokerRemovePointcut(_this, consumer){
 		consumer.messageBroker = null;
 	}
 
+	/**
+	 * An internal field to hold the {@link MessageBroker}.  This field is used only by this aspect.
+	 * @return
+	 */
 	private MessageBroker Broadcast.messageBroker;
 
 }

@@ -28,6 +28,11 @@ package org.tickcode.broadcast;
 
 import org.tickcode.trace.BreadCrumbTrail;
 
+/**
+ * This interface provides a way to notify the application of exceptions that might come up during a broadcast.
+ * @author Eyon Land
+ *
+ */
 public interface ErrorHandler {
 	public void error(MessageBroker broker, Broadcast broadcast, Throwable ex, BreadCrumbTrail trail);
 }

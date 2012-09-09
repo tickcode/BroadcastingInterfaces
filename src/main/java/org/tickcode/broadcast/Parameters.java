@@ -26,10 +26,29 @@
  ******************************************************************************/
 package org.tickcode.broadcast;
 
+/**
+ * The {@link RedisMessageBroker} will use this class to send parameters to other {@link RedisMessageBroker}s
+ * that have a matching {@link RedisMessageBroker#getName()}
+ * @author Eyon Land
+ *
+ */
 public class Parameters {
 
+	/**
+	 * A channel will be the name of the {@link RedisMessageBroker#getName()}, the {@link Broadcast} interface, and the name
+	 * of the method being broadcasted.
+	 */
 	String channel;
+	
+	/**
+	 * The arguments for the method signature.
+	 */
 	Object[] arguments;
+	
+	/**
+	 * Each {@link RedisMessageBroker} will have a unique string that will help it identify when it sees its own 
+	 * broadcasting.
+	 */
 	String thumbprint;
 	
 	public Parameters(){

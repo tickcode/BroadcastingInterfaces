@@ -26,6 +26,13 @@
  ******************************************************************************/
 package org.tickcode.broadcast;
 
+/**
+ * Used by the aspect BroadcastImpl.aj in a case where the developer forgot to add the {@link Broadcast} class
+ * implementation to a {@link MessageBroker}.  This can be done automatically by setting {@link VMMessageBroker#setSettingVMMessageBrokerForAll()} 
+ * or {@link VMMessageBroker#setSettingVMMessageBrokerForAll()} 
+ * @author Eyon Land
+ *
+ */
 public class NoMessageBrokerException extends RuntimeException{
 
 	public NoMessageBrokerException(String message){
