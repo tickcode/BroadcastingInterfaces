@@ -1,6 +1,11 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
+	<parent>
+		<groupId>org.sonatype.oss</groupId>
+		<artifactId>oss-parent</artifactId>
+		<version>7</version>
+	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.tickcode</groupId>
 	<artifactId>BroadcastingInterfaces</artifactId>
@@ -20,16 +25,16 @@
 	</licenses>
 	<scm>
 		<connection>scm:git:git://github.com/tickcode/BroadcastingInterfaces.git</connection>
-		<developerConnection>scm:git:https://tickcode@github.com/tickcode/BroadcastingInterfaces.git</developerConnection>
-		<url>https://github.com/tickcode/BroadcastingInterfaces</url>
+		<developerConnection>scm:git:git@github.com:tickcode/BroadcastingInterfaces.git</developerConnection>
+		<url>git@github.com:tickcode/BroadcastingInterfaces.git</url>
 	</scm>
 	<developers>
-    <developer>
-      <id>tickcode</id>
-      <name>Eyon Land</name>
-      <email>tickcode@gmail.com</email>
-    </developer>
-  </developers>
+		<developer>
+			<id>tickcode</id>
+			<name>Eyon Land</name>
+			<email>tickcode@gmail.com</email>
+		</developer>
+	</developers>
 	<properties>
 		<org.aspectj-version>1.6.11</org.aspectj-version>
 		<maven.compiler.source>6</maven.compiler.source>
