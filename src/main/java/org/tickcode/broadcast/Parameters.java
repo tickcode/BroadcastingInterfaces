@@ -50,10 +50,15 @@ public class Parameters {
 	 * broadcasting.
 	 */
 	String thumbprint;
+
+	/**
+	 * The time in which the broadcast was sent.
+	 */
+	long timeSent;
 	
 	public Parameters(){
 	}
-
+	
 	public String getChannel() {
 		return channel;
 	}
@@ -77,4 +82,13 @@ public class Parameters {
 	public void setThumbprint(String thumbprint) {
 		this.thumbprint = thumbprint;
 	}
+
+	public long getTimeSent() {
+		return timeSent;
+	}
+
+	public void setTimeSent(long timeSent) {
+		this.timeSent = timeSent;
+	}
+
 }

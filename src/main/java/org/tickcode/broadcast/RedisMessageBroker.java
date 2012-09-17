@@ -73,6 +73,11 @@ public class RedisMessageBroker extends VMMessageBroker {
 	private Jedis subscriberJedis;
 	private String thumbprint = UUID.randomUUID().toString();
 	private volatile String methodBeingBroadcastedFromRedis;
+	private long latencyFromOthers;
+	private long broadcastsFromOthers;
+	private long latencyFromUs;
+	private long broadcastsFromUs;
+
 
 	MyBinarySubscriber subscriber = new MyBinarySubscriber();
 
@@ -123,12 +128,25 @@ public class RedisMessageBroker extends VMMessageBroker {
 
 				ByteArrayInputStream bais = new ByteArrayInputStream(message);
 				ObjectMapper mapper = new ObjectMapper(new BsonFactory());
+				
+				if(latencyFromOthers > Long.MAX_VALUE/2 || latencyFromUs > Long.MAX_VALUE/2){
+					latencyFromOthers = 0;
+					broadcastsFromOthers = 0;
+					latencyFromUs = 0;
+					broadcastsFromUs = 0;
+				}
+				
 				Parameters args = mapper.readValue(bais, Parameters.class);
 				if (!thumbprint.equals(args.getThumbprint())) {
 					methodBeingBroadcastedFromRedis = methodName;
 					RedisMessageBroker.super.broadcast(producerProxy,
 							methodName, args.getArguments());
 					methodBeingBroadcastedFromRedis = null;
+					latencyFromOthers = System.currentTimeMillis() - args.getTimeSent();
+					broadcastsFromOthers++;
+				}{
+					latencyFromUs = System.currentTimeMillis() - args.getTimeSent();
+					broadcastsFromUs++;
 				}
 
 			} catch (Exception ex) {
@@ -152,7 +170,21 @@ public class RedisMessageBroker extends VMMessageBroker {
 		this.name = name;
 		this.jedisPool = jedisPool;
 	}
+	
+	public long getLatencyFromUs(){
+		if(broadcastsFromUs > 0)
+			return this.latencyFromUs / this.broadcastsFromUs;
+		else 
+			return 0;
+	}
 
+	public long getLatencyFromOthers(){
+		if(broadcastsFromOthers > 0)
+			return this.latencyFromOthers / this.broadcastsFromOthers;
+		else 
+			return 0;
+	}
+	
 	public void finishedBroadcasting(Broadcast producer, String methodName,
 			Object[] params) {
 		if (!methodName.equals(methodBeingBroadcastedFromRedis))
@@ -175,6 +207,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 		fac.enable(BsonGenerator.Feature.ENABLE_STREAMING);
 		ObjectMapper mapper = new ObjectMapper(fac);
 		Parameters args = new Parameters();
+		args.setTimeSent(System.currentTimeMillis());
 		args.setThumbprint(thumbprint);
 		args.setArguments(params);
 		args.setChannel(channel.toString());
@@ -194,8 +227,10 @@ public class RedisMessageBroker extends VMMessageBroker {
 				}
 			}
 		} finally {
-			if (jedis != null)
+			if (jedis != null){
 				jedisPool.returnResource(jedis);
+				jedis = null;
+			}
 		}
 	}
 
@@ -338,7 +373,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 		JedisPoolConfig poolConfig = new JedisPoolConfig();
 		poolConfig.maxActive = 10;
 		poolConfig.maxIdle = 5;
-		poolConfig.minIdle = 1;
+		poolConfig.minIdle = 2;
 		poolConfig.testOnBorrow = true;
 		poolConfig.numTestsPerEvictionRun = 10;
 		poolConfig.timeBetweenEvictionRunsMillis = 60000;
@@ -351,7 +386,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 		try {
 			broker.start();
 
-			int totalPings = 3;
+			int totalPings = 1000;
 			CountDownLatch latch = new CountDownLatch(totalPings);
 			WatchPingMessages consumer = new WatchPingMessages(latch);
 			broker.add(consumer);
@@ -368,10 +403,11 @@ public class RedisMessageBroker extends VMMessageBroker {
 			// simulate getting a broadcast from another virtual machine through
 			// Redis
 			String thumbprint = UUID.randomUUID().toString();
-			for (int i = 0; i < totalPings; i++)
+			for (int i = 0; i < totalPings; i++){
 				broker.broadcastToRedisServer(thumbprint, broadcastProxy,
 						"ping",
 						new Object[] { "Pong", System.currentTimeMillis() });
+			}
 			latch.await(5, TimeUnit.SECONDS);
 			if (latch.getCount() > 0) {
 				logger.error("Never received ping response from Redis server.");
@@ -381,7 +417,9 @@ public class RedisMessageBroker extends VMMessageBroker {
 			String pingMessage = consumer.getMessage();
 			if ("Pong".equals(pingMessage)) {
 				logger.info("Redis server appears working. Average response time was "
-						+ consumer.getAverageLatency() + " microseconds.");
+						+ consumer.getAverageLatency() + " microseconds for " + totalPings + " pings.");
+				logger.info("Average response time from others was "
+						+ broker.getLatencyFromOthers() + " microseconds.");
 				redisServerWorking = true;
 			} else {
 				logger.error("Redis server does not appear to be working.");
@@ -415,6 +453,8 @@ public class RedisMessageBroker extends VMMessageBroker {
 						"We are getting too many ping messages internally.");
 			} else if (producer.getCount() == 1 && consumer.getCount() == 1) {
 				logger.info("Internal broadcasting looks OK.");
+				logger.info("Average response time from us was "
+						+ broker.getLatencyFromUs() + " microseconds.");
 			} else {
 				logger.error("There's something wrong with the internal broadcasting.");
 			}
