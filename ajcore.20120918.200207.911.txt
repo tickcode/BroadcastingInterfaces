@@ -1,0 +1,218 @@
+---- AspectJ Properties ---
+AspectJ Compiler 1.6.11 built on Tuesday Mar 15, 2011 at 15:31:04 GMT
+---- Dump Properties ---
+Dump file: ajcore.20120918.200207.911.txt
+Dump reason: java.lang.RuntimeException
+Dump on exception: true
+Dump at exit condition: abort
+---- Exception Information ---
+java.lang.RuntimeException: Problem processing attributes in /Users/eyon/github/BroadcastingInterfaces/target/classes/org/tickcode/broadcast/BroadcastImpl.class
+	at org.aspectj.weaver.bcel.BcelObjectType.ensureAspectJAttributesUnpacked(BcelObjectType.java:385)
+	at org.aspectj.weaver.bcel.BcelObjectType.<init>(BcelObjectType.java:162)
+	at org.aspectj.weaver.bcel.BcelWorld.buildBcelDelegate(BcelWorld.java:394)
+	at org.aspectj.weaver.bcel.BcelWorld.addSourceObjectType(BcelWorld.java:478)
+	at org.aspectj.weaver.bcel.BcelWorld.addSourceObjectType(BcelWorld.java:440)
+	at org.aspectj.weaver.bcel.BcelWeaver.addClassFile(BcelWeaver.java:448)
+	at org.aspectj.weaver.bcel.BcelWeaver.addClassFile(BcelWeaver.java:472)
+	at org.aspectj.ajdt.internal.core.builder.AjBuildManager.initBcelWorld(AjBuildManager.java:894)
+	at org.aspectj.ajdt.internal.core.builder.AjBuildManager.performBuild(AjBuildManager.java:245)
+	at org.aspectj.ajdt.internal.core.builder.AjBuildManager.batchBuild(AjBuildManager.java:181)
+	at org.aspectj.ajdt.ajc.AjdtCommand.doCommand(AjdtCommand.java:112)
+	at org.aspectj.ajdt.ajc.AjdtCommand.runCommand(AjdtCommand.java:60)
+	at org.aspectj.tools.ajc.Main.run(Main.java:371)
+	at org.aspectj.tools.ajc.Main.runMain(Main.java:248)
+	at org.codehaus.mojo.aspectj.AbstractAjcCompiler.execute(AbstractAjcCompiler.java:405)
+	at org.apache.maven.plugin.DefaultBuildPluginManager.executeMojo(DefaultBuildPluginManager.java:101)
+	at org.apache.maven.lifecycle.internal.MojoExecutor.execute(MojoExecutor.java:209)
+	at org.apache.maven.lifecycle.internal.MojoExecutor.execute(MojoExecutor.java:153)
+	at org.apache.maven.lifecycle.internal.MojoExecutor.execute(MojoExecutor.java:145)
+	at org.apache.maven.lifecycle.internal.LifecycleModuleBuilder.buildProject(LifecycleModuleBuilder.java:84)
+	at org.apache.maven.lifecycle.internal.LifecycleModuleBuilder.buildProject(LifecycleModuleBuilder.java:59)
+	at org.apache.maven.lifecycle.internal.LifecycleStarter.singleThreadedBuild(LifecycleStarter.java:183)
+	at org.apache.maven.lifecycle.internal.LifecycleStarter.execute(LifecycleStarter.java:161)
+	at org.apache.maven.DefaultMaven.doExecute(DefaultMaven.java:319)
+	at org.apache.maven.DefaultMaven.execute(DefaultMaven.java:156)
+	at org.apache.maven.cli.MavenCli.execute(MavenCli.java:537)
+	at org.apache.maven.cli.MavenCli.doMain(MavenCli.java:196)
+	at org.apache.maven.cli.MavenCli.main(MavenCli.java:141)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:39)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:25)
+	at java.lang.reflect.Method.invoke(Method.java:597)
+	at org.codehaus.plexus.classworlds.launcher.Launcher.launchEnhanced(Launcher.java:290)
+	at org.codehaus.plexus.classworlds.launcher.Launcher.launch(Launcher.java:230)
+	at org.codehaus.plexus.classworlds.launcher.Launcher.mainWithExitCode(Launcher.java:409)
+	at org.codehaus.plexus.classworlds.launcher.Launcher.main(Launcher.java:352)
+Caused by: java.lang.RuntimeException: bad WeaverState.Kind: -115.  File was :<Unknown>::0
+	at org.aspectj.weaver.WeaverStateInfo.read(WeaverStateInfo.java:170)
+	at org.aspectj.weaver.AjAttribute.read(AjAttribute.java:105)
+	at org.aspectj.weaver.bcel.Utility.readAjAttributes(Utility.java:101)
+	at org.aspectj.weaver.bcel.BcelObjectType.ensureAspectJAttributesUnpacked(BcelObjectType.java:381)
+	... 35 more
+---- System Properties ---
+java.runtime.name=Java(TM) SE Runtime Environment
+sun.boot.library.path=/Library/Java/JavaVirtualMachines/1.6.0_33-b03-424.jdk/Contents/Libraries
+java.vm.version=20.8-b03-424
+awt.nativeDoubleBuffering=true
+gopherProxySet=false
+mrj.build=11M3720
+java.vm.vendor=Apple Inc.
+java.vendor.url=http://www.apple.com/
+guice.disable.misplaced.annotation.check=true
+path.separator=:
+java.vm.name=Java HotSpot(TM) 64-Bit Server VM
+file.encoding.pkg=sun.io
+sun.java.launcher=SUN_STANDARD
+user.country=US
+sun.os.patch.level=unknown
+java.vm.specification.name=Java Virtual Machine Specification
+user.dir=/Users/eyon/github/BroadcastingInterfaces
+java.runtime.version=1.6.0_33-b03-424-11M3720
+java.awt.graphicsenv=apple.awt.CGraphicsEnvironment
+java.endorsed.dirs=/Library/Java/JavaVirtualMachines/1.6.0_33-b03-424.jdk/Contents/Home/lib/endorsed
+os.arch=x86_64
+java.io.tmpdir=/var/folders/yq/xznqwg3d3_g9k_wdjzsk_5_w0000gt/T/
+line.separator=
+
+java.vm.specification.vendor=Sun Microsystems Inc.
+os.name=Mac OS X
+classworlds.conf=/usr/share/maven/bin/m2.conf
+sun.jnu.encoding=MacRoman
+java.library.path=.:/Users/eyon/Library/Java/Extensions:/Library/Java/Extensions:/System/Library/Java/Extensions:/usr/lib/java
+java.specification.name=Java Platform API Specification
+java.class.version=50.0
+sun.management.compiler=HotSpot 64-Bit Tiered Compilers
+os.version=10.7.4
+http.nonProxyHosts=local|*.local|169.254/16|*.169.254/16
+user.home=/Users/eyon
+user.timezone=America/Chicago
+java.awt.printerjob=apple.awt.CPrinterJob
+file.encoding=MacRoman
+java.specification.version=1.6
+java.class.path=/usr/share/maven/boot/plexus-classworlds-2.4.jar
+user.name=eyon
+java.vm.specification.version=1.0
+sun.java.command=org.codehaus.plexus.classworlds.launcher.Launcher test
+java.home=/Library/Java/JavaVirtualMachines/1.6.0_33-b03-424.jdk/Contents/Home
+sun.arch.data.model=64
+user.language=en
+java.specification.vendor=Sun Microsystems Inc.
+awt.toolkit=apple.awt.CToolkit
+java.vm.info=mixed mode
+java.version=1.6.0_33
+java.ext.dirs=/Users/eyon/Library/Java/Extensions:/Library/Java/Extensions:/System/Library/Java/Extensions:/Library/Java/JavaVirtualMachines/1.6.0_33-b03-424.jdk/Contents/Home/lib/ext
+sun.boot.class.path=/Library/Java/JavaVirtualMachines/1.6.0_33-b03-424.jdk/Contents/Classes/jsfd.jar:/Library/Java/JavaVirtualMachines/1.6.0_33-b03-424.jdk/Contents/Classes/classes.jar:/System/Library/Frameworks/JavaVM.framework/Frameworks/JavaRuntimeSupport.framework/Resources/Java/JavaRuntimeSupport.jar:/Library/Java/JavaVirtualMachines/1.6.0_33-b03-424.jdk/Contents/Classes/ui.jar:/Library/Java/JavaVirtualMachines/1.6.0_33-b03-424.jdk/Contents/Classes/laf.jar:/Library/Java/JavaVirtualMachines/1.6.0_33-b03-424.jdk/Contents/Classes/sunrsasign.jar:/Library/Java/JavaVirtualMachines/1.6.0_33-b03-424.jdk/Contents/Classes/jsse.jar:/Library/Java/JavaVirtualMachines/1.6.0_33-b03-424.jdk/Contents/Classes/jce.jar:/Library/Java/JavaVirtualMachines/1.6.0_33-b03-424.jdk/Contents/Classes/charsets.jar
+java.vendor=Apple Inc.
+maven.home=/usr/share/maven
+file.separator=/
+java.vendor.url.bug=http://bugreport.apple.com/
+sun.io.unicode.encoding=UnicodeLittle
+sun.cpu.endian=little
+mrj.version=1070.1.6.0_33-424
+socksNonProxyHosts=local|*.local|169.254/16|*.169.254/16
+ftp.nonProxyHosts=local|*.local|169.254/16|*.169.254/16
+sun.cpu.isalist=
+---- Command Line ---
+-encoding
+UTF-8
+-showWeaveInfo
+-source
+1.6
+-target
+1.6
+-verbose
+-classpath
+/Users/eyon/.m2/repository/org/aspectj/aspectjrt/1.6.11/aspectjrt-1.6.11.jar:/Users/eyon/.m2/repository/org/aspectj/aspectjweaver/1.6.11/aspectjweaver-1.6.11.jar:/Users/eyon/.m2/repository/javassist/javassist/3.12.1.GA/javassist-3.12.1.GA.jar:/Users/eyon/.m2/repository/redis/clients/jedis/2.1.0/jedis-2.1.0.jar:/Users/eyon/.m2/repository/de/undercouch/bson4jackson/2.0.0/bson4jackson-2.0.0.jar:/Users/eyon/.m2/repository/log4j/log4j/1.2.17/log4j-1.2.17.jar:/Users/eyon/.m2/repository/junit/junit/4.7/junit-4.7.jar:/Users/eyon/.m2/repository/commons-pool/commons-pool/1.5.5/commons-pool-1.5.5.jar:/Users/eyon/.m2/repository/com/fasterxml/jackson/core/jackson-core/2.0.0/jackson-core-2.0.0.jar:/Users/eyon/.m2/repository/com/fasterxml/jackson/core/jackson-annotations/2.0.0/jackson-annotations-2.0.0.jar:/Users/eyon/.m2/repository/com/fasterxml/jackson/core/jackson-databind/2.0.0/jackson-databind-2.0.0.jar:/Users/eyon/github/BroadcastingInterfaces/target/classes
+-inpath
+/Users/eyon/github/BroadcastingInterfaces/target/classes:/Users/eyon/github/BroadcastingInterfaces/target/test-classes
+-d
+/Users/eyon/github/BroadcastingInterfaces/target/classes
+/Users/eyon/github/BroadcastingInterfaces/src/main/java/org/tickcode/broadcast/AbstractMessageBroker.java
+/Users/eyon/github/BroadcastingInterfaces/src/main/java/org/tickcode/broadcast/Broadcast.java
+/Users/eyon/github/BroadcastingInterfaces/src/main/java/org/tickcode/broadcast/BroadcastConsumer.java
+/Users/eyon/github/BroadcastingInterfaces/src/main/java/org/tickcode/broadcast/BroadcastImpl.aj
+/Users/eyon/github/BroadcastingInterfaces/src/main/java/org/tickcode/broadcast/BroadcastProducer.java
+/Users/eyon/github/BroadcastingInterfaces/src/main/java/org/tickcode/broadcast/BroadcastProxy.java
+/Users/eyon/github/BroadcastingInterfaces/src/main/java/org/tickcode/broadcast/DuplicateMethodException.java
+/Users/eyon/github/BroadcastingInterfaces/src/main/java/org/tickcode/broadcast/ErrorHandler.java
+/Users/eyon/github/BroadcastingInterfaces/src/main/java/org/tickcode/broadcast/GetProxyImplementation.java
+/Users/eyon/github/BroadcastingInterfaces/src/main/java/org/tickcode/broadcast/JavassistBroadcastImpl.java
+/Users/eyon/github/BroadcastingInterfaces/src/main/java/org/tickcode/broadcast/JavassistException.java
+/Users/eyon/github/BroadcastingInterfaces/src/main/java/org/tickcode/broadcast/Logging.aj
+/Users/eyon/github/BroadcastingInterfaces/src/main/java/org/tickcode/broadcast/MessageBroker.java
+/Users/eyon/github/BroadcastingInterfaces/src/main/java/org/tickcode/broadcast/NoMessageBrokerException.java
+/Users/eyon/github/BroadcastingInterfaces/src/main/java/org/tickcode/broadcast/NonVoidBroadcastMethodException.java
+/Users/eyon/github/BroadcastingInterfaces/src/main/java/org/tickcode/broadcast/OnlyOneMessageBrokerSupportedException.java
+/Users/eyon/github/BroadcastingInterfaces/src/main/java/org/tickcode/broadcast/Parameters.java
+/Users/eyon/github/BroadcastingInterfaces/src/main/java/org/tickcode/broadcast/ProxyImplementationException.java
+/Users/eyon/github/BroadcastingInterfaces/src/main/java/org/tickcode/broadcast/RedisBroadcastProxy.java
+/Users/eyon/github/BroadcastingInterfaces/src/main/java/org/tickcode/broadcast/RedisMessageBroker.java
+/Users/eyon/github/BroadcastingInterfaces/src/main/java/org/tickcode/broadcast/SettingRedisMessageBrokerForAll.aj
+/Users/eyon/github/BroadcastingInterfaces/src/main/java/org/tickcode/broadcast/SettingVMMessageBrokerForAll.aj
+/Users/eyon/github/BroadcastingInterfaces/src/main/java/org/tickcode/broadcast/VMMessageBroker.java
+/Users/eyon/github/BroadcastingInterfaces/src/main/java/org/tickcode/broadcast/WrongUseOfAnnotationException.java
+/Users/eyon/github/BroadcastingInterfaces/src/main/java/org/tickcode/example/swing/ConsumeAndProducePanel.java
+/Users/eyon/github/BroadcastingInterfaces/src/main/java/org/tickcode/example/swing/ConsumerPanel.java
+/Users/eyon/github/BroadcastingInterfaces/src/main/java/org/tickcode/example/swing/DependencyInjection.aj
+/Users/eyon/github/BroadcastingInterfaces/src/main/java/org/tickcode/example/swing/Main.java
+/Users/eyon/github/BroadcastingInterfaces/src/main/java/org/tickcode/example/swing/MenuBar.java
+/Users/eyon/github/BroadcastingInterfaces/src/main/java/org/tickcode/example/swing/ProducerPanel.java
+/Users/eyon/github/BroadcastingInterfaces/src/main/java/org/tickcode/example/swing/ShuttingDownBroadcast.java
+/Users/eyon/github/BroadcastingInterfaces/src/main/java/org/tickcode/example/swing/TextChangedBroadcast.java
+/Users/eyon/github/BroadcastingInterfaces/src/main/java/org/tickcode/trace/BreadCrumb.java
+/Users/eyon/github/BroadcastingInterfaces/src/main/java/org/tickcode/trace/BreadCrumbTrail.java
+/Users/eyon/github/BroadcastingInterfaces/src/main/java/org/tickcode/trace/DefaultBreadCrumb.java
+/Users/eyon/github/BroadcastingInterfaces/src/main/java/org/tickcode/trace/MethodUtil.java
+---- Full Classpath ---
+Empty
+---- Compiler Messages ---
+info directory classpath entry does not exist: /Library/Java/JavaVirtualMachines/1.6.0_33-b03-424.jdk/Contents/Classes/jsfd.jar
+info directory classpath entry does not exist: /System/Library/Frameworks/JavaVM.framework/Frameworks/JavaRuntimeSupport.framework/Resources/Java/JavaRuntimeSupport.jar
+info directory classpath entry does not exist: /Library/Java/JavaVirtualMachines/1.6.0_33-b03-424.jdk/Contents/Classes/laf.jar
+info directory classpath entry does not exist: /Library/Java/JavaVirtualMachines/1.6.0_33-b03-424.jdk/Contents/Classes/sunrsasign.jar
+abort ABORT -- (RuntimeException) Problem processing attributes in /Users/eyon/github/BroadcastingInterfaces/target/classes/org/tickcode/broadcast/BroadcastImpl.class
+Problem processing attributes in /Users/eyon/github/BroadcastingInterfaces/target/classes/org/tickcode/broadcast/BroadcastImpl.class
+java.lang.RuntimeException: Problem processing attributes in /Users/eyon/github/BroadcastingInterfaces/target/classes/org/tickcode/broadcast/BroadcastImpl.class
+	at org.aspectj.weaver.bcel.BcelObjectType.ensureAspectJAttributesUnpacked(BcelObjectType.java:385)
+	at org.aspectj.weaver.bcel.BcelObjectType.<init>(BcelObjectType.java:162)
+	at org.aspectj.weaver.bcel.BcelWorld.buildBcelDelegate(BcelWorld.java:394)
+	at org.aspectj.weaver.bcel.BcelWorld.addSourceObjectType(BcelWorld.java:478)
+	at org.aspectj.weaver.bcel.BcelWorld.addSourceObjectType(BcelWorld.java:440)
+	at org.aspectj.weaver.bcel.BcelWeaver.addClassFile(BcelWeaver.java:448)
+	at org.aspectj.weaver.bcel.BcelWeaver.addClassFile(BcelWeaver.java:472)
+	at org.aspectj.ajdt.internal.core.builder.AjBuildManager.initBcelWorld(AjBuildManager.java:894)
+	at org.aspectj.ajdt.internal.core.builder.AjBuildManager.performBuild(AjBuildManager.java:245)
+	at org.aspectj.ajdt.internal.core.builder.AjBuildManager.batchBuild(AjBuildManager.java:181)
+	at org.aspectj.ajdt.ajc.AjdtCommand.doCommand(AjdtCommand.java:112)
+	at org.aspectj.ajdt.ajc.AjdtCommand.runCommand(AjdtCommand.java:60)
+	at org.aspectj.tools.ajc.Main.run(Main.java:371)
+	at org.aspectj.tools.ajc.Main.runMain(Main.java:248)
+	at org.codehaus.mojo.aspectj.AbstractAjcCompiler.execute(AbstractAjcCompiler.java:405)
+	at org.apache.maven.plugin.DefaultBuildPluginManager.executeMojo(DefaultBuildPluginManager.java:101)
+	at org.apache.maven.lifecycle.internal.MojoExecutor.execute(MojoExecutor.java:209)
+	at org.apache.maven.lifecycle.internal.MojoExecutor.execute(MojoExecutor.java:153)
+	at org.apache.maven.lifecycle.internal.MojoExecutor.execute(MojoExecutor.java:145)
+	at org.apache.maven.lifecycle.internal.LifecycleModuleBuilder.buildProject(LifecycleModuleBuilder.java:84)
+	at org.apache.maven.lifecycle.internal.LifecycleModuleBuilder.buildProject(LifecycleModuleBuilder.java:59)
+	at org.apache.maven.lifecycle.internal.LifecycleStarter.singleThreadedBuild(LifecycleStarter.java:183)
+	at org.apache.maven.lifecycle.internal.LifecycleStarter.execute(LifecycleStarter.java:161)
+	at org.apache.maven.DefaultMaven.doExecute(DefaultMaven.java:319)
+	at org.apache.maven.DefaultMaven.execute(DefaultMaven.java:156)
+	at org.apache.maven.cli.MavenCli.execute(MavenCli.java:537)
+	at org.apache.maven.cli.MavenCli.doMain(MavenCli.java:196)
+	at org.apache.maven.cli.MavenCli.main(MavenCli.java:141)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:39)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:25)
+	at java.lang.reflect.Method.invoke(Method.java:597)
+	at org.codehaus.plexus.classworlds.launcher.Launcher.launchEnhanced(Launcher.java:290)
+	at org.codehaus.plexus.classworlds.launcher.Launcher.launch(Launcher.java:230)
+	at org.codehaus.plexus.classworlds.launcher.Launcher.mainWithExitCode(Launcher.java:409)
+	at org.codehaus.plexus.classworlds.launcher.Launcher.main(Launcher.java:352)
+Caused by: java.lang.RuntimeException: bad WeaverState.Kind: -115.  File was :<Unknown>::0
+	at org.aspectj.weaver.WeaverStateInfo.read(WeaverStateInfo.java:170)
+	at org.aspectj.weaver.AjAttribute.read(AjAttribute.java:105)
+	at org.aspectj.weaver.bcel.Utility.readAjAttributes(Utility.java:101)
+	at org.aspectj.weaver.bcel.BcelObjectType.ensureAspectJAttributesUnpacked(BcelObjectType.java:381)
+	... 35 more
+

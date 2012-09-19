@@ -83,16 +83,6 @@
 
 	<build>
 		<plugins>
-			
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.3.2</version>
-				<configuration>
-					<source>1.6</source>
-					<target>1.6</target>
-				</configuration>
-           </plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-release-plugin</artifactId>
@@ -115,7 +105,6 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>2.8.1</version>
 				<executions>
 					<execution>
 						<id>attach-javadocs</id>
@@ -135,6 +124,29 @@
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.5.1</version>
+				<configuration>
+					<source>1.6</source>
+					<target>1.6</target>
+				</configuration>
+				<executions>
+					<execution>
+						<!-- Modifying output directory of default compile because non-weaved 
+							classes must be stored in separate folder to not confuse ajc by reweaving 
+							already woven classes (which leads to to ajc error message like "bad weaverState.Kind: 
+							-115") -->
+						<id>default-compile</id>
+						<configuration>
+							<compilerArguments>
+								<d>${project.build.directory}/unwoven-classes</d>
+							</compilerArguments>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-dependency-plugin</artifactId>
 				<executions>
 					<execution>
@@ -150,19 +162,24 @@
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>aspectj-maven-plugin</artifactId>
 				<version>1.4</version>
+				<configuration>
+					<weaveDirectories>
+						<weaveDirectory>${project.build.directory}/unwoven-classes</weaveDirectory>
+					</weaveDirectories>
+					<ajdtBuildDefFile>build-1-6.ajproperties</ajdtBuildDefFile>
+					<source>1.6</source>
+					<target>1.6</target>
+				</configuration>
 				<executions>
 					<execution>
+						<!-- Compile and weave aspects after all classes compiled by javac -->
+						<phase>process-classes</phase>
 						<goals>
-							<goal>compile</goal>
-							<goal>test-compile</goal>
+							<goal>compile</goal>       <!-- use this goal to weave all your main classes -->
+							<goal>test-compile</goal>  <!-- use this goal to weave all your test classes -->
 						</goals>
 					</execution>
 				</executions>
-				<configuration>
-					<source>1.6</source>
-					<target>1.6</target>
-					<outxml>true</outxml>
-				</configuration>
 			</plugin>
 		</plugins>
 	</build>
