@@ -19,8 +19,8 @@ Use github to clone the project onto your computer from https://github.com/tickc
 and pick a location other than your workspace
 Under the BroadcastingInterfaces github clone directory
 execute: mvn clean eclipse:clean
-
-execute: mvn -DdownloadSources=true mvn compile test-compile eclipse:eclipse
+execute: mvn -DdownloadSources=true compile test-compile eclipse:eclipse
+execute: mvn test
 Note: for more info about the aspectj-maven-plugin see http://mojo.codehaus.org/aspectj-maven-plugin/index.html
 
 Launch eclipse...
