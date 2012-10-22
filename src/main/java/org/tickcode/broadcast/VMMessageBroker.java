@@ -29,7 +29,7 @@ package org.tickcode.broadcast;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -48,11 +48,17 @@ import org.tickcode.trace.MethodUtil;
  * @author eyon
  * 
  */
-public class VMMessageBroker extends AbstractMessageBroker {
+public class VMMessageBroker implements MessageBroker {
 
 	private static Logger logger;
 	private static boolean loggingOn;
-	private static boolean settingVMMessageBrokerForAll;
+	
+	private static VMMessageBroker singleton;
+	public static VMMessageBroker get(){
+		if(singleton == null)
+			singleton = new VMMessageBroker();
+		return singleton;
+	}
 
 	static {
 		logger = Logger.getLogger(org.tickcode.broadcast.VMMessageBroker.class);
@@ -61,6 +67,33 @@ public class VMMessageBroker extends AbstractMessageBroker {
 
 	public VMMessageBroker() {
 	}
+	
+	@Override
+	public Broadcast createProducer(Broadcast implementation){
+		ArrayList<Class> broadcastInterfaces = new ArrayList<Class>();
+		for (Class _class : implementation.getClass().getInterfaces()) {
+			if (Broadcast.class.isAssignableFrom(_class)) {
+				broadcastInterfaces.add(_class);
+			}
+		}
+		this.addConsumer(implementation);
+		return BroadcastProducerProxy.newInstance(this, broadcastInterfaces.toArray(new Class[broadcastInterfaces.size()]));
+	}
+	
+	@Override
+	public Broadcast createProducer(Class _class){
+		ArrayList<Class> broadcastInterfaces = new ArrayList<Class>();
+		for(Class _interface : _class.getInterfaces()){
+			if (Broadcast.class.isAssignableFrom(_class)) {
+				broadcastInterfaces.add(_class);
+				addInterface(_class, null);
+			}
+		}
+		if(broadcastInterfaces.size() == 0)
+			throw new RuntimeException("You cannot create a producer for an interface that does not extend Broadcast.");		
+		return BroadcastProducerProxy.newInstance(this, broadcastInterfaces.toArray(new Class[broadcastInterfaces.size()]));
+	}
+	
 
 	/**
 	 * By using ThreadLocal, every set of method names will be unique per thread.  So while we allow
@@ -261,7 +294,9 @@ public class VMMessageBroker extends AbstractMessageBroker {
 			}
 			methodsOnTheCurrentThreadStack.add(methodName);
 			beginBroadcasting(producer, methodName, params);
-			interfacesByMethodName.get(methodName).broadcast(producer, params);	
+			BroadcastConsumersForAGivenInterface b = interfacesByMethodName.get(methodName);
+			if(b!=null)
+				b.broadcast(producer, params);	
 			finishedBroadcasting(producer, methodName,params);
 			methodsOnTheCurrentThreadStack.remove(methodName);
 		}
@@ -287,111 +322,86 @@ public class VMMessageBroker extends AbstractMessageBroker {
 	 * @see org.tickcode.broadcast.MessageBroker#remove(org.tickcode.broadcast.Broadcast)
 	 */
 	@Override
-	public void remove(Broadcast consumer) {
+	public void removeConsumer(Broadcast consumer) {
 		//consumer = getBroadcastImplementation(consumer);
 		for (BroadcastConsumersForAGivenInterface imp : interfacesByMethodName
 				.values()) {
 			imp.remove(consumer);
 		}
 	}
+	
+	protected void addInterface(Class _interface, Broadcast consumer){
+		if (Broadcast.class.isAssignableFrom(_interface)
+				&& Broadcast.class != _interface) { // you cannot just implement {@link Broadcast}.
+			if (loggingOn) {
+				if(consumer != null)
+					logger.debug("Interface: " + _interface.getSimpleName()
+						+ " added for " + consumer.getClass().getSimpleName());
+			}
+			for (Method method : _interface.getMethods()) {
+				if (loggingOn) {
+					logger.debug("Broadcasting to "
+							+ MethodUtil.getReadableMethodString(
+									_interface, method));
+
+				}
+
+				if (!Void.TYPE.equals(method.getReturnType())) {
+					throw new NonVoidBroadcastMethodException(
+							"You tried to implement a non-void broadcast method.  See "
+									+ MethodUtil.getReadableMethodString(
+											_interface, method));
+				}
+
+				BroadcastConsumersForAGivenInterface impl = interfacesByMethodName
+						.get(method.getName());
+				if (impl == null) {
+					impl = new BroadcastConsumersForAGivenInterface(
+							_interface, method);
+					if(consumer != null)
+						impl.addBroadcastReceiver(consumer);
+					interfacesByMethodName.put(method.getName(), impl);
+				} else if (impl.broadcastInterface != _interface) {
+					logger.error("We cannot have two methods with the same name! Please look at "
+							+ MethodUtil.getReadableMethodString(
+									impl.broadcastInterface, impl.method)
+							+ " and "
+							+ MethodUtil.getReadableMethodString(
+									_interface, method));
+					throw new DuplicateMethodException(
+							"We cannot have two methods from a Broadcast interface with the same name! Please look at "
+									+ MethodUtil.getReadableMethodString(
+											impl.broadcastInterface,
+											impl.method)
+									+ " and "
+									+ MethodUtil.getReadableMethodString(
+											_interface, method));
+				} else {
+					if(consumer != null)
+						impl.addBroadcastReceiver(consumer);
+				}
+			}
+		}		
+	}
 
 	/* (non-Javadoc)
 	 * @see org.tickcode.broadcast.MessageBroker#add(org.tickcode.broadcast.Broadcast)
 	 */
 	@Override
-	public void add(Broadcast consumer) {
-		if(!watchForDuplicatesOfUnderlyingImplementationFromProxies.containsKey(getBroadcastImplementation(consumer))){
-			watchForDuplicatesOfUnderlyingImplementationFromProxies.put(getBroadcastImplementation(consumer), consumer);
+	public void addConsumer(Broadcast consumer) {
+		if(!watchForDuplicatesOfUnderlyingImplementationFromProxies.containsKey(consumer)){
+			watchForDuplicatesOfUnderlyingImplementationFromProxies.put(consumer, consumer);
 		}
 		else{
-			Broadcast implementation = getBroadcastImplementation(consumer);
+			Broadcast implementation = consumer;
 			Broadcast previousProxy = watchForDuplicatesOfUnderlyingImplementationFromProxies.get(implementation);
 			if(consumer instanceof java.lang.reflect.Proxy || previousProxy instanceof java.lang.reflect.Proxy){
 				throw new ProxyImplementationException("You tried to add a proxy with an implementation that was previously added.");
 			}
 		}
 		
-		HashSet<String> broadcastConsumerMethods = new HashSet<String>();
-		HashMap<String, Class> methodsWithAnnotations = new HashMap<String, Class>();
-		// note that we have to pull the underlying implementation so that we can actually see the annotations!
-		for (Method method : getBroadcastImplementation(consumer).getClass().getMethods()) {
-			if (method.isAnnotationPresent(BroadcastConsumer.class)) {
-				methodsWithAnnotations.put(method.getName(),
-						BroadcastConsumer.class);
-				broadcastConsumerMethods.add(method.getName());
-			}
-			if (method.isAnnotationPresent(BroadcastProducer.class)) {
-				methodsWithAnnotations.put(method.getName(),
-						BroadcastProducer.class);
-			}
-		}
-
 		for (Class _interface : consumer.getClass().getInterfaces()) {
-			if (Broadcast.class.isAssignableFrom(_interface)
-					&& Broadcast.class != _interface) { // you cannot just implement {@link Broadcast}.
-				if (loggingOn) {
-					logger.debug("Interface: " + _interface.getSimpleName()
-							+ " added for " + consumer.getClass().getSimpleName());
-				}
-				for (Method method : _interface.getMethods()) {
-					if (loggingOn) {
-						logger.debug("Broadcasting to "
-								+ MethodUtil.getReadableMethodString(
-										_interface, method));
-
-					}
-
-					if (!method.getName().endsWith("$messageBroker") && !Void.TYPE.equals(method.getReturnType())) {
-						throw new NonVoidBroadcastMethodException(
-								"You tried to implement a non-void broadcast method.  See "
-										+ MethodUtil.getReadableMethodString(
-												_interface, method));
-					}
-
-					BroadcastConsumersForAGivenInterface impl = interfacesByMethodName
-							.get(method.getName());
-					if (impl == null) {
-						impl = new BroadcastConsumersForAGivenInterface(
-								_interface, method);
-						if(broadcastConsumerMethods.contains(method.getName()))
-							impl.addBroadcastReceiver(consumer);
-						interfacesByMethodName.put(method.getName(), impl);
-						methodsWithAnnotations.remove(method.getName());
-					} else if(  // this is because of the aspect BroadcastImpl.aj
-								method.getName().endsWith("$messageBroker")
-								){
-						// ignore
-					} else if (impl.broadcastInterface != _interface) {
-						logger.error("We cannot have two methods with the same name! Please look at "
-								+ MethodUtil.getReadableMethodString(
-										impl.broadcastInterface, impl.method)
-								+ " and "
-								+ MethodUtil.getReadableMethodString(
-										_interface, method));
-						throw new DuplicateMethodException(
-								"We cannot have two methods from a Broadcast interface with the same name! Please look at "
-										+ MethodUtil.getReadableMethodString(
-												impl.broadcastInterface,
-												impl.method)
-										+ " and "
-										+ MethodUtil.getReadableMethodString(
-												_interface, method));
-					} else {
-						if(broadcastConsumerMethods.contains(method.getName()))
-							impl.addBroadcastReceiver(consumer);
-						methodsWithAnnotations.remove(method.getName());
-					}
-				}
-			}
-		}
-		for (String methodName : methodsWithAnnotations.keySet()) {
-			String annotation = "@"
-					+ methodsWithAnnotations.get(methodName).getSimpleName();
-			throw new WrongUseOfAnnotationException("The method "
-					+ consumer.getClass().getName() + "." + methodName + "(...)"
-					+ " has the annotation " + annotation
-					+ " but does not implement an interface that extends "
-					+ Broadcast.class.getName());
+			addInterface(_interface, consumer);
 		}
 	}
 
@@ -449,14 +459,13 @@ public class VMMessageBroker extends AbstractMessageBroker {
 		}
 		return false;
 	}
-
-	public static boolean isSettingVMMessageBrokerForAll() {
-		return settingVMMessageBrokerForAll;
+	
+	@Override
+	public void start() {		
+	}
+	@Override
+	public void stop() {		
 	}
 
-	public static void setSettingVMMessageBrokerForAll(
-			boolean settingVMMessageBrokerForAll) {
-		VMMessageBroker.settingVMMessageBrokerForAll = settingVMMessageBrokerForAll;
-	}
 
 }

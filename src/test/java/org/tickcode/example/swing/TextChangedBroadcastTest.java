@@ -31,9 +31,6 @@ import java.util.ArrayList;
 import junit.framework.Assert;
 
 import org.junit.Test;
-import org.tickcode.broadcast.BroadcastConsumer;
-import org.tickcode.broadcast.BroadcastProducer;
-import org.tickcode.broadcast.BroadcastProxy;
 import org.tickcode.broadcast.VMMessageBroker;
 
 
@@ -42,22 +39,18 @@ public class TextChangedBroadcastTest {
 	protected class Producer implements TextChangedBroadcast{
 		protected String messageReceived;
 		@Override
-		@BroadcastProducer
 		public void textChanged(String text) {
 			this.messageReceived = text;
 		}
 	};
 	protected class ProducerAndConsumer implements TextChangedBroadcast{
 		protected String messageReceived;
-		@BroadcastConsumer
-		@BroadcastProducer
 		public void textChanged(String text) {
 			this.messageReceived = text;
 		};
 	};
 	protected class Consumer implements TextChangedBroadcast{
 		protected String messageReceived;
-		@BroadcastConsumer
 		public void textChanged(String text) {
 			this.messageReceived = text;
 		};
@@ -67,11 +60,12 @@ public class TextChangedBroadcastTest {
 	public void test() {
 		VMMessageBroker broker = new VMMessageBroker();
 		Producer producer = new Producer(); 
-		broker.add(producer);
+		//note that we do not add the producer to the broker because
+		// it should never consume messages
 		ProducerAndConsumer producerAndConsumer = new ProducerAndConsumer(); 
-		broker.add(producerAndConsumer);
+		broker.addConsumer(producerAndConsumer);
 		Consumer consumer = new Consumer(); 
-		broker.add(consumer);
+		broker.addConsumer(consumer);
 		
 
 		String expected = null;
@@ -80,14 +74,14 @@ public class TextChangedBroadcastTest {
 		
 		
 		expected = "Hello World from the Producer";
-		producer.textChanged(expected);
+		((TextChangedBroadcast)broker.createProducer(TextChangedBroadcast.class)).textChanged(expected);
 		Assert.assertEquals(expected, producerAndConsumer.messageReceived);
 		Assert.assertEquals(expected, consumer.messageReceived);
 		
 		String expectedForConsumer = "Hello World from the ProducerAndConsumer";
 		String expectedForProducerAndConsumer = expectedForConsumer;
 		producer.messageReceived = null;
-		producerAndConsumer.textChanged(expectedForConsumer);
+		((TextChangedBroadcast)broker.createProducer(TextChangedBroadcast.class)).textChanged(expectedForConsumer);
 		Assert.assertEquals(expectedForProducerAndConsumer, producerAndConsumer.messageReceived);
 		Assert.assertEquals(expectedForConsumer, consumer.messageReceived);
 		Assert.assertNull(producer.messageReceived);
@@ -95,57 +89,21 @@ public class TextChangedBroadcastTest {
 	}
 	
 	@Test
-	public void testUsingProxy(){
-		VMMessageBroker broker = new VMMessageBroker();
-		broker.clear();
-		broker.setUsingAspectJ(false);
-		try{
-			Producer producer = new Producer();
-			ProducerAndConsumer producerAndConsumer = new ProducerAndConsumer();
-			Consumer consumer = new Consumer();
-			
-			TextChangedBroadcast producerProxy = (TextChangedBroadcast) BroadcastProxy.newInstance(broker, producer);
-			TextChangedBroadcast producerAndConsumerProxy = (TextChangedBroadcast) BroadcastProxy.newInstance(broker, producerAndConsumer);
-			TextChangedBroadcast consumerProxy = (TextChangedBroadcast) BroadcastProxy.newInstance(broker, consumer);
-
-			String expected = null;
-			Assert.assertEquals(expected, producerAndConsumer.messageReceived);
-			Assert.assertEquals(expected, consumer.messageReceived);
-			
-			
-			expected = "Hello World from the Producer";
-			producerProxy.textChanged(expected);
-			Assert.assertEquals(expected, producerAndConsumer.messageReceived);
-			Assert.assertEquals(expected, consumer.messageReceived);
-			
-			String expectedForConsumer = "Hello World from the ProducerAndConsumer";
-			String expectedForProducerAndConsumer = expectedForConsumer;
-			producerAndConsumerProxy.textChanged(expectedForConsumer);
-			Assert.assertEquals(expectedForProducerAndConsumer, producerAndConsumer.messageReceived);
-			Assert.assertEquals(expectedForConsumer, consumer.messageReceived);
-
-		}finally{
-			broker.setUsingAspectJ(true);
-		}
-	}
-	
 	public void test100Consumers(){
+		VMMessageBroker broker = new VMMessageBroker();
 		Producer producer = new Producer();
 		ArrayList<Consumer> consumers = new ArrayList<Consumer>();
 		
 		for(int i=0; i < 100; i++){
 			consumers.add(new Consumer());
+			broker.addConsumer(consumers.get(i));
 		}
 		
-		for(int i=0; i < 100; i++){
-			Assert.assertNull(consumers.get(i));
-		}
-
 		for(int i=0; i < 100; i++){
 			Assert.assertNull(consumers.get(i).messageReceived);
 		}
 		
-		producer.textChanged("Hello World");
+		((TextChangedBroadcast)broker.createProducer(TextChangedBroadcast.class)).textChanged("Hello World");
 
 		for(int i=0; i < 100; i++){
 			Assert.assertEquals("Hello World",consumers.get(i).messageReceived);

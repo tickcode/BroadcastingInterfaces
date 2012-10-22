@@ -43,23 +43,23 @@ public class BroadcastsWithinBroadcastsTest {
 		String name;
 		int method1;
 		int method2;
+		MessageBroker broker;
+		InfiniteLoopInterface broadcast;
 
-		public MyFirstClass(String name) {
+		public MyFirstClass(String name, MessageBroker broker) {
 			this.name = name;
+			this.broker = broker;
+			broadcast = (InfiniteLoopInterface)broker.createProducer(InfiniteLoopInterface.class);
 		}
 
-		@BroadcastConsumer
-		@BroadcastProducer
 		public void method1() {
-			System.out.println("We invoked method1 on " + name);
+			//System.out.println("We invoked method1 on " + name);
 			method1++;
-			method2();
+			broadcast.method2();
 		}
 
-		@BroadcastProducer
-		@BroadcastConsumer
 		public void method2() {
-			System.out.println("We invoked method2 on " + name);
+			//System.out.println("We invoked method2 on " + name);
 			method2++;
 
 			if (method2 > 20)
@@ -70,8 +70,10 @@ public class BroadcastsWithinBroadcastsTest {
 	protected class MyErrorHandler implements ErrorHandler {
 		int trailSize;
 		String trailString;
+
 		@Override
-		public void error(MessageBroker broker, Broadcast broadcast, Throwable ex, BreadCrumbTrail trail) {
+		public void error(MessageBroker broker, Broadcast broadcast,
+				Throwable ex, BreadCrumbTrail trail) {
 			this.trailString = trail.toString();
 			this.trailSize = trail.size();
 			throw new RuntimeException("Are we getting a stack overflow?", ex);
@@ -83,10 +85,10 @@ public class BroadcastsWithinBroadcastsTest {
 		VMMessageBroker broker = new VMMessageBroker();
 		MyErrorHandler handler = new MyErrorHandler();
 		broker.add(handler);
-		MyFirstClass first = new MyFirstClass("first");
-		MyFirstClass second = new MyFirstClass("second");
-		broker.add(first);
-		broker.add(second);
+		MyFirstClass first = new MyFirstClass("first", broker);
+		MyFirstClass second = new MyFirstClass("second", broker);
+		broker.addConsumer(first);
+		broker.addConsumer(second);
 
 		Assert.assertEquals(0, first.method1);
 		Assert.assertEquals(0, first.method2);
@@ -94,27 +96,33 @@ public class BroadcastsWithinBroadcastsTest {
 		Assert.assertEquals(0, second.method2);
 
 		try {
-			first.method1();
+			((InfiniteLoopInterface) broker.createProducer(first)).method1();
 			/**
-			 * first.method1()  first.method1 == 1
-			 * 		first.method2()  first.method2 == 1
-			 *      second.method2() (from broadcast)  second.method2 == 1
-			 * second.method1()  (from broadcast)  second.method1 == 1
-			 * 		second.method2() second.method2 == 2
-			 * 		first.method2()  (from broadcast) first.method2 == 2
+			 * first.method1() first.method1 == 1 first.method2() first.method2
+			 * == 1 second.method2() (from broadcast) second.method2 == 1
+			 * second.method1() (from broadcast) second.method1 == 1
+			 * second.method2() second.method2 == 2 first.method2() (from
+			 * broadcast) first.method2 == 2
+			 * 
 			 */
-			
+			 
+//We invoked method1 on first
+//We invoked method2 on first
+//We invoked method2 on second
+//We invoked method1 on second
+//We invoked method2 on first
+//We invoked method2 on second
 
 			Assert.assertEquals(1, first.method1);
 			Assert.assertEquals(2, first.method2);
 			Assert.assertEquals(1, second.method1);
 			Assert.assertEquals(2, second.method2);
-			
+
 		} catch (RuntimeException ex) {
 			Assert.assertEquals("Are we getting a stack overflow?",
 					ex.getMessage());
 			Assert.assertTrue(20 < handler.trailSize);
-			//System.out.println(handler.trail);
+			// System.out.println(handler.trail);
 		}
 
 	}
@@ -123,8 +131,8 @@ public class BroadcastsWithinBroadcastsTest {
 	public void testAllowBroadcastingWithinBroadcastingUsingProxy() {
 		VMMessageBroker broker = new VMMessageBroker();
 		MyErrorHandler handler = new MyErrorHandler();
-		MyFirstClass first = new MyFirstClass("first");
-		MyFirstClass second = new MyFirstClass("second");
+		MyFirstClass first = new MyFirstClass("first", broker);
+		MyFirstClass second = new MyFirstClass("second", broker);
 
 		Assert.assertEquals(0, first.method1);
 		Assert.assertEquals(0, first.method2);
@@ -133,16 +141,14 @@ public class BroadcastsWithinBroadcastsTest {
 
 		try {
 			broker.clear();
-			broker.setUsingAspectJ(false);
-			broker.add(second);
+			broker.addConsumer(second);
 			broker.add(handler);
-			((InfiniteLoopInterface)BroadcastProxy.newInstance(broker, first)).method1();
+
+			((InfiniteLoopInterface) broker.createProducer(first)).method1();
 		} finally {
-			broker.remove(
-					handler);
-			broker.setUsingAspectJ(true);
+			broker.remove(handler);
 		}
 
 	}
-	
+
 }

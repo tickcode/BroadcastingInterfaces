@@ -41,19 +41,16 @@ public class DuplicateMethodNameTest {
 
 	protected class MyTestClass implements FirstTestInterface,
 			SecondTestInterface {
-		@BroadcastConsumer
 		public void duplicateTest() {
 		}
 	}
 
 	protected class TestFirstClass implements FirstTestInterface {
-		@BroadcastConsumer
 		public void duplicateTest() {
 		}
 	}
 
 	protected class TestSecondClass implements SecondTestInterface {
-		@BroadcastConsumer
 		public void duplicateTest() {
 		}
 	}
@@ -62,7 +59,7 @@ public class DuplicateMethodNameTest {
 	public void test() {
 		try {
 			VMMessageBroker broker = new VMMessageBroker();
-			broker.add(new MyTestClass());
+			broker.addConsumer(new MyTestClass());
 			Assert.fail("We should have gotten an exception here!");
 		} catch (DuplicateMethodException err) {
 			// good
@@ -73,8 +70,7 @@ public class DuplicateMethodNameTest {
 	public void testUsingProxy() {
 		try {
 			VMMessageBroker broker = new VMMessageBroker();
-			broker.setUsingAspectJ(false);
-			BroadcastProxy.newInstance(broker, new MyTestClass());
+			broker.createProducer(new MyTestClass());
 			Assert.fail("We should have gotten an exception here!");
 		} catch (DuplicateMethodException err) {
 			// good
@@ -84,9 +80,9 @@ public class DuplicateMethodNameTest {
 	@Test
 	public void testDuplicatesBetweenInterfaces() {
 		VMMessageBroker broker = new VMMessageBroker();
-		broker.add(new TestFirstClass());
+		broker.addConsumer(new TestFirstClass());
 		try {
-			broker.add(new TestSecondClass());
+			broker.addConsumer(new TestSecondClass());
 			Assert.fail("We should have gotten an exception here!");
 		} catch (DuplicateMethodException err) {
 			// good
@@ -96,10 +92,9 @@ public class DuplicateMethodNameTest {
 	@Test
 	public void testDuplicatesBetweenInterfacesUsingProxy() {
 		VMMessageBroker broker = new VMMessageBroker();
-		broker.add(new TestFirstClass());
+		broker.addConsumer(new TestFirstClass());
 		try {
-			AbstractMessageBroker.setUsingAspectJ(false);
-			BroadcastProxy.newInstance(broker, new TestSecondClass());
+			broker.createProducer(new TestSecondClass());
 			Assert.fail("We should have gotten an exception here!");
 		} catch (DuplicateMethodException err) {
 			// good

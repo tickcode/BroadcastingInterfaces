@@ -33,7 +33,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 
-import org.tickcode.broadcast.BroadcastConsumer;
+import org.tickcode.broadcast.VMMessageBroker;
 
 
 
@@ -62,6 +62,7 @@ public class ConsumerPanel extends JPanel implements TextChangedBroadcast{
 	public ConsumerPanel() {
 		super();
 		initialize();
+		VMMessageBroker.get().addConsumer(this);
 	}
 
 	/**
@@ -102,7 +103,6 @@ public class ConsumerPanel extends JPanel implements TextChangedBroadcast{
 		return jTextArea;
 	}
 	
-	@BroadcastConsumer
 	public void textChanged(String text){
 		jTextArea.setText(text);
 	}

@@ -1,12 +1,6 @@
-Setup AJDT within Eclipse
 Download eclipse from http://eclipse.org
 Figure out where you want your eclipse workspace to be and create it.
 Launch eclipse and select your workspace
-Goto Help, Eclipse Marketplace
-Within the "Find" text box search for "ajdt"
-Select the Install button for "AspectJ Development Tools (Juno)"
-Click "Next >" and follow the prompts to install the AJDT
-You will then be prompted to restart eclipse.
 
 Setup Maven
 Grab a copy of maven from http://maven.apache.org/download.html
@@ -21,7 +15,6 @@ Under the BroadcastingInterfaces github clone directory
 execute: mvn clean eclipse:clean
 execute: mvn -DdownloadSources=true compile test-compile eclipse:eclipse
 execute: mvn test
-Note: for more info about the aspectj-maven-plugin see http://mojo.codehaus.org/aspectj-maven-plugin/index.html
 
 Launch eclipse...
 Within eclipse import an existing project from: 

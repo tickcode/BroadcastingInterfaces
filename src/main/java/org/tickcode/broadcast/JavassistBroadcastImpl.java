@@ -44,14 +44,14 @@ public class JavassistBroadcastImpl {
 		try{
 			CtClass ct = classPool.get(className);
 			boolean atLeastOneProducerMethod = false;
-			for (CtMethod method : ct.getMethods()) {
-				if (method.hasAnnotation(BroadcastProducer.class)) {
-					atLeastOneProducerMethod = true;
-					StringBuffer content = new StringBuffer();
-					content.append("\n { getMessageBroker().broadcast($0, \"").append(method.getName()).append("\", $args); }");
-					method.insertAfter(content.toString());
-				}
-			}
+//			for (CtMethod method : ct.getMethods()) {
+//				if (method.hasAnnotation(BroadcastProducer.class)) {
+//					atLeastOneProducerMethod = true;
+//					StringBuffer content = new StringBuffer();
+//					content.append("\n { getMessageBroker().broadcast($0, \"").append(method.getName()).append("\", $args); }");
+//					method.insertAfter(content.toString());
+//				}
+//			}
 			if(atLeastOneProducerMethod){
 				ct.writeFile();
 			}

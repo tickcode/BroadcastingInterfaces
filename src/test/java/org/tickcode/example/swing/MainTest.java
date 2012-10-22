@@ -37,24 +37,21 @@ import javax.swing.UIManager;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.tickcode.broadcast.AbstractMessageBroker;
-
 
 public class MainTest {
 
 	@Test
 	public void test() throws Exception {
-		AbstractMessageBroker.setUsingAspectJ(true);
 		final Main main = new Main();
-		
-		// At this point I'm expecting that DependencyInjection.aj did my dependency
+
+		// At this point I'm expecting that DependencyInjection.aj did my
+		// dependency
 		// injection and that I have a fully functional GUI
 
 		try {
 			Assert.assertNotNull(((JMenuBar) TestUtils.getChildNamed(main,
 					"MainMenuBar")));
-			
-			
+
 			Assert.assertNotNull(((JTextArea) TestUtils.getChildNamed(main,
 					"ProducerJTextArea")));
 			Assert.assertNotNull(((JTextArea) TestUtils.getChildNamed(main,
@@ -75,9 +72,9 @@ public class MainTest {
 					main, "ProducerJTextArea")), "Hello World");
 
 			final CountDownLatch latch = new CountDownLatch(1);
-			
+
 			// I did not want to have to put in a Thread.sleep() to wait for the
-			// event to be consume the last character(s) of Hello World 
+			// event to be consume the last character(s) of Hello World
 			// so I simply put the Asserts inside the awt dispatch thread
 			// so they are queued for after the Consumer/Producers broadcast
 			SwingUtilities.invokeLater(new Runnable() {
@@ -97,13 +94,12 @@ public class MainTest {
 			});
 
 			latch.await();
-			
+
 		} finally {
 			main.setVisible(false);
 			main.dispose();
 		}
 	}
-
 
 	public void testPopUp(Component parent) throws Exception {
 		final JButton popup = (JButton) TestUtils

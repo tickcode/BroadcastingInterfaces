@@ -34,10 +34,12 @@ import redis.clients.jedis.JedisPoolConfig;
 
 public class InternalRedisTest {
 
-	protected interface ArbitraryMethodsNoBroadcast{
+	protected interface ArbitraryMethodsNoBroadcast {
 		public void sanityCheckMethod1();
+
 		public void shouldNotBroadcast();
 	}
+
 	protected interface ArbitraryMethods extends Broadcast {
 		public void sanityCheckMethod1();
 
@@ -46,7 +48,8 @@ public class InternalRedisTest {
 		public void sanityCheckMethod3(ArbitraryMethods myself);
 	}
 
-	protected class MyFirstClass implements ArbitraryMethods,ArbitraryMethodsNoBroadcast {
+	protected class MyFirstClass implements ArbitraryMethods,
+			ArbitraryMethodsNoBroadcast {
 		int countMethod1;
 		int countMethod2;
 		int countMethod3;
@@ -55,33 +58,28 @@ public class InternalRedisTest {
 		String message;
 		ArbitraryMethods payload;
 
-		@BroadcastConsumer
-		@BroadcastProducer
 		public void sanityCheckMethod1() {
 			countMethod1++;
 		}
 
-		@BroadcastProducer
-		@BroadcastConsumer
 		public void sanityCheckMethod2(String message) {
 			countMethod2++;
 			this.message = message;
 		}
 
-		@BroadcastConsumer
-		@BroadcastProducer
 		public void sanityCheckMethod3(ArbitraryMethods payload) {
 			countMethod3++;
 			this.payload = payload;
 		}
-		
+
 		@Override
 		public void shouldNotBroadcast() {
 			countShouldNotBroadcast++;
 		}
 	}
 
-	protected class MySecondClass implements ArbitraryMethods,ArbitraryMethodsNoBroadcast {
+	protected class MySecondClass implements ArbitraryMethods,
+			ArbitraryMethodsNoBroadcast {
 		int countMethod1;
 		int countMethod2;
 		int countMethod3;
@@ -90,21 +88,15 @@ public class InternalRedisTest {
 		String message;
 		ArbitraryMethods payload;
 
-		@BroadcastConsumer
-		@BroadcastProducer
 		public void sanityCheckMethod1() {
 			countMethod1++;
 		}
 
-		@BroadcastConsumer
-		@BroadcastProducer
 		public void sanityCheckMethod2(String message) {
 			countMethod2++;
 			this.message = message;
 		}
 
-		@BroadcastConsumer
-		@BroadcastProducer
 		public void sanityCheckMethod3(ArbitraryMethods payload) {
 			countMethod3++;
 			this.payload = payload;
@@ -116,7 +108,6 @@ public class InternalRedisTest {
 		}
 
 	}
-	
 
 	@Test
 	public void testSanityCheck() {
@@ -127,12 +118,10 @@ public class InternalRedisTest {
 				jedisPool);
 		MyFirstClass first = new MyFirstClass();
 		MySecondClass second = new MySecondClass();
-// this is not necessary because we have RedisMessageBroker.setSettingRedisMessageBrokerForAll(true);
-//		broker.add(first);
-//		broker.add(second);
+		
+		broker.addConsumer(second);
 
-		Assert.assertTrue(broker.isUsingAspectJ());
-		first.sanityCheckMethod1();
+		((ArbitraryMethods)broker.createProducer(first)).sanityCheckMethod1();
 		Assert.assertEquals(1, first.countMethod1);
 		Assert.assertEquals(1, second.countMethod1);
 		Assert.assertEquals(0, first.countMethod2);
@@ -146,7 +135,7 @@ public class InternalRedisTest {
 		Assert.assertNull(first.payload);
 		Assert.assertNull(second.payload);
 
-		first.sanityCheckMethod2("my message");
+		((ArbitraryMethods)broker.createProducer(first)).sanityCheckMethod2("my message");
 		Assert.assertEquals(1, first.countMethod1);
 		Assert.assertEquals(1, second.countMethod1);
 		Assert.assertEquals(1, first.countMethod2);
@@ -160,7 +149,7 @@ public class InternalRedisTest {
 		Assert.assertNull(first.payload);
 		Assert.assertNull(second.payload);
 
-		first.sanityCheckMethod3(first);
+		((ArbitraryMethods)broker.createProducer(first)).sanityCheckMethod3(first);
 		Assert.assertEquals(1, first.countMethod1);
 		Assert.assertEquals(1, second.countMethod1);
 		Assert.assertEquals(1, first.countMethod2);
@@ -173,22 +162,11 @@ public class InternalRedisTest {
 		Assert.assertEquals("my message", second.message);
 		Assert.assertEquals(first, first.payload);
 		Assert.assertEquals(first, second.payload);
-		
+
 		RedisMessageBroker.setSettingRedisMessageBrokerForAll(false);
 
+	}
 
-	}
-	
-	@Test
-	public void testWeForgotToUseAMessageBroker(){
-		try{
-			MyFirstClass first = new MyFirstClass();
-			first.sanityCheckMethod1();
-			Assert.fail("We should have gotten a NoMessageBrokerException");
-		}catch(NoMessageBrokerException ex){
-			// good
-		}
-	}
 
 	@Test
 	public void testSanityCheckUsingProxy() {
@@ -197,57 +175,54 @@ public class InternalRedisTest {
 		RedisMessageBroker broker = new RedisMessageBroker("LocalTest",
 				jedisPool);
 		broker.clear();
-		broker.setUsingAspectJ(false);
-		try{
-			MyFirstClass first = new MyFirstClass();
-			MySecondClass second = new MySecondClass();
-			ArbitraryMethods firstProxy = (ArbitraryMethods)BroadcastProxy.newInstance(broker, first);
-			ArbitraryMethods secondProxy = (ArbitraryMethods)BroadcastProxy.newInstance(broker, second);
-			
-			firstProxy.sanityCheckMethod1();
-			Assert.assertEquals(1, first.countMethod1);
-			Assert.assertEquals(1, second.countMethod1);
-			Assert.assertEquals(0, first.countMethod2);
-			Assert.assertEquals(0, second.countMethod2);
-			Assert.assertEquals(0, first.countMethod3);
-			Assert.assertEquals(0, second.countMethod3);
-			Assert.assertEquals(0, first.countShouldNotBroadcast);
-			Assert.assertEquals(0, second.countShouldNotBroadcast);
-			Assert.assertNull(first.message);
-			Assert.assertNull(second.message);
-			Assert.assertNull(first.payload);
-			Assert.assertNull(second.payload);
-	
-			firstProxy.sanityCheckMethod2("my message");
-			Assert.assertEquals(1, first.countMethod1);
-			Assert.assertEquals(1, second.countMethod1);
-			Assert.assertEquals(1, first.countMethod2);
-			Assert.assertEquals(1, second.countMethod2);
-			Assert.assertEquals(0, first.countMethod3);
-			Assert.assertEquals(0, second.countMethod3);
-			Assert.assertEquals(0, first.countShouldNotBroadcast);
-			Assert.assertEquals(0, second.countShouldNotBroadcast);
-			Assert.assertEquals("my message", first.message);
-			Assert.assertEquals("my message", second.message);
-			Assert.assertNull(first.payload);
-			Assert.assertNull(second.payload);
-	
-			firstProxy.sanityCheckMethod3(first);
-			Assert.assertEquals(1, first.countMethod1);
-			Assert.assertEquals(1, second.countMethod1);
-			Assert.assertEquals(1, first.countMethod2);
-			Assert.assertEquals(1, second.countMethod2);
-			Assert.assertEquals(1, first.countMethod3);
-			Assert.assertEquals(1, second.countMethod3);
-			Assert.assertEquals(0, first.countShouldNotBroadcast);
-			Assert.assertEquals(0, second.countShouldNotBroadcast);
-			Assert.assertEquals("my message", first.message);
-			Assert.assertEquals("my message", second.message);
-			Assert.assertEquals(first, first.payload);
-			Assert.assertEquals(first, second.payload);
-		}finally{
-			broker.setUsingAspectJ(true);
-		}
+		MyFirstClass first = new MyFirstClass();
+		MySecondClass second = new MySecondClass();
+		ArbitraryMethods firstProxy = (ArbitraryMethods) broker
+				.createProducer(first);
+		ArbitraryMethods secondProxy = (ArbitraryMethods) broker
+				.createProducer(second);
+
+		firstProxy.sanityCheckMethod1();
+		Assert.assertEquals(1, first.countMethod1);
+		Assert.assertEquals(1, second.countMethod1);
+		Assert.assertEquals(0, first.countMethod2);
+		Assert.assertEquals(0, second.countMethod2);
+		Assert.assertEquals(0, first.countMethod3);
+		Assert.assertEquals(0, second.countMethod3);
+		Assert.assertEquals(0, first.countShouldNotBroadcast);
+		Assert.assertEquals(0, second.countShouldNotBroadcast);
+		Assert.assertNull(first.message);
+		Assert.assertNull(second.message);
+		Assert.assertNull(first.payload);
+		Assert.assertNull(second.payload);
+
+		firstProxy.sanityCheckMethod2("my message");
+		Assert.assertEquals(1, first.countMethod1);
+		Assert.assertEquals(1, second.countMethod1);
+		Assert.assertEquals(1, first.countMethod2);
+		Assert.assertEquals(1, second.countMethod2);
+		Assert.assertEquals(0, first.countMethod3);
+		Assert.assertEquals(0, second.countMethod3);
+		Assert.assertEquals(0, first.countShouldNotBroadcast);
+		Assert.assertEquals(0, second.countShouldNotBroadcast);
+		Assert.assertEquals("my message", first.message);
+		Assert.assertEquals("my message", second.message);
+		Assert.assertNull(first.payload);
+		Assert.assertNull(second.payload);
+
+		firstProxy.sanityCheckMethod3(first);
+		Assert.assertEquals(1, first.countMethod1);
+		Assert.assertEquals(1, second.countMethod1);
+		Assert.assertEquals(1, first.countMethod2);
+		Assert.assertEquals(1, second.countMethod2);
+		Assert.assertEquals(1, first.countMethod3);
+		Assert.assertEquals(1, second.countMethod3);
+		Assert.assertEquals(0, first.countShouldNotBroadcast);
+		Assert.assertEquals(0, second.countShouldNotBroadcast);
+		Assert.assertEquals("my message", first.message);
+		Assert.assertEquals("my message", second.message);
+		Assert.assertEquals(first, first.payload);
+		Assert.assertEquals(first, second.payload);
 	}
 
 }

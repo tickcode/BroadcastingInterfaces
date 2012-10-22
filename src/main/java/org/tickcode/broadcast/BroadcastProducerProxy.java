@@ -26,26 +26,37 @@
  ******************************************************************************/
 package org.tickcode.broadcast;
 
-public aspect SettingVMMessageBrokerForAll {
-	VMMessageBroker lastInstanceCreated;
-	
-	/** Watch for new instances of VMMessageBroker **/
-	pointcut createVMMessageBroker(VMMessageBroker _this):
-		execution (VMMessageBroker.new(..)) && this(_this) && if(VMMessageBroker.isSettingVMMessageBrokerForAll());
-	
-	after(VMMessageBroker _this) returning: createVMMessageBroker(_this){
-		lastInstanceCreated = _this;
+import java.lang.reflect.Method;
+
+/**
+ * Used for creating a producer proxy for sending messages to all consumers using
+ * the given MesssageBroker.
+ * @author Eyon Land
+ *
+ */
+public class BroadcastProducerProxy implements java.lang.reflect.InvocationHandler {
+
+	private MessageBroker messageBroker;
+
+	public static Broadcast newInstance(MessageBroker broker, Class[] broadcastInterfaces) {
+		Broadcast proxy = (Broadcast)java.lang.reflect.Proxy.newProxyInstance(broker.getClass()
+				.getClassLoader(), broadcastInterfaces,
+				new BroadcastProducerProxy(broker));
+		return proxy;
 	}
 	
-	/** Watch for new instances of Broadcast and if the static variable is set, automatically provide the
-	 *  new instance of VMMessageBroker to them.
-	 * @param _this
-	 */
-	pointcut createBroadcast(Broadcast _this):
-		execution (Broadcast+.new(..)) && this(_this) && if(VMMessageBroker.isSettingVMMessageBrokerForAll()) && if(AbstractMessageBroker.isUsingAspectJ());
-	
-	after(Broadcast _this) returning: createBroadcast(_this){
-		if(lastInstanceCreated != null)
-			lastInstanceCreated.add(_this);
+	private BroadcastProducerProxy(MessageBroker broker) {
+		this.messageBroker = broker;
 	}
+	
+	private MessageBroker getBroker(){
+		return messageBroker;
+	}
+
+	public Object invoke(Object proxy, Method m, Object[] args)
+			throws Throwable {
+		messageBroker.broadcast((Broadcast)proxy, m.getName(), args);
+		return null;
+	}
+
 }

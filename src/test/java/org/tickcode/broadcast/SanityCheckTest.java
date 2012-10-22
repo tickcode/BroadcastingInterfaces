@@ -55,21 +55,15 @@ public class SanityCheckTest {
 		String message;
 		ArbitraryMethods payload;
 
-		@BroadcastConsumer
-		@BroadcastProducer
 		public void sanityCheckMethod1() {
 			countMethod1++;
 		}
 
-		@BroadcastProducer
-		@BroadcastConsumer
 		public void sanityCheckMethod2(String message) {
 			countMethod2++;
 			this.message = message;
 		}
 
-		@BroadcastConsumer
-		@BroadcastProducer
 		public void sanityCheckMethod3(ArbitraryMethods payload) {
 			countMethod3++;
 			this.payload = payload;
@@ -91,21 +85,15 @@ public class SanityCheckTest {
 		String message;
 		ArbitraryMethods payload;
 
-		@BroadcastConsumer
-		@BroadcastProducer
 		public void sanityCheckMethod1() {
 			countMethod1++;
 		}
 
-		@BroadcastConsumer
-		@BroadcastProducer
 		public void sanityCheckMethod2(String message) {
 			countMethod2++;
 			this.message = message;
 		}
 
-		@BroadcastConsumer
-		@BroadcastProducer
 		public void sanityCheckMethod3(ArbitraryMethods payload) {
 			countMethod3++;
 			this.payload = payload;
@@ -117,23 +105,25 @@ public class SanityCheckTest {
 		}
 
 	}
+	
+	@Test
+	public void makeSureWeCanBroadcastWithoutEverAddingAConsuemr(){
+		VMMessageBroker broker = new VMMessageBroker();
+		((ArbitraryMethods)broker.createProducer(ArbitraryMethods.class)).sanityCheckMethod1();
+	}
 
 	@Test
 	public void testSanityCheck() {
-		VMMessageBroker.setSettingVMMessageBrokerForAll(true);
 		VMMessageBroker broker = new VMMessageBroker();
 		MyFirstClass first = new MyFirstClass();
-		Assert.assertEquals(1, broker.size());
+		Assert.assertEquals(0, broker.size());
 
 		MySecondClass second = new MySecondClass();
+		broker.addConsumer(second);
+		Assert.assertEquals(1, broker.size());
+		
+		((ArbitraryMethods)broker.createProducer(first)).sanityCheckMethod1();
 		Assert.assertEquals(2, broker.size());
-		// this is not necessary because we have
-		// VMMessageBroker.setSettingVMMessageBrokerForAll(true);
-		// broker.add(first);
-		// broker.add(second);
-
-		Assert.assertTrue(broker.isUsingAspectJ());
-		first.sanityCheckMethod1();
 		Assert.assertEquals(1, first.countMethod1);
 		Assert.assertEquals(1, second.countMethod1);
 		Assert.assertEquals(0, first.countMethod2);
@@ -147,7 +137,7 @@ public class SanityCheckTest {
 		Assert.assertNull(first.payload);
 		Assert.assertNull(second.payload);
 
-		first.sanityCheckMethod2("my message");
+		((ArbitraryMethods)broker.createProducer(first)).sanityCheckMethod2("my message");
 		Assert.assertEquals(1, first.countMethod1);
 		Assert.assertEquals(1, second.countMethod1);
 		Assert.assertEquals(1, first.countMethod2);
@@ -161,7 +151,7 @@ public class SanityCheckTest {
 		Assert.assertNull(first.payload);
 		Assert.assertNull(second.payload);
 
-		first.sanityCheckMethod3(first);
+		((ArbitraryMethods)broker.createProducer(first)).sanityCheckMethod3(first);
 		Assert.assertEquals(1, first.countMethod1);
 		Assert.assertEquals(1, second.countMethod1);
 		Assert.assertEquals(1, first.countMethod2);
@@ -175,107 +165,6 @@ public class SanityCheckTest {
 		Assert.assertEquals(first, first.payload);
 		Assert.assertEquals(first, second.payload);
 
-		VMMessageBroker.setSettingVMMessageBrokerForAll(false);
-
-	}
-
-	@Test
-	public void testWeForgotToUseAMessageBroker() {
-		try {
-			MyFirstClass first = new MyFirstClass();
-			first.sanityCheckMethod1();
-			Assert.fail("We should have gotten a NoMessageBrokerException");
-		} catch (NoMessageBrokerException ex) {
-			// good
-		}
-	}
-
-	@Test
-	public void testWeTriedToAddTwoMessageBrokers() {
-		try {
-			VMMessageBroker broker1 = new VMMessageBroker();
-			VMMessageBroker broker2 = new VMMessageBroker();			
-			MyFirstClass first = new MyFirstClass();			
-			broker1.add(first);
-			broker2.add(first);
-			Assert.fail("We should have gotten a OnlyOneMessageBrokerSupportedException");
-		} catch (OnlyOneMessageBrokerSupportedException ex) {
-			// good
-		}
-	}
-
-	@Test
-	public void testSanityCheckUsingProxy() {
-		VMMessageBroker broker = new VMMessageBroker();
-		broker.clear();
-		broker.setUsingAspectJ(false);
-		try {
-			MyFirstClass first = new MyFirstClass();
-			MySecondClass second = new MySecondClass();
-			ArbitraryMethods firstProxy = (ArbitraryMethods) BroadcastProxy
-					.newInstance(broker, first);
-			Assert.assertEquals(1, broker.size());
-			ArbitraryMethods secondProxy = (ArbitraryMethods) BroadcastProxy
-					.newInstance(broker, second);
-			Assert.assertEquals(2, broker.size());
-
-			try {
-				broker.add(first);
-				Assert.fail("Our first implementation should have already been added by the firstProxy.");
-			} catch (ProxyImplementationException ex) {
-				// good
-			}
-			try {
-				broker.add(firstProxy);
-				Assert.fail("Our first implementation should have already been added by the firstProxy.");
-			} catch (ProxyImplementationException ex) {
-				// good
-			}
-
-			firstProxy.sanityCheckMethod1();
-			Assert.assertEquals(1, first.countMethod1);
-			Assert.assertEquals(1, second.countMethod1);
-			Assert.assertEquals(0, first.countMethod2);
-			Assert.assertEquals(0, second.countMethod2);
-			Assert.assertEquals(0, first.countMethod3);
-			Assert.assertEquals(0, second.countMethod3);
-			Assert.assertEquals(0, first.countShouldNotBroadcast);
-			Assert.assertEquals(0, second.countShouldNotBroadcast);
-			Assert.assertNull(first.message);
-			Assert.assertNull(second.message);
-			Assert.assertNull(first.payload);
-			Assert.assertNull(second.payload);
-
-			firstProxy.sanityCheckMethod2("my message");
-			Assert.assertEquals(1, first.countMethod1);
-			Assert.assertEquals(1, second.countMethod1);
-			Assert.assertEquals(1, first.countMethod2);
-			Assert.assertEquals(1, second.countMethod2);
-			Assert.assertEquals(0, first.countMethod3);
-			Assert.assertEquals(0, second.countMethod3);
-			Assert.assertEquals(0, first.countShouldNotBroadcast);
-			Assert.assertEquals(0, second.countShouldNotBroadcast);
-			Assert.assertEquals("my message", first.message);
-			Assert.assertEquals("my message", second.message);
-			Assert.assertNull(first.payload);
-			Assert.assertNull(second.payload);
-
-			firstProxy.sanityCheckMethod3(first);
-			Assert.assertEquals(1, first.countMethod1);
-			Assert.assertEquals(1, second.countMethod1);
-			Assert.assertEquals(1, first.countMethod2);
-			Assert.assertEquals(1, second.countMethod2);
-			Assert.assertEquals(1, first.countMethod3);
-			Assert.assertEquals(1, second.countMethod3);
-			Assert.assertEquals(0, first.countShouldNotBroadcast);
-			Assert.assertEquals(0, second.countShouldNotBroadcast);
-			Assert.assertEquals("my message", first.message);
-			Assert.assertEquals("my message", second.message);
-			Assert.assertEquals(first, first.payload);
-			Assert.assertEquals(first, second.payload);
-		} finally {
-			broker.setUsingAspectJ(true);
-		}
 	}
 
 }

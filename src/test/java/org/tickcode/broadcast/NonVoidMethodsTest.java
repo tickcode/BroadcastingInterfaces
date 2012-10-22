@@ -36,8 +36,6 @@ public class NonVoidMethodsTest {
 	}
 
 	protected class ThisClassAttemptedANonVoidBroadcastMethod implements NonVoidMethod{
-		@BroadcastConsumer
-		@BroadcastProducer
 		public int myNonVoidMethod() {
 			return 0;
 		}
@@ -49,9 +47,9 @@ public class NonVoidMethodsTest {
 		VMMessageBroker broker = new VMMessageBroker();
 		try{
 			ThisClassAttemptedANonVoidBroadcastMethod _instance = new ThisClassAttemptedANonVoidBroadcastMethod();
-			broker.add(_instance);
+			broker.addConsumer(_instance);
 			_instance.myNonVoidMethod();
-			broker.add(_instance);
+			broker.addConsumer(_instance);
 			Assert.fail("We should be throwing an exception here because we tried to create a non-void broadcast method!");
 		}catch(NonVoidBroadcastMethodException ex){
 			// good
@@ -63,20 +61,15 @@ public class NonVoidMethodsTest {
 	public void testWeTriedToMakeANonVoidMethodUsingProxy() {
 		VMMessageBroker broker = new VMMessageBroker();
 		broker.clear();
-		broker.setUsingAspectJ(false);
-		try{
 		
 			try{
 				ThisClassAttemptedANonVoidBroadcastMethod _instance = new ThisClassAttemptedANonVoidBroadcastMethod();
-				BroadcastProxy.newInstance(broker, _instance);
+				broker.createProducer(_instance);
 				_instance.myNonVoidMethod();
 				Assert.fail("We should be throwing an exception here because we tried to create a non-void broadcast method!");
 			}catch(NonVoidBroadcastMethodException ex){
 				// good
 			}
-		}finally{
-			broker.setUsingAspectJ(true);
-		}
 	}
 	
 }

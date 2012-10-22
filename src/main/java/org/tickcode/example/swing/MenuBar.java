@@ -35,12 +35,12 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.KeyStroke;
 
-import org.tickcode.broadcast.BroadcastProducer;
+import org.tickcode.broadcast.VMMessageBroker;
 
 
 
 
-public class MenuBar extends JMenuBar implements ShuttingDownBroadcast {
+public class MenuBar extends JMenuBar {
 
 	JMenu fileMenu;
 	JMenuItem exitMenuItem;
@@ -75,17 +75,9 @@ public class MenuBar extends JMenuBar implements ShuttingDownBroadcast {
 	}
 	
 	public void shutDownGui(ActionEvent e){
-		shuttingDown();
+		((ShuttingDownBroadcast)VMMessageBroker.get().createProducer(ShuttingDownBroadcast.class)).shuttingDown();
 		System.exit(0);
 	}
-	
-	
-	@Override
-	@BroadcastProducer
-	public void shuttingDown() {
-		
-	}
-
 	
 	
 

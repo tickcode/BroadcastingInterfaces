@@ -34,8 +34,9 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import org.tickcode.broadcast.BroadcastConsumer;
-import org.tickcode.broadcast.BroadcastProducer;
+import org.tickcode.broadcast.Broadcast;
+import org.tickcode.broadcast.MessageBroker;
+import org.tickcode.broadcast.VMMessageBroker;
 
 
 
@@ -55,6 +56,8 @@ public class Main extends JFrame implements ShuttingDownBroadcast {
 	private JComponent left;
 	private JComponent middle;
 	private JComponent right;
+	
+	private ShuttingDownBroadcast producer = (ShuttingDownBroadcast) VMMessageBroker.get().createProducer(this);
 
 	/**
 	 * @param args
@@ -68,11 +71,25 @@ public class Main extends JFrame implements ShuttingDownBroadcast {
 	 * This is the default constructor
 	 */
 	public Main() {
-		super();
+
+		MessageBroker broker = VMMessageBroker.get();
+		MenuBar menuBar = new org.tickcode.example.swing.MenuBar();
+		this.setJMenuBar(menuBar);
+		this.setLeft(new org.tickcode.example.swing.ProducerPanel());
+		Broadcast panel = null;
+		panel = new org.tickcode.example.swing.ConsumeAndProducePanel();
+		broker.addConsumer(panel);
+		this.setMiddle((JComponent)panel);
+		panel = new org.tickcode.example.swing.ConsumerPanel();
+		broker.addConsumer(panel);
+		this.setRight((JComponent)panel);
+		this.initialize();
+		this.pack();
+
 
 		this.addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {
-				shuttingDown();
+				producer.shuttingDown();
 				System.exit(0);
 			}
 		});
@@ -116,8 +133,6 @@ public class Main extends JFrame implements ShuttingDownBroadcast {
 		this.right = right;
 	}
 
-	@BroadcastProducer
-	@BroadcastConsumer
 	public void shuttingDown() {
 		this.setVisible(false);
 	}

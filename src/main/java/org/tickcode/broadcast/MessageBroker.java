@@ -39,10 +39,19 @@ public interface MessageBroker {
 	public abstract void broadcast(Broadcast producer, String methodName,
 			Object[] params);
 
-	public abstract void remove(Broadcast consumer);
+	public abstract void removeConsumer(Broadcast consumer);
 
-	public abstract void add(Broadcast consumer);
+	public abstract void addConsumer(Broadcast consumer);
+	
+	/**
+	 * Will create a producer but also add the implementation as a consumer.
+	 * @param implementation
+	 * @return
+	 */
+	public abstract Broadcast createProducer(Broadcast implementation);
 
+	public abstract Broadcast createProducer(Class broadcastInterfaces);
+	
 	public abstract void add(ErrorHandler handler);
 
 	public abstract void remove(ErrorHandler handler);
@@ -50,5 +59,9 @@ public interface MessageBroker {
 	public abstract void clear();
 	
 	public abstract int size();
+	
+	public void start();
+	
+	public void stop();
 
 }

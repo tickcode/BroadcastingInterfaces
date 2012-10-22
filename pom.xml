@@ -8,7 +8,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.tickcode</groupId>
 	<artifactId>BroadcastingInterfaces</artifactId>
-	<version>0.0.2-SNAPSHOT</version>
+	<version>0.1.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>BroadcastingInterfaces</name>
 	<description>A framework that automatically generates an implementation
@@ -36,23 +36,12 @@
 		</developer>
 	</developers>
 	<properties>
-		<org.aspectj-version>1.6.11</org.aspectj-version>
 		<maven.compiler.source>6</maven.compiler.source>
 		<maven.compiler.target>6</maven.compiler.target>
 		<project.build.java.target>1.6</project.build.java.target>
 	</properties>
 
 	<dependencies>
-		<dependency>
-			<groupId>org.aspectj</groupId>
-			<artifactId>aspectjrt</artifactId>
-			<version>${org.aspectj-version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.aspectj</groupId>
-			<artifactId>aspectjweaver</artifactId>
-			<version>${org.aspectj-version}</version>
-		</dependency>
 		<dependency>
 			<groupId>javassist</groupId>
 			<artifactId>javassist</artifactId>
@@ -127,14 +116,6 @@
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-eclipse-plugin</artifactId>
-				<version>2.9</version>
-				<configuration>
-					<ajdtVersion>${org.aspectj-version}</ajdtVersion>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-dependency-plugin</artifactId>
 				<executions>
 					<execution>
@@ -145,24 +126,6 @@
 						</goals>
 					</execution>
 				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>aspectj-maven-plugin</artifactId>
-				<version>1.4</version>
-				<executions>
-					<execution>
-						<goals>
-							<goal>compile</goal>
-							<goal>test-compile</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<source>1.6</source>
-					<target>1.6</target>
-					<outxml>true</outxml>
-				</configuration>
 			</plugin>
 		</plugins>
 	</build>

@@ -36,7 +36,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 
-import org.tickcode.broadcast.BroadcastProducer;
+import org.tickcode.broadcast.VMMessageBroker;
 
 
 
@@ -50,8 +50,9 @@ import org.tickcode.broadcast.BroadcastProducer;
  * @author Eyon Land
  *
  */
-public class ProducerPanel extends JPanel implements TextChangedBroadcast{
+public class ProducerPanel extends JPanel {
 
+	private TextChangedBroadcast producer = (TextChangedBroadcast)VMMessageBroker.get().createProducer(TextChangedBroadcast.class);
 
 	private ScrollPane scrollPane = null;  //  @jve:decl-index=0:visual-constraint="312,149"
 	private JTextArea jTextArea = null;
@@ -106,7 +107,7 @@ public class ProducerPanel extends JPanel implements TextChangedBroadcast{
 					SwingUtilities.invokeLater(
 							new Runnable(){
 								public void run(){
-									textChanged(jTextArea.getText());
+									producer.textChanged(jTextArea.getText());
 								}
 							});
 			    }
@@ -117,15 +118,6 @@ public class ProducerPanel extends JPanel implements TextChangedBroadcast{
 		return jTextArea;
 	}
 
-	/**
-	 * Calling this method will cause all implementing interfaces of TextChangedBroadcast that have the
-	 * @BroadcastConsumer annotation to be invoked.
-	 */
-	@Override
-	@BroadcastProducer
-	public void textChanged(String text) {
-		// nothing to do given that we are only a producer
-	}
 
 }
 

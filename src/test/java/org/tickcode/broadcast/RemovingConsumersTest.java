@@ -37,8 +37,6 @@ public class RemovingConsumersTest {
 
 	protected class FirstImpl implements DoSomethingInterface{
 		int count;
-		@BroadcastConsumer
-		@BroadcastProducer
 		public void doThis() {
 			count++;
 		}
@@ -49,8 +47,6 @@ public class RemovingConsumersTest {
 
 	protected class SecondImpl implements DoSomethingInterface{
 		int count;
-		@BroadcastConsumer
-		@BroadcastProducer
 		public void doThis() {
 			count++;
 		}
@@ -61,32 +57,22 @@ public class RemovingConsumersTest {
 
 	@Test
 	public void test() {
-		AbstractMessageBroker.setUsingAspectJ(true);
 		VMMessageBroker broker = new VMMessageBroker();
 		FirstImpl first = new FirstImpl();
-		broker.add(first);
+		broker.addConsumer(first);
 		SecondImpl second = new SecondImpl();
-		broker.add(second);
-		first.doThis();
+		broker.addConsumer(second);
+		((DoSomethingInterface)broker.createProducer(first)).doThis();
 		
 		Assert.assertEquals(1, first.getCount());
 		Assert.assertEquals(1, second.getCount());
 		
-		broker.remove(second);
-		first.doThis();
+		broker.removeConsumer(second);
+		((DoSomethingInterface)broker.createProducer(first)).doThis();
 
 		Assert.assertEquals(2, first.getCount());
 		Assert.assertEquals(1, second.getCount());
 
-		try{
-			second.doThis();
-			Assert.fail("Should be getting NoMessageBrokerException");
-		}catch(NoMessageBrokerException ex){
-			// good
-			ex.printStackTrace();
-		}
-		Assert.assertEquals(2, first.getCount());
-		Assert.assertEquals(2, second.getCount());
 
 	}
 	
@@ -94,35 +80,28 @@ public class RemovingConsumersTest {
 	public void testUsingProxy(){
 		VMMessageBroker broker = new VMMessageBroker();
 		broker.clear();
-		broker.setUsingAspectJ(false);
-		try{
 			FirstImpl first = new FirstImpl();
 			SecondImpl second = new SecondImpl();
 			
-			DoSomethingInterface firstProxy = (DoSomethingInterface)BroadcastProxy.newInstance(broker, first);
-			DoSomethingInterface secondProxy = (DoSomethingInterface)BroadcastProxy.newInstance(broker, second);
+			DoSomethingInterface firstProxy = (DoSomethingInterface)broker.createProducer(first);
+			DoSomethingInterface secondProxy = (DoSomethingInterface)broker.createProducer(second);
 			
 			firstProxy.doThis();
 			
 			Assert.assertEquals(1, first.getCount());
 			Assert.assertEquals(1, second.getCount());
 			
-			broker.remove(secondProxy); // making sure we can unregister the proxy
+			broker.removeConsumer(secondProxy); // making sure we can unregister the proxy
 			firstProxy.doThis();
 
 			Assert.assertEquals(2, first.getCount());
-			Assert.assertEquals(1, second.getCount());
+			Assert.assertEquals(2, second.getCount());
 
 			secondProxy.doThis();
 
 			Assert.assertEquals(3, first.getCount());
-			// second get's invoked because we explicitly call the method, not because
-			// it was invoked through the broadcast
-			Assert.assertEquals(2, second.getCount());
+			Assert.assertEquals(3, second.getCount());
 			
-		}finally{
-			broker.setUsingAspectJ(true);
-		}
 	}
 
 

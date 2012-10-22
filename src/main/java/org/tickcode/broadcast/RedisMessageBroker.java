@@ -64,6 +64,25 @@ public class RedisMessageBroker extends VMMessageBroker {
 			.getLogger(org.tickcode.broadcast.RedisMessageBroker.class);
 	private static boolean settingRedisMessageBrokerForAll;
 
+	private static RedisMessageBroker singleton;
+	public static RedisMessageBroker get(){
+		if(singleton == null){
+			JedisPoolConfig poolConfig = new JedisPoolConfig();
+			poolConfig.maxActive = 10;
+			poolConfig.maxIdle = 5;
+			poolConfig.minIdle = 2;
+			poolConfig.testOnBorrow = true;
+			poolConfig.numTestsPerEvictionRun = 10;
+			poolConfig.timeBetweenEvictionRunsMillis = 60000;
+			poolConfig.maxWait = 3000;
+			poolConfig.whenExhaustedAction = org.apache.commons.pool.impl.GenericObjectPool.WHEN_EXHAUSTED_FAIL;
+			JedisPool jedisPool = new JedisPool(poolConfig, "localhost", 6379, 0);
+			singleton = new RedisMessageBroker("LocalTest",
+					jedisPool);
+		}
+		return singleton;
+	}
+
 	private String name;
 	private JedisPool jedisPool;
 
@@ -235,8 +254,8 @@ public class RedisMessageBroker extends VMMessageBroker {
 	}
 
 	@Override
-	public void add(Broadcast consumer) {
-		super.add(consumer);
+	public void addConsumer(Broadcast consumer) {
+		super.addConsumer(consumer);
 
 		// create a subscriber on Redis
 		Map<String, Class> channels = getAllBroadcastConsumerMethodNames(name,
@@ -245,19 +264,20 @@ public class RedisMessageBroker extends VMMessageBroker {
 			if (!broadcastProxyByChannel.contains(channel)) {
 				Class _interface = channels.get(channel);
 				Class[] broadcastInterfaces = new Class[] { _interface };
-				broadcastProxyByChannel.put(channel, RedisBroadcastProxy
+				broadcastProxyByChannel.put(channel, BroadcastProducerProxy
 						.newInstance(this, broadcastInterfaces));
 			}
 		}
 	}
 
 	public void start() {
+		super.start();
 		if (thread != null)
 			thread.interrupt();
 		thread = new Thread() {
 			public void run() {
 				subscriberJedis = jedisPool.getResource();
-				logger.info("Whatching pub/sub from " + name + ".*");
+				logger.info("Watching pub/sub from " + name + ".*");
 				subscriberJedis.psubscribe(subscriber,
 						SafeEncoder.encodeMany(name + ".*"));
 			}
@@ -266,6 +286,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 	}
 
 	public void stop() {
+		super.stop();
 		if (subscriber.isSubscribed())
 			subscriber.punsubscribe();
 		if (subscriberJedis != null) {
@@ -296,9 +317,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 			String appendString, Class consumer) {
 		HashSet<String> broadcastConsumerMethods = new HashSet<String>();
 		for (Method method : consumer.getMethods()) {
-			if (method.isAnnotationPresent(BroadcastConsumer.class)) {
-				broadcastConsumerMethods.add(method.getName());
-			}
+			broadcastConsumerMethods.add(method.getName());
 		}
 		HashMap<String, Class> readableMethodName = new HashMap<String, Class>();
 		for (Class _interface : consumer.getInterfaces()) {
@@ -345,8 +364,6 @@ public class RedisMessageBroker extends VMMessageBroker {
 		}
 
 		@Override
-		@BroadcastConsumer
-		@BroadcastProducer
 		public void ping(String message, long timeSent) {
 			this.message = message;
 			this.timeSent = timeSent;
@@ -370,31 +387,16 @@ public class RedisMessageBroker extends VMMessageBroker {
 
 	public static void main(String[] args) throws Exception {
 
-		JedisPoolConfig poolConfig = new JedisPoolConfig();
-		poolConfig.maxActive = 10;
-		poolConfig.maxIdle = 5;
-		poolConfig.minIdle = 2;
-		poolConfig.testOnBorrow = true;
-		poolConfig.numTestsPerEvictionRun = 10;
-		poolConfig.timeBetweenEvictionRunsMillis = 60000;
-		poolConfig.maxWait = 3000;
-		poolConfig.whenExhaustedAction = org.apache.commons.pool.impl.GenericObjectPool.WHEN_EXHAUSTED_FAIL;
-		JedisPool jedisPool = new JedisPool(poolConfig, "localhost", 6379, 0);
-		RedisMessageBroker broker = new RedisMessageBroker("LocalTest",
-				jedisPool);
-
+		RedisMessageBroker broker = null;
 		try {
+			broker = RedisMessageBroker.get();
 			broker.start();
 
 			int totalPings = 1000;
 			CountDownLatch latch = new CountDownLatch(totalPings);
 			WatchPingMessages consumer = new WatchPingMessages(latch);
-			broker.add(consumer);
+			broker.addConsumer(consumer);
 
-			if (RedisMessageBroker.isUsingAspectJ())
-				logger.info("We are using AspectJ");
-			else
-				logger.warn("Where is AspectJ?");
 
 			String channel = broker.createChannelName(
 					PingRedisMessageBroker.class.getName(), "ping");
@@ -427,7 +429,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 
 			if (redisServerWorking)
 				checkInternalPing(broker);
-
+			logger.info("Finished testing redis.");
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		} finally {
@@ -438,20 +440,20 @@ public class RedisMessageBroker extends VMMessageBroker {
 	private static void checkInternalPing(RedisMessageBroker broker)
 			throws Exception {
 		CountDownLatch latch = new CountDownLatch(2);
-		WatchPingMessages producer = new WatchPingMessages(latch);
-		WatchPingMessages consumer = new WatchPingMessages(latch);
-		broker.add(producer);
-		broker.add(consumer);
-		producer.ping("Sending out a ping message", System.currentTimeMillis());
-		latch.await(105, TimeUnit.SECONDS);
+		WatchPingMessages consumer1 = new WatchPingMessages(latch);
+		WatchPingMessages consumer2 = new WatchPingMessages(latch);
+		broker.addConsumer(consumer1);
+		broker.addConsumer(consumer2);
+		((PingRedisMessageBroker)broker.createProducer(PingRedisMessageBroker.class)).ping("Sending out a ping message", System.currentTimeMillis());
+		latch.await(5, TimeUnit.SECONDS);
 		if (latch.getCount() > 0) {
 			logger.error("Never received ping response internally.");
 		} else {
-			if (producer.getCount() > 1 || consumer.getCount() > 1) {
+			if (consumer1.getCount() > 1 || consumer2.getCount() > 1) {
 				logger.error("We are getting too many ping messages internally.");
 				throw new Exception(
 						"We are getting too many ping messages internally.");
-			} else if (producer.getCount() == 1 && consumer.getCount() == 1) {
+			} else if (consumer1.getCount() == 1 && consumer2.getCount() == 1) {
 				logger.info("Internal broadcasting looks OK.");
 				logger.info("Average response time from us was "
 						+ broker.getLatencyFromUs() + " microseconds.");
