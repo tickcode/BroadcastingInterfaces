@@ -32,8 +32,10 @@ package org.tickcode.broadcast;
  * @author Eyon Land
  *
  */
-public class Parameters {
+public class Parameters implements java.io.Serializable{
 
+	static final long serialVersionUID = 1L;
+	
 	/**
 	 * A channel will be the name of the {@link RedisMessageBroker#getName()}, the {@link Broadcast} interface, and the name
 	 * of the method being broadcasted.

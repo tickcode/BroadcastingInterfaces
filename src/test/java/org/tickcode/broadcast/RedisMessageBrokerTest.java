@@ -26,11 +26,59 @@
  ******************************************************************************/
 package org.tickcode.broadcast;
 
-/**
- * Used so that {@link VMMessageBroker} can grab the actual implementation instead of the proxy.
- * @author Eyon Land
- *
- */
-public interface GetProxyImplementation {
-  public Broadcast getBroadcastImplementation();
+import org.junit.Assert;
+import org.junit.Test;
+import org.tickcode.broadcast.RedisMessageBroker.ThreadSafeVariables;
+
+import com.esotericsoftware.kryo.io.Output;
+
+public class RedisMessageBrokerTest implements java.io.Serializable {
+
+	@Test
+	public void testMarshallingData() throws Exception {
+		RedisMessageBroker broker = RedisMessageBroker.get();
+		ThreadSafeVariables safe = broker.threadSafeVariables.get();
+		safe.buffer = new byte[3];
+		safe.output = new Output(safe.buffer);
+
+		Parameters expectedArgs = new Parameters();
+		expectedArgs.setArguments(new Object[] { "Hello", new TickCode() });
+		expectedArgs.setTimeSent(System.currentTimeMillis());
+		byte[] message = broker.marshall(expectedArgs);
+		//Assert.assertEquals(98, message.length);
+		Parameters actualArgs = broker.unmarshall(message);
+
+		Assert.assertEquals(expectedArgs.getTimeSent(),
+				actualArgs.getTimeSent());
+		Assert.assertEquals(expectedArgs.getArguments()[0],
+				actualArgs.getArguments()[0]);
+	}
+
+	@Test
+	public void testManyMarshallingDataCalls() throws Exception {
+		RedisMessageBroker broker = RedisMessageBroker.get();
+		Parameters expectedArgs = new Parameters();
+
+		for (int i = 0; i < 1000; i++) {
+			expectedArgs.setArguments(new Object[] { "Hello", new TickCode() });
+			expectedArgs.setTimeSent(i);
+			byte[] message = broker.marshall(expectedArgs);
+			Parameters actualArgs = broker.unmarshall(message);
+
+			Assert.assertEquals(expectedArgs.getTimeSent(),
+					actualArgs.getTimeSent());
+			Assert.assertEquals(expectedArgs.getArguments()[0],
+					actualArgs.getArguments()[0]);
+		}
+	}
+
+	private static class TickCode implements java.io.Serializable {
+		private double[] array;
+		long time;
+
+		public double get(int index) {
+			return array[index];
+		}
+	}
+
 }
