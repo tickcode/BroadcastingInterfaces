@@ -244,7 +244,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 				bufferIsNotBigEnough = false;
 			} catch (KryoException ex) {
 				if (ex.getMessage().contains("Buffer overflow")) {
-					safe.buffer = new byte[2 * safe.buffer.length];
+					safe.buffer = new byte[(int)(1.25 * safe.buffer.length + 1)];
 					safe.output = new Output(safe.buffer);
 				} else {
 					throw ex;
