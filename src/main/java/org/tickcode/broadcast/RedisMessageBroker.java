@@ -53,11 +53,10 @@ import com.esotericsoftware.kryo.io.Output;
 
 /**
  * Provides support for getting messages broadcasted through Redis (See <a
- * href="http://redis.io/">http://redis.io/</a> for details). At the moment we
- * are using bson4jackson (See <a
- * href="http://www.michel-kraemer.com/binary-json-with-bson4jackson"
- * >http://www.michel-kraemer.com/binary-json-with-bson4jackson</a> for details)
- * to move our {@link Parameters} class into a BSON data representation. and
+ * href="http://redis.io/">http://redis.io/</a> for details). We are currently using Kryo (See <a
+ * href="http://code.google.com/p/kryo/"
+ * >http://code.google.com/p/kryo/</a> for details)
+ * to move our {@link Parameters} class to
  * broadcast to other RedisMessageBrokers.
  * 
  * @author Eyon Land
