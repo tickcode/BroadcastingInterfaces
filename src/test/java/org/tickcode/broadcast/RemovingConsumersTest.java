@@ -35,22 +35,26 @@ public class RemovingConsumersTest {
 		public void doThis();
 	}
 
-	protected class FirstImpl implements DoSomethingInterface{
+	protected class FirstImpl implements DoSomethingInterface {
 		int count;
+
 		public void doThis() {
 			count++;
 		}
-		int getCount(){
+
+		int getCount() {
 			return count;
 		}
 	}
 
-	protected class SecondImpl implements DoSomethingInterface{
+	protected class SecondImpl implements DoSomethingInterface {
 		int count;
+
 		public void doThis() {
 			count++;
 		}
-		int getCount(){
+
+		int getCount() {
 			return count;
 		}
 	}
@@ -62,47 +66,52 @@ public class RemovingConsumersTest {
 		broker.addConsumer(first);
 		SecondImpl second = new SecondImpl();
 		broker.addConsumer(second);
-		((DoSomethingInterface)broker.createProducer(first)).doThis();
-		
+		((DoSomethingInterface) broker
+				.createProducer(DoSomethingInterface.class)).doThis();
+
 		Assert.assertEquals(1, first.getCount());
 		Assert.assertEquals(1, second.getCount());
-		
+
 		broker.removeConsumer(second);
-		((DoSomethingInterface)broker.createProducer(first)).doThis();
+		((DoSomethingInterface) broker
+				.createProducer(DoSomethingInterface.class)).doThis();
 
 		Assert.assertEquals(2, first.getCount());
 		Assert.assertEquals(1, second.getCount());
 
-
 	}
-	
+
 	@Test
-	public void testUsingProxy(){
+	public void testUsingProxy() {
 		VMMessageBroker broker = new VMMessageBroker();
 		broker.clear();
-			FirstImpl first = new FirstImpl();
-			SecondImpl second = new SecondImpl();
-			
-			DoSomethingInterface firstProxy = (DoSomethingInterface)broker.createProducer(first);
-			DoSomethingInterface secondProxy = (DoSomethingInterface)broker.createProducer(second);
-			
-			firstProxy.doThis();
-			
-			Assert.assertEquals(1, first.getCount());
-			Assert.assertEquals(1, second.getCount());
-			
-			broker.removeConsumer(secondProxy); // making sure we can unregister the proxy
-			firstProxy.doThis();
+		FirstImpl first = new FirstImpl();
+		SecondImpl second = new SecondImpl();
+		broker.addConsumer(first);
+		broker.addConsumer(second);
 
-			Assert.assertEquals(2, first.getCount());
-			Assert.assertEquals(2, second.getCount());
+		DoSomethingInterface firstProxy = broker
+				.createProducer(DoSomethingInterface.class);
+		DoSomethingInterface secondProxy = broker
+				.createProducer(DoSomethingInterface.class);
 
-			secondProxy.doThis();
+		firstProxy.doThis();
 
-			Assert.assertEquals(3, first.getCount());
-			Assert.assertEquals(3, second.getCount());
-			
+		Assert.assertEquals(1, first.getCount());
+		Assert.assertEquals(1, second.getCount());
+
+		broker.removeConsumer(secondProxy); // making sure we can unregister the
+											// proxy
+		firstProxy.doThis();
+
+		Assert.assertEquals(2, first.getCount());
+		Assert.assertEquals(2, second.getCount());
+
+		secondProxy.doThis();
+
+		Assert.assertEquals(3, first.getCount());
+		Assert.assertEquals(3, second.getCount());
+
 	}
-
 
 }

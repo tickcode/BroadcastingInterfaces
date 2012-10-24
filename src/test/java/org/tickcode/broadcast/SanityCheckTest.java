@@ -121,8 +121,9 @@ public class SanityCheckTest {
 		MySecondClass second = new MySecondClass();
 		broker.addConsumer(second);
 		Assert.assertEquals(1, broker.size());
+		broker.addConsumer(first);
 		
-		((ArbitraryMethods)broker.createProducer(first)).sanityCheckMethod1();
+		(broker.createProducer(ArbitraryMethods.class)).sanityCheckMethod1();
 		Assert.assertEquals(2, broker.size());
 		Assert.assertEquals(1, first.countMethod1);
 		Assert.assertEquals(1, second.countMethod1);
@@ -137,7 +138,7 @@ public class SanityCheckTest {
 		Assert.assertNull(first.payload);
 		Assert.assertNull(second.payload);
 
-		((ArbitraryMethods)broker.createProducer(first)).sanityCheckMethod2("my message");
+		(broker.createProducer(ArbitraryMethods.class)).sanityCheckMethod2("my message");
 		Assert.assertEquals(1, first.countMethod1);
 		Assert.assertEquals(1, second.countMethod1);
 		Assert.assertEquals(1, first.countMethod2);
@@ -151,7 +152,7 @@ public class SanityCheckTest {
 		Assert.assertNull(first.payload);
 		Assert.assertNull(second.payload);
 
-		((ArbitraryMethods)broker.createProducer(first)).sanityCheckMethod3(first);
+		(broker.createProducer(ArbitraryMethods.class)).sanityCheckMethod3(first);
 		Assert.assertEquals(1, first.countMethod1);
 		Assert.assertEquals(1, second.countMethod1);
 		Assert.assertEquals(1, first.countMethod2);

@@ -68,22 +68,21 @@ public class VMMessageBroker implements MessageBroker {
 	public VMMessageBroker() {
 	}
 	
-	@Override
-	public Broadcast createProducer(Broadcast implementation){
-		ArrayList<Class> broadcastInterfaces = new ArrayList<Class>();
-		for (Class _class : implementation.getClass().getInterfaces()) {
-			if (Broadcast.class.isAssignableFrom(_class)) {
-				broadcastInterfaces.add(_class);
-			}
-		}
-		this.addConsumer(implementation);
-		return BroadcastProducerProxy.newInstance(this, broadcastInterfaces.toArray(new Class[broadcastInterfaces.size()]));
-	}
+//	@Override
+//	public Broadcast addConsumerAndCreateProducer(Broadcast implementation){
+//		ArrayList<Class> broadcastInterfaces = new ArrayList<Class>();
+//		for (Class _class : implementation.getClass().getInterfaces()) {
+//			if (Broadcast.class.isAssignableFrom(_class)) {
+//				broadcastInterfaces.add(_class);
+//			}
+//		}
+//		this.addConsumer(implementation);
+//		return BroadcastProducerProxy.newInstance(this, broadcastInterfaces.toArray(new Class[broadcastInterfaces.size()]));
+//	}
 	
-	@Override
-	public Broadcast createProducer(Class _class){
-		ArrayList<Class> broadcastInterfaces = new ArrayList<Class>();
-		for(Class _interface : _class.getInterfaces()){
+	public <T extends Broadcast> T  createProducer(Class<? extends T> _class) {
+		ArrayList<Class<? extends T>> broadcastInterfaces = new ArrayList<Class<? extends T>>();
+		for(Class<? extends T> _interface : (Class<? extends T>[])_class.getInterfaces()){
 			if (Broadcast.class.isAssignableFrom(_class)) {
 				broadcastInterfaces.add(_class);
 				addInterface(_class, null);
@@ -91,7 +90,7 @@ public class VMMessageBroker implements MessageBroker {
 		}
 		if(broadcastInterfaces.size() == 0)
 			throw new RuntimeException("You cannot create a producer for an interface that does not extend Broadcast.");		
-		return BroadcastProducerProxy.newInstance(this, broadcastInterfaces.toArray(new Class[broadcastInterfaces.size()]));
+		return (T)BroadcastProducerProxy.newInstance(this, broadcastInterfaces.toArray(new Class[broadcastInterfaces.size()]));
 	}
 	
 
@@ -409,7 +408,7 @@ public class VMMessageBroker implements MessageBroker {
 	 * @see org.tickcode.broadcast.MessageBroker#add(org.tickcode.broadcast.ErrorHandler)
 	 */
 	@Override
-	public void add(ErrorHandler handler) {
+	public void addErrorHandler(ErrorHandler handler) {
 		if (!hasErrorHandler(handler)) {
 			this.errorHandlers.add(new WeakReference<ErrorHandler>(handler));
 		}
@@ -419,7 +418,7 @@ public class VMMessageBroker implements MessageBroker {
 	 * @see org.tickcode.broadcast.MessageBroker#remove(org.tickcode.broadcast.ErrorHandler)
 	 */
 	@Override
-	public void remove(ErrorHandler handler) {
+	public void removeErrorHandler(ErrorHandler handler) {
 		for (WeakReference<ErrorHandler> h : this.errorHandlers) {
 			if (h.get() != null) {
 				if (h.get() == handler)

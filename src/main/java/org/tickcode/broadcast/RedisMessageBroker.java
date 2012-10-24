@@ -99,6 +99,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 
 		public ThreadSafeVariables() {
 			kryo.setRegistrationRequired(false);
+			kryo.register(Parameters.class);
 		}
 	}
 
@@ -299,17 +300,28 @@ public class RedisMessageBroker extends VMMessageBroker {
 			}
 		}
 	}
+	
+	@Override
+	public <T extends Broadcast> T createProducer(Class<? extends T> _class) {
+		ThreadSafeVariables safe = threadSafeVariables.get();
+		safe.kryo.register(_class);
+		return super.createProducer(_class);
+	}
 
 	@Override
 	public void addConsumer(Broadcast consumer) {
 		super.addConsumer(consumer);
-
+		
+		ThreadSafeVariables safe = threadSafeVariables.get();
+		safe.kryo.register(consumer.getClass());
+		
 		// create a subscriber on Redis
 		Map<String, Class> channels = getAllBroadcastConsumerMethodNames(name,
 				consumer.getClass());
 		for (String channel : channels.keySet()) {
 			if (!broadcastProxyByChannel.contains(channel)) {
 				Class _interface = channels.get(channel);
+				safe.kryo.register(_interface);
 				Class[] broadcastInterfaces = new Class[] { _interface };
 				broadcastProxyByChannel.put(channel, BroadcastProducerProxy
 						.newInstance(this, broadcastInterfaces));

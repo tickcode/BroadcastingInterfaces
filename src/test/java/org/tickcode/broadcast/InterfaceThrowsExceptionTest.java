@@ -84,7 +84,7 @@ public class InterfaceThrowsExceptionTest {
 	public void testExceptionDoesNotHurtOtherConsumers() {
 		VMMessageBroker broker = new VMMessageBroker();
 		MyErrorHandler handler = new MyErrorHandler();
-		broker.add(handler);
+		broker.addErrorHandler(handler);
 		ThisClassDoesNotThrowAnException wellBehaved = new ThisClassDoesNotThrowAnException();
 		broker.addConsumer(wellBehaved);
 		ThisClassThrowsAnException badBehavior = new ThisClassThrowsAnException();
@@ -113,8 +113,7 @@ public class InterfaceThrowsExceptionTest {
 		
 		try {
 			// now use the proxy and confirm the error handler knows about he exception
-			DoSomethingInterface badBehaviorProxy = (DoSomethingInterface) broker
-					.createProducer(badBehavior);
+			DoSomethingInterface badBehaviorProxy = broker.createProducer(DoSomethingInterface.class);
 			badBehaviorProxy.doSomething();
 			Assert.assertTrue(handler.ex instanceof RuntimeException);
 		} finally {
@@ -138,11 +137,14 @@ public class InterfaceThrowsExceptionTest {
 			ThisClassDoesNotThrowAnException wellBehaved = new ThisClassDoesNotThrowAnException();
 			ThisClassThrowsAnException badBehavior = new ThisClassThrowsAnException();
 			broker.addConsumer(badBehavior);
-			broker.add(handler);
-			broker.add(handler2);
+			broker.addErrorHandler(handler);
+			broker.addErrorHandler(handler2);
 
-			((DoSomethingInterface) broker.createProducer(wellBehaved))
-					.doSomething();
+			DoSomethingInterface badBehaviorProxy = broker.createProducer(DoSomethingInterface.class);
+			broker.addConsumer(badBehavior);
+			broker.addConsumer(wellBehaved);
+
+			(broker.createProducer(DoSomethingInterface.class)).doSomething();
 			// we are also testing the number of times a method get's invoked as
 			// we expect here
 			Assert.assertEquals(1, wellBehaved.getCount());
@@ -152,8 +154,8 @@ public class InterfaceThrowsExceptionTest {
 			Assert.assertTrue(badBehavior.lastErrorThrown == handler2.ex);
 			Assert.assertEquals(handler.trailString, 1, handler.trailSize);
 		} finally {
-			broker.remove(handler);
-			broker.remove(handler2);
+			broker.removeErrorHandler(handler);
+			broker.removeErrorHandler(handler2);
 			broker.clear();
 		}
 	}

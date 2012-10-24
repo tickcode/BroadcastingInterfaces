@@ -84,7 +84,7 @@ public class BroadcastsWithinBroadcastsTest {
 	public void testAllowBroadcastingWithinBroadcasting() {
 		VMMessageBroker broker = new VMMessageBroker();
 		MyErrorHandler handler = new MyErrorHandler();
-		broker.add(handler);
+		broker.addErrorHandler(handler);
 		MyFirstClass first = new MyFirstClass("first", broker);
 		MyFirstClass second = new MyFirstClass("second", broker);
 		broker.addConsumer(first);
@@ -96,7 +96,8 @@ public class BroadcastsWithinBroadcastsTest {
 		Assert.assertEquals(0, second.method2);
 
 		try {
-			((InfiniteLoopInterface) broker.createProducer(first)).method1();
+			broker.addConsumer(first);
+			(broker.createProducer(InfiniteLoopInterface.class)).method1();
 			/**
 			 * first.method1() first.method1 == 1 first.method2() first.method2
 			 * == 1 second.method2() (from broadcast) second.method2 == 1
@@ -142,11 +143,11 @@ public class BroadcastsWithinBroadcastsTest {
 		try {
 			broker.clear();
 			broker.addConsumer(second);
-			broker.add(handler);
-
-			((InfiniteLoopInterface) broker.createProducer(first)).method1();
+			broker.addErrorHandler(handler);
+			broker.addConsumer(first);
+			(broker.createProducer(InfiniteLoopInterface.class)).method1();
 		} finally {
-			broker.remove(handler);
+			broker.removeErrorHandler(handler);
 		}
 
 	}

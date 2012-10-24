@@ -67,17 +67,6 @@ public class DuplicateMethodNameTest {
 	}
 
 	@Test
-	public void testUsingProxy() {
-		try {
-			VMMessageBroker broker = new VMMessageBroker();
-			broker.createProducer(new MyTestClass());
-			Assert.fail("We should have gotten an exception here!");
-		} catch (DuplicateMethodException err) {
-			// good
-		}
-	}
-
-	@Test
 	public void testDuplicatesBetweenInterfaces() {
 		VMMessageBroker broker = new VMMessageBroker();
 		broker.addConsumer(new TestFirstClass());
@@ -94,7 +83,7 @@ public class DuplicateMethodNameTest {
 		VMMessageBroker broker = new VMMessageBroker();
 		broker.addConsumer(new TestFirstClass());
 		try {
-			broker.createProducer(new TestSecondClass());
+			broker.addConsumer(new TestSecondClass());
 			Assert.fail("We should have gotten an exception here!");
 		} catch (DuplicateMethodException err) {
 			// good

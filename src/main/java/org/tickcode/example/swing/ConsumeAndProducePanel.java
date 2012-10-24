@@ -56,13 +56,14 @@ public class ConsumeAndProducePanel extends JPanel implements TextChangedBroadca
 	private ScrollPane scrollPane = null;  //  @jve:decl-index=0:visual-constraint="312,149"
 	private JTextArea jTextArea = null;
 
-	private TextChangedBroadcast producer = (TextChangedBroadcast)VMMessageBroker.get().createProducer(this);
+	private TextChangedBroadcast producer = VMMessageBroker.get().createProducer(TextChangedBroadcast.class);
 	
 	/**
 	 * This is the default constructor
 	 */
 	public ConsumeAndProducePanel() {
 		super();
+		VMMessageBroker.get().addConsumer(this);
 		initialize();
 	}
 

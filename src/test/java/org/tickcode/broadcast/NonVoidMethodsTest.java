@@ -64,7 +64,7 @@ public class NonVoidMethodsTest {
 		
 			try{
 				ThisClassAttemptedANonVoidBroadcastMethod _instance = new ThisClassAttemptedANonVoidBroadcastMethod();
-				broker.createProducer(_instance);
+				broker.createProducer(NonVoidMethod.class);
 				_instance.myNonVoidMethod();
 				Assert.fail("We should be throwing an exception here because we tried to create a non-void broadcast method!");
 			}catch(NonVoidBroadcastMethodException ex){

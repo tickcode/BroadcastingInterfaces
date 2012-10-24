@@ -62,12 +62,12 @@ public class WeakReferenceTest {
 
 		Assert.assertEquals(0, consumer.count);
 		Assert.assertEquals(0, producer.count);
-		((WeakReferencesTestInterface)broker.createProducer(producer)).whatAboutWeakReferences(); // broadcast
+		(broker.createProducer(WeakReferencesTestInterface.class)).whatAboutWeakReferences(); // broadcast
 		Assert.assertEquals(1, consumer.count);
 		Assert.assertEquals(1, producer.count);
 
 		broker.setWeakReferencesToNull(consumer);
-		((WeakReferencesTestInterface)broker.createProducer(producer)).whatAboutWeakReferences(); // broadcast
+		(broker.createProducer(WeakReferencesTestInterface.class)).whatAboutWeakReferences(); // broadcast
 		Assert.assertEquals(1, consumer.count); // nothing should change
 		Assert.assertEquals(2, producer.count); // of course the producer
 												// changes

@@ -57,7 +57,7 @@ public class Main extends JFrame implements ShuttingDownBroadcast {
 	private JComponent middle;
 	private JComponent right;
 	
-	private ShuttingDownBroadcast producer = (ShuttingDownBroadcast) VMMessageBroker.get().createProducer(this);
+	private ShuttingDownBroadcast producer = VMMessageBroker.get().createProducer(ShuttingDownBroadcast.class);
 
 	/**
 	 * @param args
@@ -73,6 +73,7 @@ public class Main extends JFrame implements ShuttingDownBroadcast {
 	public Main() {
 
 		MessageBroker broker = VMMessageBroker.get();
+		broker.addConsumer(this);
 		MenuBar menuBar = new org.tickcode.example.swing.MenuBar();
 		this.setJMenuBar(menuBar);
 		this.setLeft(new org.tickcode.example.swing.ProducerPanel());

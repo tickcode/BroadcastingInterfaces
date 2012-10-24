@@ -118,10 +118,11 @@ public class InternalRedisTest {
 				jedisPool);
 		MyFirstClass first = new MyFirstClass();
 		MySecondClass second = new MySecondClass();
-		
-		broker.addConsumer(second);
 
-		((ArbitraryMethods)broker.createProducer(first)).sanityCheckMethod1();
+		broker.addConsumer(second);
+		broker.addConsumer(first);
+
+		(broker.createProducer(ArbitraryMethods.class)).sanityCheckMethod1();
 		Assert.assertEquals(1, first.countMethod1);
 		Assert.assertEquals(1, second.countMethod1);
 		Assert.assertEquals(0, first.countMethod2);
@@ -135,7 +136,8 @@ public class InternalRedisTest {
 		Assert.assertNull(first.payload);
 		Assert.assertNull(second.payload);
 
-		((ArbitraryMethods)broker.createProducer(first)).sanityCheckMethod2("my message");
+		(broker.createProducer(ArbitraryMethods.class))
+				.sanityCheckMethod2("my message");
 		Assert.assertEquals(1, first.countMethod1);
 		Assert.assertEquals(1, second.countMethod1);
 		Assert.assertEquals(1, first.countMethod2);
@@ -149,7 +151,8 @@ public class InternalRedisTest {
 		Assert.assertNull(first.payload);
 		Assert.assertNull(second.payload);
 
-		((ArbitraryMethods)broker.createProducer(first)).sanityCheckMethod3(first);
+		(broker.createProducer(ArbitraryMethods.class))
+				.sanityCheckMethod3(first);
 		Assert.assertEquals(1, first.countMethod1);
 		Assert.assertEquals(1, second.countMethod1);
 		Assert.assertEquals(1, first.countMethod2);
@@ -167,7 +170,6 @@ public class InternalRedisTest {
 
 	}
 
-
 	@Test
 	public void testSanityCheckUsingProxy() {
 		JedisPoolConfig poolConfig = new JedisPoolConfig();
@@ -177,10 +179,13 @@ public class InternalRedisTest {
 		broker.clear();
 		MyFirstClass first = new MyFirstClass();
 		MySecondClass second = new MySecondClass();
-		ArbitraryMethods firstProxy = (ArbitraryMethods) broker
-				.createProducer(first);
-		ArbitraryMethods secondProxy = (ArbitraryMethods) broker
-				.createProducer(second);
+		broker.addConsumer(first);
+		broker.addConsumer(second);
+
+		ArbitraryMethods firstProxy = broker
+				.createProducer(ArbitraryMethods.class);
+		ArbitraryMethods secondProxy = broker
+				.createProducer(ArbitraryMethods.class);
 
 		firstProxy.sanityCheckMethod1();
 		Assert.assertEquals(1, first.countMethod1);
