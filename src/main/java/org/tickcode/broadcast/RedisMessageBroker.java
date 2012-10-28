@@ -67,24 +67,24 @@ public class RedisMessageBroker extends VMMessageBroker {
 			.getLogger(org.tickcode.broadcast.RedisMessageBroker.class);
 	private static boolean settingRedisMessageBrokerForAll;
 
-	private static RedisMessageBroker singleton;
-
-	public static RedisMessageBroker get() {
-		if (singleton == null) {
-			JedisPoolConfig poolConfig = new JedisPoolConfig();
-			poolConfig.maxActive = 10;
-			poolConfig.maxIdle = 5;
-			poolConfig.minIdle = 2;
-			poolConfig.testOnBorrow = true;
-			poolConfig.numTestsPerEvictionRun = 10;
-			poolConfig.timeBetweenEvictionRunsMillis = 60000;
-			poolConfig.maxWait = 3000;
-			poolConfig.whenExhaustedAction = org.apache.commons.pool.impl.GenericObjectPool.WHEN_EXHAUSTED_FAIL;
-			JedisPool jedisPool = new JedisPool(poolConfig, "localhost", 6379,
-					0);
-			singleton = new RedisMessageBroker("LocalTest", jedisPool);
-		}
-		return singleton;
+	public static RedisMessageBroker create(String messageBrokerName, String host){
+		return RedisMessageBroker.create(messageBrokerName, host, 6379);
+	}
+	public static RedisMessageBroker create(String messageBrokerName, String host, int port) {
+		JedisPoolConfig poolConfig = new JedisPoolConfig();
+		poolConfig.maxActive = 10;
+		poolConfig.maxIdle = 5;
+		poolConfig.minIdle = 2;
+		poolConfig.testOnBorrow = true;
+		poolConfig.numTestsPerEvictionRun = 10;
+		poolConfig.timeBetweenEvictionRunsMillis = 60000;
+		poolConfig.maxWait = 3000;
+		poolConfig.whenExhaustedAction = org.apache.commons.pool.impl.GenericObjectPool.WHEN_EXHAUSTED_FAIL;
+		JedisPool jedisPool = new JedisPool(poolConfig, host, port,
+				0);
+		RedisMessageBroker broker = new RedisMessageBroker(messageBrokerName, jedisPool);
+		broker.setHost(host);
+		return broker;
 	}
 
 	private String name;
@@ -445,7 +445,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 
 		RedisMessageBroker broker = null;
 		try {
-			broker = RedisMessageBroker.get();
+			broker = RedisMessageBroker.create("LocalTest","localhost");
 			broker.start();
 
 			int totalPings = 1000;

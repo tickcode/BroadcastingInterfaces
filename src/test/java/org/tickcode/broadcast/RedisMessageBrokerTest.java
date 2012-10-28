@@ -36,7 +36,7 @@ public class RedisMessageBrokerTest implements java.io.Serializable {
 
 	@Test
 	public void testMarshallingData() throws Exception {
-		RedisMessageBroker broker = RedisMessageBroker.get();
+		RedisMessageBroker broker = RedisMessageBroker.create("LocalTest","localhost");
 		ThreadSafeVariables safe = broker.threadSafeVariables.get();
 		safe.buffer = new byte[3];
 		safe.output = new Output(safe.buffer);
@@ -56,7 +56,7 @@ public class RedisMessageBrokerTest implements java.io.Serializable {
 
 	@Test
 	public void testManyMarshallingDataCalls() throws Exception {
-		RedisMessageBroker broker = RedisMessageBroker.get();
+		RedisMessageBroker broker = RedisMessageBroker.create("LocalTest","localhost");
 		Parameters expectedArgs = new Parameters();
 
 		for (int i = 0; i < 1000; i++) {

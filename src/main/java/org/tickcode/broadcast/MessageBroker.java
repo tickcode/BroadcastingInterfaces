@@ -56,5 +56,7 @@ public interface MessageBroker {
 	public void start();
 	
 	public void stop();
+	
+	public String getHost();
 
 }

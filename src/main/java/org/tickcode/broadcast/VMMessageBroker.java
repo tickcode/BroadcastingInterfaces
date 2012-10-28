@@ -68,6 +68,13 @@ public class VMMessageBroker implements MessageBroker {
 
 	public VMMessageBroker() {
 	}
+	
+	public String getHost(){
+		return host;
+	}
+	public void setHost(String host){
+		this.host = host;
+	}
 
 	public <T extends Broadcast> T createProducer(Class<? extends T> _class) {
 		ArrayList<Class<? extends T>> broadcastInterfaces = new ArrayList<Class<? extends T>>();
@@ -100,7 +107,8 @@ public class VMMessageBroker implements MessageBroker {
 	protected ConcurrentHashMap<String, BroadcastConsumersForAGivenInterface> interfacesByMethodName = new ConcurrentHashMap<String, BroadcastConsumersForAGivenInterface>();
 	protected ConcurrentLinkedQueue<WeakReference<ErrorHandler>> errorHandlers = new ConcurrentLinkedQueue<WeakReference<ErrorHandler>>();
 	private ConcurrentHashMap<Broadcast, Broadcast> watchForDuplicatesOfUnderlyingImplementationFromProxies = new ConcurrentHashMap<Broadcast, Broadcast>();
-
+	protected String host = "localhost";
+	
 	protected class BroadcastConsumersForAGivenInterface {
 		Class broadcastInterface;
 		Method method;
