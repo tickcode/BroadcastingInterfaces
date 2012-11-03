@@ -37,15 +37,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 import org.objenesis.strategy.SerializingInstantiatorStrategy;
 import org.tickcode.trace.BreadCrumbTrail;
 
+import redis.clients.jedis.BinaryJedisPubSub;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
-import redis.clients.jedis.JedisPubSub;
 import redis.clients.util.SafeEncoder;
 
 import com.esotericsoftware.kryo.Kryo;
@@ -125,38 +124,31 @@ public class RedisMessageBroker extends VMMessageBroker {
 
 	MySubscriber subscriber = new MySubscriber();
 
-	class MySubscriber extends JedisPubSub {
-		@Override
-		public void onMessage(String channel, String message) {
-			// TODO Auto-generated method stub
+	class MySubscriber extends BinaryJedisPubSub {
 
+		@Override
+		public void onMessage(byte[] channel, byte[] message) {
 		}
 
 		@Override
-		public void onPSubscribe(String pattern, int subscribedChannels) {
-			// TODO Auto-generated method stub
-
+		public void onSubscribe(byte[] channel, int subscribedChannels) {
 		}
 
 		@Override
-		public void onSubscribe(String channel, int subscribedChannels) {
-			// TODO Auto-generated method stub
-
+		public void onUnsubscribe(byte[] channel, int subscribedChannels) {
 		}
 
 		@Override
-		public void onUnsubscribe(String channel, int subscribedChannels) {
-			// TODO Auto-generated method stub
-
-		}
-
-		@Override
-		public void onPUnsubscribe(String pattern, int subscribedChannels) {
+		public void onPUnsubscribe(byte[] pattern, int subscribedChannels) {
 			logger.info("RedisMessageBroker shutting down.");
 		}
 
 		@Override
-		public void onPMessage(String pattern, String channel, String message) {
+		public void onPSubscribe(byte[] pattern, int subscribedChannels) {
+		}
+
+		public void onPMessage(byte[] pattern, byte[] _channel, byte[] message) {
+			String channel = SafeEncoder.encode(_channel);
 			Broadcast producerProxy = null;
 			try {
 				int firstPeriod = channel.indexOf('.');
@@ -185,7 +177,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 					broadcastsFromUs = 0;
 				}
 
-				Parameters args = unmarshall(Base64.decodeBase64(message));
+				Parameters args = unmarshall(message);
 				if (args == null)
 					System.out.println("Why is args null?");
 				if (!thumbprint.equals(args.getThumbprint())) {
@@ -302,8 +294,9 @@ public class RedisMessageBroker extends VMMessageBroker {
 		args.setChannel(channel.toString());
 		Jedis jedis = null;
 		try {
+			byte[] _channel = SafeEncoder.encode(channel);
 			jedis = jedisPool.getResource();
-			jedis.publish(channel, Base64.encodeBase64String(marshall(args)));
+			jedis.publish(_channel, marshall(args));
 		} catch (Exception ex) {
 			for (WeakReference<ErrorHandler> errorHandler : errorHandlers) {
 				if (errorHandler.get() != null)
@@ -356,7 +349,8 @@ public class RedisMessageBroker extends VMMessageBroker {
 				public void run() {
 					subscriberJedis = jedisPool.getResource();
 					logger.info("Watching pub/sub from " + name + ".*");
-					subscriberJedis.psubscribe(subscriber, name + ".*");
+					subscriberJedis.psubscribe(subscriber,
+							SafeEncoder.encodeMany(name + ".*"));
 				}
 			};
 			thread.start();
