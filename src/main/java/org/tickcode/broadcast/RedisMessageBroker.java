@@ -54,11 +54,10 @@ import com.esotericsoftware.kryo.io.Output;
 
 /**
  * Provides support for getting messages broadcasted through Redis (See <a
- * href="http://redis.io/">http://redis.io/</a> for details). We are currently using Kryo (See <a
- * href="http://code.google.com/p/kryo/"
- * >http://code.google.com/p/kryo/</a> for details)
- * to move our {@link Parameters} class to
- * broadcast to other RedisMessageBrokers.
+ * href="http://redis.io/">http://redis.io/</a> for details). We are currently
+ * using Kryo (See <a href="http://code.google.com/p/kryo/"
+ * >http://code.google.com/p/kryo/</a> for details) to move our
+ * {@link Parameters} class to broadcast to other RedisMessageBrokers.
  * 
  * @author Eyon Land
  * 
@@ -68,10 +67,13 @@ public class RedisMessageBroker extends VMMessageBroker {
 			.getLogger(org.tickcode.broadcast.RedisMessageBroker.class);
 	private static boolean settingRedisMessageBrokerForAll;
 
-	public static RedisMessageBroker create(String messageBrokerName, String host){
+	public static RedisMessageBroker create(String messageBrokerName,
+			String host) {
 		return RedisMessageBroker.create(messageBrokerName, host, 6379);
 	}
-	public static RedisMessageBroker create(String messageBrokerName, String host, int port) {
+
+	public static RedisMessageBroker create(String messageBrokerName,
+			String host, int port) {
 		JedisPoolConfig poolConfig = new JedisPoolConfig();
 		poolConfig.maxActive = 10;
 		poolConfig.maxIdle = 5;
@@ -81,13 +83,12 @@ public class RedisMessageBroker extends VMMessageBroker {
 		poolConfig.timeBetweenEvictionRunsMillis = 60000;
 		poolConfig.maxWait = 3000;
 		poolConfig.whenExhaustedAction = org.apache.commons.pool.impl.GenericObjectPool.WHEN_EXHAUSTED_FAIL;
-		JedisPool jedisPool = new JedisPool(poolConfig, host, port,
-				0);
-		RedisMessageBroker broker = new RedisMessageBroker(messageBrokerName, jedisPool);
+		JedisPool jedisPool = new JedisPool(poolConfig, host, port, 0);
+		RedisMessageBroker broker = new RedisMessageBroker(messageBrokerName,
+				jedisPool);
 		broker.setHost(host);
 		return broker;
 	}
-	
 
 	private String name;
 	private JedisPool jedisPool;
@@ -120,7 +121,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 	private long latencyFromUs;
 	private long broadcastsFromUs;
 	private InitializeKryo initializeKryo;
-	
+
 	MyBinarySubscriber subscriber = new MyBinarySubscriber();
 
 	class MyBinarySubscriber extends BinaryJedisPubSub {
@@ -198,7 +199,8 @@ public class RedisMessageBroker extends VMMessageBroker {
 				logger.error("Unable to process the broadcast.", ex);
 				for (WeakReference<ErrorHandler> errorHandler : errorHandlers) {
 					if (errorHandler.get() != null)
-						errorHandler.get().error(RedisMessageBroker.this.toString(),
+						errorHandler.get().error(
+								RedisMessageBroker.this.toString(),
 								producerProxy, ex.getCause(),
 								BreadCrumbTrail.get());
 					else {
@@ -214,17 +216,17 @@ public class RedisMessageBroker extends VMMessageBroker {
 	public RedisMessageBroker(String name, JedisPool jedisPool) {
 		this.name = name;
 		this.jedisPool = jedisPool;
-		this.initializeKryo = new InitializeKryo(){
+		this.initializeKryo = new InitializeKryo() {
 			@Override
 			public void initialize(Kryo kryo) {
 				kryo.setRegistrationRequired(false);
 				kryo.register(Parameters.class);
-				kryo.register(StackTraceElement.class).setInstantiator((new SerializingInstantiatorStrategy()).newInstantiatorOf(StackTraceElement.class));
+				kryo.register(StackTraceElement.class).setInstantiator(
+						(new SerializingInstantiatorStrategy())
+								.newInstantiatorOf(StackTraceElement.class));
 			}
 		};
 	}
-	
-	
 
 	public long getLatencyFromUs() {
 		if (broadcastsFromUs > 0)
@@ -256,7 +258,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 				bufferIsNotBigEnough = false;
 			} catch (KryoException ex) {
 				if (ex.getMessage().contains("Buffer overflow")) {
-					safe.buffer = new byte[(int)(1.25 * safe.buffer.length + 1)];
+					safe.buffer = new byte[(int) (1.25 * safe.buffer.length + 1)];
 					safe.output = new Output(safe.buffer);
 				} else {
 					throw ex;
@@ -298,8 +300,8 @@ public class RedisMessageBroker extends VMMessageBroker {
 		} catch (Exception ex) {
 			for (WeakReference<ErrorHandler> errorHandler : errorHandlers) {
 				if (errorHandler.get() != null)
-					errorHandler.get().error(this.toString(), producer, ex.getCause(),
-							BreadCrumbTrail.get());
+					errorHandler.get().error(this.toString(), producer,
+							ex.getCause(), BreadCrumbTrail.get());
 				else {
 					errorHandlers.remove(errorHandler);
 				}
@@ -311,7 +313,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 			}
 		}
 	}
-	
+
 	@Override
 	public <T extends Broadcast> T createProducer(Class<? extends T> _class) {
 		ThreadSafeVariables safe = threadSafeVariables.get();
@@ -322,10 +324,10 @@ public class RedisMessageBroker extends VMMessageBroker {
 	@Override
 	public void addConsumer(Broadcast consumer) {
 		super.addConsumer(consumer);
-		
+
 		ThreadSafeVariables safe = threadSafeVariables.get();
 		safe.kryo.register(consumer.getClass());
-		
+
 		// create a subscriber on Redis
 		Map<String, Class> channels = getAllBroadcastConsumerMethodNames(name,
 				consumer.getClass());
@@ -342,27 +344,29 @@ public class RedisMessageBroker extends VMMessageBroker {
 
 	public void start() {
 		super.start();
-		if (thread != null)
-			thread.interrupt();
-		thread = new Thread() {
-			public void run() {
-				subscriberJedis = jedisPool.getResource();
-				logger.info("Watching pub/sub from " + name + ".*");
-				subscriberJedis.psubscribe(subscriber,
-						SafeEncoder.encodeMany(name + ".*"));
-			}
-		};
-		thread.start();
+		if (thread == null) {
+			thread = new Thread() {
+				public void run() {
+					subscriberJedis = jedisPool.getResource();
+					logger.info("Watching pub/sub from " + name + ".*");
+					subscriberJedis.psubscribe(subscriber,
+							SafeEncoder.encodeMany(name + ".*"));
+				}
+			};
+			thread.start();
+		}
 	}
 
 	public void stop() {
 		super.stop();
-		if (subscriber.isSubscribed())
-			subscriber.punsubscribe();
-		if (subscriberJedis != null) {
-			jedisPool.returnResource(subscriberJedis);
+		if (thread != null) {
+			if (subscriber.isSubscribed())
+				subscriber.punsubscribe();
+			if (subscriberJedis != null) {
+				jedisPool.returnResource(subscriberJedis);
+			}
+			thread = null;
 		}
-		thread = null;
 	}
 
 	public String getName() {
@@ -372,7 +376,6 @@ public class RedisMessageBroker extends VMMessageBroker {
 	public void setInitializeKryo(InitializeKryo initializeKryo) {
 		this.initializeKryo = initializeKryo;
 	}
-
 
 	private static StringBuffer builder = new StringBuffer();
 
@@ -462,7 +465,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 
 		RedisMessageBroker broker = null;
 		try {
-			broker = RedisMessageBroker.create("LocalTest","localhost");
+			broker = RedisMessageBroker.create("LocalTest", "localhost");
 			broker.start();
 
 			int totalPings = 1000;
@@ -545,7 +548,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 		}
 
 	}
-	
+
 	@Override
 	public String toString() {
 		return this.name + "@" + this.host;

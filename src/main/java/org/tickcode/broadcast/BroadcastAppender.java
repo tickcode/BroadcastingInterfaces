@@ -53,7 +53,8 @@ public class BroadcastAppender extends AppenderSkeleton{
 			exceptionMessage = throwable.getMessage();
 			elements = throwable.getStackTrace();
 		}
-		broadcastLogger.logEvent(event.getLevel().getSyslogEquivalent(), event.getMessage().toString(), exceptionMessage, elements);
+		if(event != null && event.getLevel()!=null && event.getMessage() != null)
+			broadcastLogger.logEvent(event.getLevel().getSyslogEquivalent(), event.getMessage().toString(), exceptionMessage, elements);
     }
 	
 	@Override
