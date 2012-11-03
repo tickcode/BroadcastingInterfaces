@@ -72,7 +72,7 @@ public class BroadcastsWithinBroadcastsTest {
 		String trailString;
 
 		@Override
-		public void error(MessageBroker broker, Broadcast broadcast,
+		public void error(String broker, Broadcast broadcast,
 				Throwable ex, BreadCrumbTrail trail) {
 			this.trailString = trail.toString();
 			this.trailSize = trail.size();

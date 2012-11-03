@@ -41,7 +41,7 @@ public class InterfaceThrowsExceptionTest {
 		int trailSize;
 		String trailString;
 
-		public void error(MessageBroker broker, Broadcast broadcast,
+		public void error(String broker, Broadcast broadcast,
 				Throwable ex, BreadCrumbTrail trail) {
 			this.ex = ex;
 			this.trailSize = trail.size();

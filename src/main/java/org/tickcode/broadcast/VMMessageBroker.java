@@ -259,7 +259,7 @@ public class VMMessageBroker implements MessageBroker {
 						}
 						for (WeakReference<ErrorHandler> errorHandler : errorHandlers) {
 							if (errorHandler.get() != null)
-								errorHandler.get().error(VMMessageBroker.this,
+								errorHandler.get().error(VMMessageBroker.this.toString(),
 										consumer, ex.getCause(), trail);
 							else {
 								errorHandlers.remove(errorHandler);
@@ -491,6 +491,11 @@ public class VMMessageBroker implements MessageBroker {
 
 	@Override
 	public void stop() {
+	}
+	
+	@Override
+	public String toString() {
+		return "VMMessageBroker";
 	}
 
 }

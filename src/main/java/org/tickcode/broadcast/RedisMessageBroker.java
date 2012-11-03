@@ -196,7 +196,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 				logger.error("Unable to process the broadcast.", ex);
 				for (WeakReference<ErrorHandler> errorHandler : errorHandlers) {
 					if (errorHandler.get() != null)
-						errorHandler.get().error(RedisMessageBroker.this,
+						errorHandler.get().error(RedisMessageBroker.this.toString(),
 								producerProxy, ex.getCause(),
 								BreadCrumbTrail.get());
 					else {
@@ -286,7 +286,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 		} catch (Exception ex) {
 			for (WeakReference<ErrorHandler> errorHandler : errorHandlers) {
 				if (errorHandler.get() != null)
-					errorHandler.get().error(this, producer, ex.getCause(),
+					errorHandler.get().error(this.toString(), producer, ex.getCause(),
 							BreadCrumbTrail.get());
 				else {
 					errorHandlers.remove(errorHandler);
@@ -527,6 +527,11 @@ public class RedisMessageBroker extends VMMessageBroker {
 			}
 		}
 
+	}
+	
+	@Override
+	public String toString() {
+		return this.name + "@" + this.host;
 	}
 
 }

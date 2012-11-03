@@ -26,9 +26,13 @@
  ******************************************************************************/
 package org.tickcode.broadcast;
 
+import javassist.bytecode.ByteArray;
+
+import org.apache.commons.codec.binary.Base64;
 import org.junit.Assert;
 import org.junit.Test;
 import org.tickcode.broadcast.RedisMessageBroker.ThreadSafeVariables;
+
 
 import com.esotericsoftware.kryo.io.Output;
 
@@ -69,6 +73,16 @@ public class RedisMessageBrokerTest implements java.io.Serializable {
 					actualArgs.getTimeSent());
 			Assert.assertEquals(expectedArgs.getArguments()[0],
 					actualArgs.getArguments()[0]);
+			
+			String string =  Base64.encodeBase64String(message);
+			byte[] bytes = Base64.decodeBase64(string);
+			actualArgs = broker.unmarshall(bytes);
+
+			Assert.assertEquals(expectedArgs.getTimeSent(),
+					actualArgs.getTimeSent());
+			Assert.assertEquals(expectedArgs.getArguments()[0],
+					actualArgs.getArguments()[0]);
+
 		}
 	}
 

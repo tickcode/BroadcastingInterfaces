@@ -33,6 +33,6 @@ import org.tickcode.trace.BreadCrumbTrail;
  * @author Eyon Land
  *
  */
-public interface ErrorHandler {
-	public void error(MessageBroker broker, Broadcast broadcast, Throwable ex, BreadCrumbTrail trail);
+public interface ErrorHandler extends Broadcast{
+	public void error(String brokerName, Broadcast broadcast, Throwable ex, BreadCrumbTrail trail);
 }
