@@ -38,6 +38,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
+import org.objenesis.strategy.SerializingInstantiatorStrategy;
 import org.tickcode.trace.BreadCrumbTrail;
 
 import redis.clients.jedis.BinaryJedisPubSub;
@@ -86,6 +87,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 		broker.setHost(host);
 		return broker;
 	}
+	
 
 	private String name;
 	private JedisPool jedisPool;
@@ -97,8 +99,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 		Input input = new Input();
 
 		public ThreadSafeVariables() {
-			kryo.setRegistrationRequired(false);
-			kryo.register(Parameters.class);
+			initializeKryo.initialize(kryo);
 		}
 	}
 
@@ -118,7 +119,8 @@ public class RedisMessageBroker extends VMMessageBroker {
 	private long broadcastsFromOthers;
 	private long latencyFromUs;
 	private long broadcastsFromUs;
-
+	private InitializeKryo initializeKryo;
+	
 	MyBinarySubscriber subscriber = new MyBinarySubscriber();
 
 	class MyBinarySubscriber extends BinaryJedisPubSub {
@@ -212,7 +214,17 @@ public class RedisMessageBroker extends VMMessageBroker {
 	public RedisMessageBroker(String name, JedisPool jedisPool) {
 		this.name = name;
 		this.jedisPool = jedisPool;
+		this.initializeKryo = new InitializeKryo(){
+			@Override
+			public void initialize(Kryo kryo) {
+				kryo.setRegistrationRequired(false);
+				kryo.register(Parameters.class);
+				kryo.register(StackTraceElement.class).setInstantiator((new SerializingInstantiatorStrategy()).newInstantiatorOf(StackTraceElement.class));
+			}
+		};
 	}
+	
+	
 
 	public long getLatencyFromUs() {
 		if (broadcastsFromUs > 0)
@@ -356,6 +368,11 @@ public class RedisMessageBroker extends VMMessageBroker {
 	public String getName() {
 		return name;
 	}
+
+	public void setInitializeKryo(InitializeKryo initializeKryo) {
+		this.initializeKryo = initializeKryo;
+	}
+
 
 	private static StringBuffer builder = new StringBuffer();
 
