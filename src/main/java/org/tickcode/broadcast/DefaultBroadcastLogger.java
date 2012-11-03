@@ -26,7 +26,23 @@
  ******************************************************************************/
 package org.tickcode.broadcast;
 
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
-public interface BroadcastLogger extends Broadcast{
-	public void logEvent(int level, String message, String exceptionMessage, StackTraceElement[] exceptionElements);
+public class DefaultBroadcastLogger implements BroadcastLogger {
+
+	private static Logger log = Logger
+			.getLogger(org.tickcode.broadcast.DefaultBroadcastLogger.class);
+
+	@Override
+	public void logEvent(int level, String message, String exceptionMessage,
+			StackTraceElement[] stackTrace) {
+		if (exceptionMessage != null) {
+			Throwable ex = new Throwable(exceptionMessage);
+			ex.setStackTrace(stackTrace);
+			log.log(Level.toLevel(level), message, ex);
+		} else {
+			log.log(Level.toLevel(level), message);
+		}
+	}
 }
