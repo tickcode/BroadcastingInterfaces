@@ -36,6 +36,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.log4j.Logger;
 import org.objenesis.strategy.SerializingInstantiatorStrategy;
@@ -57,7 +58,7 @@ import com.esotericsoftware.kryo.io.Output;
  * href="http://redis.io/">http://redis.io/</a> for details). We are currently
  * using Kryo (See <a href="http://code.google.com/p/kryo/"
  * >http://code.google.com/p/kryo/</a> for details) to move our
- * {@link Parameters} class to broadcast to other RedisMessageBrokers.
+ * {@link Parameters} class and broadcast to other RedisMessageBrokers.
  * 
  * @author Eyon Land
  * 
@@ -115,7 +116,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 	private Thread thread;
 	private Jedis subscriberJedis;
 	private String thumbprint = UUID.randomUUID().toString();
-	private volatile String methodBeingBroadcastedFromRedis;
+	private AtomicReference<String> methodBeingBroadcastedFromRedis = new AtomicReference<String>();
 	private long latencyFromOthers;
 	private long broadcastsFromOthers;
 	private long latencyFromUs;
@@ -181,10 +182,10 @@ public class RedisMessageBroker extends VMMessageBroker {
 				if (args == null)
 					System.out.println("Why is args null?");
 				if (!thumbprint.equals(args.getThumbprint())) {
-					methodBeingBroadcastedFromRedis = methodName;
+					methodBeingBroadcastedFromRedis.set(methodName);
 					RedisMessageBroker.super.broadcast(producerProxy,
 							methodName, args.getArguments());
-					methodBeingBroadcastedFromRedis = null;
+					methodBeingBroadcastedFromRedis.set(null);
 					latencyFromOthers = System.currentTimeMillis()
 							- args.getTimeSent();
 					broadcastsFromOthers++;
@@ -244,7 +245,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 
 	public void finishedBroadcasting(Broadcast producer, String methodName,
 			Object[] params) {
-		if (!methodName.equals(methodBeingBroadcastedFromRedis))
+		if (!methodName.equals(methodBeingBroadcastedFromRedis.get()))
 			broadcastToRedisServer(thumbprint, producer, methodName, params);
 	}
 
