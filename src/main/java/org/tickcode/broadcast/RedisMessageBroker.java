@@ -90,7 +90,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 		broker.setHost(host);
 		return broker;
 	}
-
+	
 	private String name;
 	private JedisPool jedisPool;
 

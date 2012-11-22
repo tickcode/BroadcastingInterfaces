@@ -122,7 +122,7 @@ public class VMMessageBroker implements MessageBroker {
 		public void addBroadcastReceiver(Broadcast consumer) {
 			if (!weHave(consumer)) {
 				consumers.add(new WeakReference<Broadcast>(consumer));
-				if (loggingOn) {
+				if (loggingOn && logger.isDebugEnabled()) {
 					logger.debug(consumer.getClass().getName()
 							+ " has implemented "
 							+ broadcastInterface.getName()
@@ -214,7 +214,7 @@ public class VMMessageBroker implements MessageBroker {
 				if (consumer != null) {
 					try {
 						if (consumer != producer) {
-							if (loggingOn) {
+							if (loggingOn && logger.isDebugEnabled()) {
 								logger.debug("We are sending a broadcast to "
 										+ consumer.getClass().getName()
 										+ " on interface "
@@ -288,7 +288,7 @@ public class VMMessageBroker implements MessageBroker {
 	 */
 	@Override
 	public void broadcast(Broadcast producer, String methodName, Object[] params) {
-		if (loggingOn) {
+		if (loggingOn && logger.isDebugEnabled()) {
 			logger.debug(methodName + "(" + MethodUtil.getArguments(params)
 					+ ")");
 		}
@@ -340,14 +340,13 @@ public class VMMessageBroker implements MessageBroker {
 		if (Broadcast.class.isAssignableFrom(_interface)
 				&& Broadcast.class != _interface) { // you cannot just implement
 													// {@link Broadcast}.
-			if (loggingOn) {
-				if (consumer != null)
+			if (consumer != null && loggingOn && logger.isDebugEnabled()){
 					logger.debug("Interface: " + _interface.getSimpleName()
 							+ " added for "
 							+ consumer.getClass().getSimpleName());
 			}
 			for (Method method : _interface.getMethods()) {
-				if (loggingOn) {
+				if (loggingOn && logger.isDebugEnabled()) {
 					logger.debug("Broadcasting to "
 							+ MethodUtil.getReadableMethodString(_interface,
 									method));
