@@ -27,8 +27,10 @@
 package org.tickcode.broadcast;
 
 import java.lang.ref.WeakReference;
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -54,7 +56,8 @@ public class VMMessageBroker implements MessageBroker {
 	private static boolean loggingOn;
 
 	private static VMMessageBroker singleton;
-
+    private MessageBrokerSignature signature;
+    
 	public static VMMessageBroker get() {
 		if (singleton == null)
 			singleton = new VMMessageBroker();
@@ -65,17 +68,15 @@ public class VMMessageBroker implements MessageBroker {
 		logger = Logger.getLogger(org.tickcode.broadcast.VMMessageBroker.class);
 		loggingOn = (logger.getEffectiveLevel() != org.apache.log4j.Level.OFF);
 	}
+	
+	public VMMessageBroker(){
+		this(new MessageBrokerSignature(VMMessageBroker.class, "VMMessageBroker", "localhost", null));
+	}
 
-	public VMMessageBroker() {
+	public VMMessageBroker(MessageBrokerSignature signature) {
+		this.signature = signature;
 	}
 	
-	public String getHost(){
-		return host;
-	}
-	public void setHost(String host){
-		this.host = host;
-	}
-
 	public <T extends Broadcast> T createProducer(Class<? extends T> _class) {
 		ArrayList<Class<? extends T>> broadcastInterfaces = new ArrayList<Class<? extends T>>();
 		for (Class<? extends T> _interface : (Class<? extends T>[]) _class
@@ -104,10 +105,9 @@ public class VMMessageBroker implements MessageBroker {
 		};
 	};
 
-	protected ConcurrentHashMap<String, BroadcastConsumersForAGivenInterface> interfacesByMethodName = new ConcurrentHashMap<String, BroadcastConsumersForAGivenInterface>();
+	protected ConcurrentHashMap<Method, BroadcastConsumersForAGivenInterface> interfacesByMethod = new ConcurrentHashMap<Method, BroadcastConsumersForAGivenInterface>();
 	protected ConcurrentLinkedQueue<WeakReference<ErrorHandler>> errorHandlers = new ConcurrentLinkedQueue<WeakReference<ErrorHandler>>();
 	private ConcurrentHashMap<Broadcast, Broadcast> watchForDuplicatesOfUnderlyingImplementationFromProxies = new ConcurrentHashMap<Broadcast, Broadcast>();
-	protected String host = "localhost";
 	
 	protected class BroadcastConsumersForAGivenInterface {
 		Class broadcastInterface;
@@ -287,33 +287,34 @@ public class VMMessageBroker implements MessageBroker {
 	 * .Broadcast, java.lang.String, java.lang.Object[])
 	 */
 	@Override
-	public void broadcast(Broadcast producer, String methodName, Object[] params) {
+	public void broadcast(Broadcast producer, Class declaringClass, String methodName, Class[] parameterTypes, Object[] params) throws NoSuchMethodException{
 		if (loggingOn && logger.isDebugEnabled()) {
 			logger.debug(methodName + "(" + MethodUtil.getArguments(params)
 					+ ")");
 		}
-		beginBroadcasting(producer, methodName, params);
-		BroadcastConsumersForAGivenInterface b = interfacesByMethodName
-				.get(methodName);
+		Method m = declaringClass.getDeclaredMethod(methodName, parameterTypes);
+		beginBroadcasting(producer, declaringClass, methodName, parameterTypes, params);
+		BroadcastConsumersForAGivenInterface b = interfacesByMethod
+				.get(m);
 		if (b != null)
 			b.broadcast(producer, params);
-		finishedBroadcasting(producer, methodName, params);
+		finishedBroadcasting(producer, declaringClass, methodName, parameterTypes, params);
 	}
 
-	protected void beginBroadcasting(Broadcast producer, String methodName,
-			Object[] params) {
+	protected void beginBroadcasting(Broadcast producer, Class declaringClass, String methodName,
+			 Class[] parameterTypes, Object[] params) {
 		// available for subclasses
 	}
 
-	protected void finishedBroadcasting(Broadcast producer, String methodName,
-			Object[] params) {
+	protected void finishedBroadcasting(Broadcast producer, Class declaringClass, String methodName,
+			 Class[] parameterTypes, Object[] params) {
 		// available for subclasses
 	}
 
 	@Override
 	public int size() {
 		HashSet<Broadcast> consumer = new HashSet<Broadcast>();
-		for (BroadcastConsumersForAGivenInterface imp : interfacesByMethodName
+		for (BroadcastConsumersForAGivenInterface imp : interfacesByMethod
 				.values()) {
 			consumer.addAll(imp.getConsumers());
 		}
@@ -330,7 +331,7 @@ public class VMMessageBroker implements MessageBroker {
 	@Override
 	public void removeConsumer(Broadcast consumer) {
 		// consumer = getBroadcastImplementation(consumer);
-		for (BroadcastConsumersForAGivenInterface imp : interfacesByMethodName
+		for (BroadcastConsumersForAGivenInterface imp : interfacesByMethod
 				.values()) {
 			imp.remove(consumer);
 		}
@@ -360,14 +361,14 @@ public class VMMessageBroker implements MessageBroker {
 											_interface, method));
 				}
 
-				BroadcastConsumersForAGivenInterface impl = interfacesByMethodName
-						.get(method.getName());
+				BroadcastConsumersForAGivenInterface impl = interfacesByMethod
+						.get(method);
 				if (impl == null) {
 					impl = new BroadcastConsumersForAGivenInterface(_interface,
 							method);
 					if (consumer != null)
 						impl.addBroadcastReceiver(consumer);
-					interfacesByMethodName.put(method.getName(), impl);
+					interfacesByMethod.put(method, impl);
 				} else if (impl.broadcastInterface != _interface) {
 					logger.error("We cannot have two methods with the same name! Please look at "
 							+ MethodUtil.getReadableMethodString(
@@ -458,7 +459,7 @@ public class VMMessageBroker implements MessageBroker {
 	 */
 	@Override
 	public void clear() {
-		interfacesByMethodName.clear();
+		interfacesByMethod.clear();
 		errorHandlers.clear();
 	}
 
@@ -467,7 +468,7 @@ public class VMMessageBroker implements MessageBroker {
 	 * WeakReferences to be null for a Broadcast implementation
 	 */
 	protected void setWeakReferencesToNull(Broadcast consumer) {
-		for (BroadcastConsumersForAGivenInterface imp : interfacesByMethodName
+		for (BroadcastConsumersForAGivenInterface imp : interfacesByMethod
 				.values()) {
 			imp.setWeakReferencesToNull(consumer);
 		}
@@ -494,7 +495,13 @@ public class VMMessageBroker implements MessageBroker {
 	
 	@Override
 	public String toString() {
-		return "VMMessageBroker";
+		return signature.toString();
 	}
+	
+	@Override
+	public MessageBrokerSignature getSignature() {
+		return signature;
+	}
+
 
 }

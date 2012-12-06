@@ -52,6 +52,7 @@ import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.KryoException;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
+import com.esotericsoftware.minlog.Log;
 
 /**
  * Provides support for getting messages broadcasted through Redis (See <a
@@ -68,28 +69,6 @@ public class RedisMessageBroker extends VMMessageBroker {
 			.getLogger(org.tickcode.broadcast.RedisMessageBroker.class);
 	private static boolean settingRedisMessageBrokerForAll;
 
-	public static RedisMessageBroker create(String messageBrokerName,
-			String host) {
-		return RedisMessageBroker.create(messageBrokerName, host, 6379);
-	}
-
-	public static RedisMessageBroker create(String messageBrokerName,
-			String host, int port) {
-		JedisPoolConfig poolConfig = new JedisPoolConfig();
-		poolConfig.maxActive = 10;
-		poolConfig.maxIdle = 5;
-		poolConfig.minIdle = 2;
-		poolConfig.testOnBorrow = true;
-		poolConfig.numTestsPerEvictionRun = 10;
-		poolConfig.timeBetweenEvictionRunsMillis = 60000;
-		poolConfig.maxWait = 3000;
-		poolConfig.whenExhaustedAction = org.apache.commons.pool.impl.GenericObjectPool.WHEN_EXHAUSTED_FAIL;
-		JedisPool jedisPool = new JedisPool(poolConfig, host, port, 0);
-		RedisMessageBroker broker = new RedisMessageBroker(messageBrokerName,
-				jedisPool);
-		broker.setHost(host);
-		return broker;
-	}
 	
 	private String name;
 	private JedisPool jedisPool;
@@ -184,7 +163,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 				if (!thumbprint.equals(args.getThumbprint())) {
 					methodBeingBroadcastedFromRedis.set(methodName);
 					RedisMessageBroker.super.broadcast(producerProxy,
-							methodName, args.getArguments());
+							args.getDeclaringClass(), methodName, args.getParameterTypes(), args.getArguments());
 					methodBeingBroadcastedFromRedis.set(null);
 					latencyFromOthers = System.currentTimeMillis()
 							- args.getTimeSent();
@@ -213,8 +192,37 @@ public class RedisMessageBroker extends VMMessageBroker {
 		}
 
 	}
+	
+	public RedisMessageBroker(String messageBrokerName,
+			String host) {
+		this(new MessageBrokerSignature(RedisMessageBroker.class, messageBrokerName, host, 6379));
+	}
 
-	public RedisMessageBroker(String name, JedisPool jedisPool) {
+	public RedisMessageBroker(String messageBrokerName,
+			String host, int port) {
+		this(new MessageBrokerSignature(RedisMessageBroker.class, messageBrokerName, host, port));
+	}
+	
+	public RedisMessageBroker(MessageBrokerSignature signature) {
+		this(signature.getName(),
+				createJedisPool(signature.getHost(), signature.getPort()));
+	}
+	
+	public static JedisPool createJedisPool(String host, int port){
+		JedisPoolConfig poolConfig = new JedisPoolConfig();
+		poolConfig.maxActive = 10;
+		poolConfig.maxIdle = 5;
+		poolConfig.minIdle = 2;
+		poolConfig.testOnBorrow = true;
+		poolConfig.numTestsPerEvictionRun = 10;
+		poolConfig.timeBetweenEvictionRunsMillis = 60000;
+		poolConfig.maxWait = 3000;
+		poolConfig.whenExhaustedAction = org.apache.commons.pool.impl.GenericObjectPool.WHEN_EXHAUSTED_FAIL;
+		return new JedisPool(poolConfig, host, port, 0);
+	}
+
+
+	protected RedisMessageBroker(String name, JedisPool jedisPool) {
 		this.name = name;
 		this.jedisPool = jedisPool;
 		this.initializeKryo = new InitializeKryo() {
@@ -243,10 +251,14 @@ public class RedisMessageBroker extends VMMessageBroker {
 			return 0;
 	}
 
-	public void finishedBroadcasting(Broadcast producer, String methodName,
+	public void finishedBroadcasting(Broadcast producer, Class declaringClass, String methodName, Class[] parameterTypes,
 			Object[] params) {
+		try{
 		if (!methodName.equals(methodBeingBroadcastedFromRedis.get()))
-			broadcastToRedisServer(thumbprint, producer, methodName, params);
+			broadcastToRedisServer(thumbprint, producer, declaringClass, methodName, parameterTypes, params);
+		}catch(NoSuchMethodException ex){
+			logger.error("Unable to broadcast through Redis.", ex);
+		}
 	}
 
 	public byte[] marshall(Parameters args) throws IOException {
@@ -282,15 +294,18 @@ public class RedisMessageBroker extends VMMessageBroker {
 	}
 
 	protected void broadcastToRedisServer(String thumbprint,
-			Broadcast producer, String methodName, Object[] params) {
+			Broadcast producer, Class declaringClass, String methodName, Class[] parameterTypes, Object[] params) throws NoSuchMethodException{
 		// broadcast to Redis
-		BroadcastConsumersForAGivenInterface b = interfacesByMethodName
-				.get(methodName);
+		Method m = producer.getClass().getDeclaredMethod(methodName, parameterTypes);
+		BroadcastConsumersForAGivenInterface b = interfacesByMethod
+				.get(m);
 		String channel = this.createChannelName(b.broadcastInterface.getName(),
-				methodName);
+				methodName, parameterTypes);
 		Parameters args = new Parameters();
 		args.setTimeSent(System.currentTimeMillis());
 		args.setThumbprint(thumbprint);
+		args.setDeclaringClass(declaringClass);
+		args.setParameterTypes(parameterTypes);
 		args.setArguments(params);
 		args.setChannel(channel.toString());
 		Jedis jedis = null;
@@ -380,7 +395,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 
 	private static StringBuffer builder = new StringBuffer();
 
-	protected String createChannelName(String interfaceName, String methodName) {
+	protected String createChannelName(String interfaceName, String methodName, Class[] parameterTypes) {
 		builder.setLength(0);
 		if (name != null) {
 			builder.append(name);
@@ -389,6 +404,10 @@ public class RedisMessageBroker extends VMMessageBroker {
 		builder.append(interfaceName);
 		builder.append(".");
 		builder.append(methodName);
+		builder.append("(");
+		for(int i=0; i < parameterTypes.length; i++)
+			builder.append(parameterTypes[i].getName());
+		builder.append(")");
 		return builder.toString();
 	}
 
@@ -406,7 +425,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 					if (broadcastConsumerMethods.contains(method.getName())) {
 						readableMethodName.put(
 								createChannelName(_interface.getName(),
-										method.getName()), _interface);
+										method.getName(),method.getParameterTypes()), _interface);
 					}
 				}
 			}
@@ -466,7 +485,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 
 		RedisMessageBroker broker = null;
 		try {
-			broker = RedisMessageBroker.create("LocalTest", "localhost");
+			broker = new RedisMessageBroker("LocalTest", "localhost");
 			broker.start();
 
 			int totalPings = 1000;
@@ -475,7 +494,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 			broker.addConsumer(consumer);
 
 			String channel = broker.createChannelName(
-					PingRedisMessageBroker.class.getName(), "ping"); // this is
+					PingRedisMessageBroker.class.getName(), "ping", new Class[]{String.class}); // this is
 																		// the
 																		// name
 																		// of
@@ -490,7 +509,8 @@ public class RedisMessageBroker extends VMMessageBroker {
 			String thumbprint = UUID.randomUUID().toString();
 			for (int i = 0; i < totalPings; i++) {
 				broker.broadcastToRedisServer(thumbprint, broadcastProxy,
-						"ping",
+						PingRedisMessageBroker.class, "ping",
+						new Class[] {String.class},
 						new Object[] { "Pong", System.currentTimeMillis() });
 			}
 			latch.await(5, TimeUnit.SECONDS);
@@ -548,11 +568,6 @@ public class RedisMessageBroker extends VMMessageBroker {
 			}
 		}
 
-	}
-
-	@Override
-	public String toString() {
-		return this.name + "@" + this.host;
 	}
 
 }

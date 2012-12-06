@@ -42,6 +42,13 @@ public class Parameters implements java.io.Serializable{
 	 */
 	String channel;
 	
+	Class declaringClass;
+	
+	/**
+	 * The Class(es) of the arguments
+	 */
+	Class[] parameterTypes;
+	
 	/**
 	 * The arguments for the method signature.
 	 */
@@ -67,6 +74,22 @@ public class Parameters implements java.io.Serializable{
 
 	public void setChannel(String channel) {
 		this.channel = channel;
+	}
+
+	public Class getDeclaringClass() {
+		return declaringClass;
+	}
+
+	public void setDeclaringClass(Class declaringClass) {
+		this.declaringClass = declaringClass;
+	}
+
+	public Class[] getParameterTypes() {
+		return parameterTypes;
+	}
+
+	public void setParameterTypes(Class[] parameterTypes) {
+		this.parameterTypes = parameterTypes;
 	}
 
 	public Object[] getArguments() {
