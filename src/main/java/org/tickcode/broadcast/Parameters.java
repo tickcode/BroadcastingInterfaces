@@ -26,6 +26,8 @@
  ******************************************************************************/
 package org.tickcode.broadcast;
 
+import java.lang.reflect.Method;
+
 /**
  * The {@link RedisMessageBroker} will use this class to send parameters to other {@link RedisMessageBroker}s
  * that have a matching {@link RedisMessageBroker#getName()}
@@ -35,19 +37,6 @@ package org.tickcode.broadcast;
 public class Parameters implements java.io.Serializable{
 
 	static final long serialVersionUID = 1L;
-	
-	/**
-	 * A channel will be the name of the {@link RedisMessageBroker#getName()}, the {@link Broadcast} interface, and the name
-	 * of the method being broadcasted.
-	 */
-	String channel;
-	
-	Class declaringClass;
-	
-	/**
-	 * The Class(es) of the arguments
-	 */
-	Class[] parameterTypes;
 	
 	/**
 	 * The arguments for the method signature.
@@ -68,30 +57,6 @@ public class Parameters implements java.io.Serializable{
 	public Parameters(){
 	}
 	
-	public String getChannel() {
-		return channel;
-	}
-
-	public void setChannel(String channel) {
-		this.channel = channel;
-	}
-
-	public Class getDeclaringClass() {
-		return declaringClass;
-	}
-
-	public void setDeclaringClass(Class declaringClass) {
-		this.declaringClass = declaringClass;
-	}
-
-	public Class[] getParameterTypes() {
-		return parameterTypes;
-	}
-
-	public void setParameterTypes(Class[] parameterTypes) {
-		this.parameterTypes = parameterTypes;
-	}
-
 	public Object[] getArguments() {
 		return arguments;
 	}

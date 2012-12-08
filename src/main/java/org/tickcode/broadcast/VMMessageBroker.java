@@ -27,10 +27,8 @@
 package org.tickcode.broadcast;
 
 import java.lang.ref.WeakReference;
-import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -45,7 +43,7 @@ import org.tickcode.trace.MethodUtil;
 
 /**
  * Inspired by http://www.eaipatterns.com/MessageBroker.html, this is the heart
- * of all messaging between decoupled {@link Broadcast} implementations.
+ * of all messaging between decoupled {@link Object} implementations.
  * 
  * @author eyon
  * 
@@ -77,20 +75,17 @@ public class VMMessageBroker implements MessageBroker {
 		this.signature = signature;
 	}
 	
-	public <T extends Broadcast> T createProducer(Class<? extends T> _class) {
-		ArrayList<Class<? extends T>> broadcastInterfaces = new ArrayList<Class<? extends T>>();
-		for (Class<? extends T> _interface : (Class<? extends T>[]) _class
-				.getInterfaces()) {
-			if (Broadcast.class.isAssignableFrom(_class)) {
-				broadcastInterfaces.add(_class);
-				addInterface(_class, null);
-			}
+	public <T extends Object> T createProducer(Class<? extends T> _class) {
+		if(_class.isInterface()){
+			return (T) BroadcastProducerProxy.newInstance(this, new Class[]{_class});
 		}
-		if (broadcastInterfaces.size() == 0)
-			throw new RuntimeException(
-					"You cannot create a producer for an interface that does not extend Broadcast.");
-		return (T) BroadcastProducerProxy.newInstance(this, broadcastInterfaces
-				.toArray(new Class[broadcastInterfaces.size()]));
+		Class[] interfaces = _class.getInterfaces();
+		if(interfaces != null && interfaces.length > 0){
+			return (T) BroadcastProducerProxy.newInstance(this, interfaces);
+		}
+		else{
+			throw new UnsupportedOperationException("You may only create a producer from an interface.");
+		}
 	}
 
 	/**
@@ -107,21 +102,21 @@ public class VMMessageBroker implements MessageBroker {
 
 	protected ConcurrentHashMap<Method, BroadcastConsumersForAGivenInterface> interfacesByMethod = new ConcurrentHashMap<Method, BroadcastConsumersForAGivenInterface>();
 	protected ConcurrentLinkedQueue<WeakReference<ErrorHandler>> errorHandlers = new ConcurrentLinkedQueue<WeakReference<ErrorHandler>>();
-	private ConcurrentHashMap<Broadcast, Broadcast> watchForDuplicatesOfUnderlyingImplementationFromProxies = new ConcurrentHashMap<Broadcast, Broadcast>();
+	private ConcurrentHashMap<Object, Object> watchForDuplicatesOfUnderlyingImplementationFromProxies = new ConcurrentHashMap<Object, Object>();
 	
 	protected class BroadcastConsumersForAGivenInterface {
 		Class broadcastInterface;
 		Method method;
-		CopyOnWriteArrayList<WeakReference<Broadcast>> consumers = new CopyOnWriteArrayList<WeakReference<Broadcast>>();
+		CopyOnWriteArrayList<WeakReference<Object>> consumers = new CopyOnWriteArrayList<WeakReference<Object>>();
 
 		BroadcastConsumersForAGivenInterface(Class _interface, Method method) {
 			broadcastInterface = _interface;
 			this.method = method;
 		}
 
-		public void addBroadcastReceiver(Broadcast consumer) {
+		public void addBroadcastReceiver(Object consumer) {
 			if (!weHave(consumer)) {
-				consumers.add(new WeakReference<Broadcast>(consumer));
+				consumers.add(new WeakReference<Object>(consumer));
 				if (loggingOn && logger.isDebugEnabled()) {
 					logger.debug(consumer.getClass().getName()
 							+ " has implemented "
@@ -137,9 +132,9 @@ public class VMMessageBroker implements MessageBroker {
 		 * 
 		 * @param consumer
 		 */
-		protected void setWeakReferencesToNull(Broadcast consumer) {
+		protected void setWeakReferencesToNull(Object consumer) {
 			for (int i = 0; i < consumers.size(); i++) {
-				WeakReference<Broadcast> c = consumers.get(i);
+				WeakReference<Object> c = consumers.get(i);
 				if (c.get() != null) {
 					if (c.get() == consumer) {
 						c.clear();
@@ -151,10 +146,10 @@ public class VMMessageBroker implements MessageBroker {
 			}
 		}
 
-		protected void remove(Broadcast consumer) {
+		protected void remove(Object consumer) {
 			boolean cleanOutWeakReferences = false;
 			for (int i = 0; i < consumers.size(); i++) {
-				WeakReference<Broadcast> c = consumers.get(i);
+				WeakReference<Object> c = consumers.get(i);
 				if (c.get() != null) {
 					if (c.get() == consumer)
 						consumers.remove(c);
@@ -166,10 +161,10 @@ public class VMMessageBroker implements MessageBroker {
 			}
 		}
 
-		protected boolean weHave(Broadcast consumer) {
+		protected boolean weHave(Object consumer) {
 			boolean cleanOutWeakReferences = false;
 			for (int i = 0; i < consumers.size(); i++) {
-				WeakReference<Broadcast> c = consumers.get(i);
+				WeakReference<Object> c = consumers.get(i);
 				if (c.get() != null) {
 					if (c.get() == consumer)
 						return true;
@@ -182,11 +177,11 @@ public class VMMessageBroker implements MessageBroker {
 			return false;
 		}
 
-		protected Set<Broadcast> getConsumers() {
-			HashSet<Broadcast> returnConsumers = new HashSet<Broadcast>();
+		protected Set<Object> getConsumers() {
+			HashSet<Object> returnConsumers = new HashSet<Object>();
 			boolean cleanOutWeakReferences = false;
 			for (int i = 0; i < consumers.size(); i++) {
-				WeakReference<Broadcast> c = consumers.get(i);
+				WeakReference<Object> c = consumers.get(i);
 				if (c.get() != null) {
 					returnConsumers.add(c.get());
 				} else
@@ -199,18 +194,18 @@ public class VMMessageBroker implements MessageBroker {
 		}
 
 		protected void cleanOutWeakReferences() {
-			for (WeakReference<Broadcast> ref : consumers) {
+			for (WeakReference<Object> ref : consumers) {
 				if (ref.get() == null)
 					consumers.remove(ref);
 			}
 		}
 
-		public void broadcast(Broadcast producer, Object[] params) {
+		public void broadcast(Object producer, Object[] params) {
 			BreadCrumbTrail trail = BreadCrumbTrail.get();
 			boolean cleanOutWeakReferences = false;
 			for (int i = 0; i < this.consumers.size(); i++) {
-				WeakReference<Broadcast> ref = this.consumers.get(i);
-				Broadcast consumer = ref.get();
+				WeakReference<Object> ref = this.consumers.get(i);
+				Object consumer = ref.get();
 				if (consumer != null) {
 					try {
 						if (consumer != producer) {
@@ -287,33 +282,30 @@ public class VMMessageBroker implements MessageBroker {
 	 * .Broadcast, java.lang.String, java.lang.Object[])
 	 */
 	@Override
-	public void broadcast(Broadcast producer, Class declaringClass, String methodName, Class[] parameterTypes, Object[] params) throws NoSuchMethodException{
+	public void broadcast(Object producer, Method m, Object[] params) throws NoSuchMethodException{
 		if (loggingOn && logger.isDebugEnabled()) {
-			logger.debug(methodName + "(" + MethodUtil.getArguments(params)
+			logger.debug(m.getName() + "(" + MethodUtil.getArguments(params)
 					+ ")");
 		}
-		Method m = declaringClass.getDeclaredMethod(methodName, parameterTypes);
-		beginBroadcasting(producer, declaringClass, methodName, parameterTypes, params);
+		beginBroadcasting(producer, m, params);
 		BroadcastConsumersForAGivenInterface b = interfacesByMethod
 				.get(m);
 		if (b != null)
 			b.broadcast(producer, params);
-		finishedBroadcasting(producer, declaringClass, methodName, parameterTypes, params);
+		finishedBroadcasting(producer, m, params);
 	}
 
-	protected void beginBroadcasting(Broadcast producer, Class declaringClass, String methodName,
-			 Class[] parameterTypes, Object[] params) {
+	protected void beginBroadcasting(Object producer, Method method, Object[] params) {
 		// available for subclasses
 	}
 
-	protected void finishedBroadcasting(Broadcast producer, Class declaringClass, String methodName,
-			 Class[] parameterTypes, Object[] params) {
+	protected void finishedBroadcasting(Object producer, Method method, Object[] params) {
 		// available for subclasses
 	}
 
 	@Override
 	public int size() {
-		HashSet<Broadcast> consumer = new HashSet<Broadcast>();
+		HashSet<Object> consumer = new HashSet<Object>();
 		for (BroadcastConsumersForAGivenInterface imp : interfacesByMethod
 				.values()) {
 			consumer.addAll(imp.getConsumers());
@@ -329,7 +321,7 @@ public class VMMessageBroker implements MessageBroker {
 	 * )
 	 */
 	@Override
-	public void removeConsumer(Broadcast consumer) {
+	public void removeConsumer(Object consumer) {
 		// consumer = getBroadcastImplementation(consumer);
 		for (BroadcastConsumersForAGivenInterface imp : interfacesByMethod
 				.values()) {
@@ -337,9 +329,9 @@ public class VMMessageBroker implements MessageBroker {
 		}
 	}
 
-	protected void addInterface(Class _interface, Broadcast consumer) {
-		if (Broadcast.class.isAssignableFrom(_interface)
-				&& Broadcast.class != _interface) { // you cannot just implement
+	protected void addInterface(Class _interface, Object consumer) {
+		if (Object.class.isAssignableFrom(_interface)
+				&& Object.class != _interface) { // you cannot just implement
 													// {@link Broadcast}.
 			if (consumer != null && loggingOn && logger.isDebugEnabled()){
 					logger.debug("Interface: " + _interface.getSimpleName()
@@ -354,40 +346,37 @@ public class VMMessageBroker implements MessageBroker {
 
 				}
 
-				if (!Void.TYPE.equals(method.getReturnType())) {
-					throw new NonVoidBroadcastMethodException(
-							"You tried to implement a non-void broadcast method.  See "
-									+ MethodUtil.getReadableMethodString(
-											_interface, method));
+				if (Void.TYPE.equals(method.getReturnType())) {
+
+					BroadcastConsumersForAGivenInterface impl = interfacesByMethod
+							.get(method);
+					if (impl == null) {
+						impl = new BroadcastConsumersForAGivenInterface(_interface,
+								method);
+						if (consumer != null)
+							impl.addBroadcastReceiver(consumer);
+						interfacesByMethod.put(method, impl);
+//				} else if (impl.broadcastInterface != _interface) {
+//					logger.error("We cannot have two methods with the same name! Please look at "
+//							+ MethodUtil.getReadableMethodString(
+//									impl.broadcastInterface, impl.method)
+//							+ " and "
+//							+ MethodUtil.getReadableMethodString(_interface,
+//									method));
+//					throw new DuplicateMethodException(
+//							"We cannot have two methods from a Broadcast interface with the same name! Please look at "
+//									+ MethodUtil.getReadableMethodString(
+//											impl.broadcastInterface,
+//											impl.method)
+//									+ " and "
+//									+ MethodUtil.getReadableMethodString(
+//											_interface, method));
+					} else {
+						if (consumer != null)
+							impl.addBroadcastReceiver(consumer);
+					}
 				}
 
-				BroadcastConsumersForAGivenInterface impl = interfacesByMethod
-						.get(method);
-				if (impl == null) {
-					impl = new BroadcastConsumersForAGivenInterface(_interface,
-							method);
-					if (consumer != null)
-						impl.addBroadcastReceiver(consumer);
-					interfacesByMethod.put(method, impl);
-				} else if (impl.broadcastInterface != _interface) {
-					logger.error("We cannot have two methods with the same name! Please look at "
-							+ MethodUtil.getReadableMethodString(
-									impl.broadcastInterface, impl.method)
-							+ " and "
-							+ MethodUtil.getReadableMethodString(_interface,
-									method));
-					throw new DuplicateMethodException(
-							"We cannot have two methods from a Broadcast interface with the same name! Please look at "
-									+ MethodUtil.getReadableMethodString(
-											impl.broadcastInterface,
-											impl.method)
-									+ " and "
-									+ MethodUtil.getReadableMethodString(
-											_interface, method));
-				} else {
-					if (consumer != null)
-						impl.addBroadcastReceiver(consumer);
-				}
 			}
 		}
 	}
@@ -400,14 +389,14 @@ public class VMMessageBroker implements MessageBroker {
 	 * )
 	 */
 	@Override
-	public void addConsumer(Broadcast consumer) {
+	public void addConsumer(Object consumer) {
 		if (!watchForDuplicatesOfUnderlyingImplementationFromProxies
 				.containsKey(consumer)) {
 			watchForDuplicatesOfUnderlyingImplementationFromProxies.put(
 					consumer, consumer);
 		} else {
-			Broadcast implementation = consumer;
-			Broadcast previousProxy = watchForDuplicatesOfUnderlyingImplementationFromProxies
+			Object implementation = consumer;
+			Object previousProxy = watchForDuplicatesOfUnderlyingImplementationFromProxies
 					.get(implementation);
 			if (consumer instanceof java.lang.reflect.Proxy
 					|| previousProxy instanceof java.lang.reflect.Proxy) {
@@ -467,7 +456,7 @@ public class VMMessageBroker implements MessageBroker {
 	 * Used for testing to simulate when the garbage collector runs and causes a
 	 * WeakReferences to be null for a Broadcast implementation
 	 */
-	protected void setWeakReferencesToNull(Broadcast consumer) {
+	protected void setWeakReferencesToNull(Object consumer) {
 		for (BroadcastConsumersForAGivenInterface imp : interfacesByMethod
 				.values()) {
 			imp.setWeakReferencesToNull(consumer);

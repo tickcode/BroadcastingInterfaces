@@ -34,5 +34,5 @@ import org.tickcode.trace.BreadCrumbTrail;
  *
  */
 public interface ErrorHandler {
-	public void error(String brokerName, Broadcast broadcast, Throwable ex, BreadCrumbTrail trail);
+	public void error(String brokerName, Object broadcast, Throwable ex, BreadCrumbTrail trail);
 }

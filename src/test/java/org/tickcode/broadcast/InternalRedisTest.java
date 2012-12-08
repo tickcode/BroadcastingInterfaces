@@ -40,7 +40,7 @@ public class InternalRedisTest {
 		public void shouldNotBroadcast();
 	}
 
-	protected interface ArbitraryMethods extends Broadcast {
+	protected interface ArbitraryMethods{
 		public void sanityCheckMethod1();
 
 		public void sanityCheckMethod2(String message);

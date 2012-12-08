@@ -26,13 +26,10 @@
  ******************************************************************************/
 package org.tickcode.broadcast;
 
-import javassist.bytecode.ByteArray;
-
 import org.apache.commons.codec.binary.Base64;
 import org.junit.Assert;
 import org.junit.Test;
 import org.tickcode.broadcast.RedisMessageBroker.ThreadSafeVariables;
-
 
 import com.esotericsoftware.kryo.io.Output;
 
@@ -41,7 +38,7 @@ public class RedisMessageBrokerTest implements java.io.Serializable {
 	@Test
 	public void testMarshallingData() throws Exception {
 		RedisMessageBroker broker = new RedisMessageBroker("LocalTest","localhost");
-		ThreadSafeVariables safe = broker.threadSafeVariables.get();
+		ThreadSafeVariables safe = broker.safeForKryo.get();
 		safe.buffer = new byte[3];
 		safe.output = new Output(safe.buffer);
 

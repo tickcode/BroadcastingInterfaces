@@ -28,11 +28,10 @@ package org.tickcode.broadcast;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.tickcode.broadcast.InternalRedisTest.ArbitraryMethods;
 
 public class WeakReferenceTest {
 
-	protected interface WeakReferencesTestInterface extends Broadcast {
+	protected interface WeakReferencesTestInterface{
 		public void whatAboutWeakReferences();
 	}
 

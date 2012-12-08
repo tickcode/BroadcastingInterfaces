@@ -34,7 +34,6 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import org.tickcode.broadcast.Broadcast;
 import org.tickcode.broadcast.MessageBroker;
 import org.tickcode.broadcast.VMMessageBroker;
 
@@ -77,7 +76,7 @@ public class Main extends JFrame implements ShuttingDownBroadcast {
 		MenuBar menuBar = new org.tickcode.example.swing.MenuBar();
 		this.setJMenuBar(menuBar);
 		this.setLeft(new org.tickcode.example.swing.ProducerPanel());
-		Broadcast panel = null;
+		Object panel = null;
 		panel = new org.tickcode.example.swing.ConsumeAndProducePanel();
 		broker.addConsumer(panel);
 		this.setMiddle((JComponent)panel);

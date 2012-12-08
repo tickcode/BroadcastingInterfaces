@@ -29,9 +29,9 @@ package org.tickcode.broadcast;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -52,7 +52,6 @@ import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.KryoException;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
-import com.esotericsoftware.minlog.Log;
 
 /**
  * Provides support for getting messages broadcasted through Redis (See <a
@@ -65,14 +64,19 @@ import com.esotericsoftware.minlog.Log;
  * 
  */
 public class RedisMessageBroker extends VMMessageBroker {
-	private static Logger logger = Logger
+	private static Logger log = Logger
 			.getLogger(org.tickcode.broadcast.RedisMessageBroker.class);
 	private static boolean settingRedisMessageBrokerForAll;
 
 	
 	private String name;
 	private JedisPool jedisPool;
-
+	
+	ThreadLocal<ThreadSafeVariables> safeForKryo = new ThreadLocal<ThreadSafeVariables>(){
+		protected ThreadSafeVariables initialValue() {
+			return new ThreadSafeVariables();
+		};
+	};
 	public class ThreadSafeVariables {
 		private final Kryo kryo = new Kryo();
 		public byte[] buffer = new byte[512];
@@ -80,27 +84,26 @@ public class RedisMessageBroker extends VMMessageBroker {
 		Input input = new Input();
 
 		public ThreadSafeVariables() {
-			initializeKryo.initialize(kryo);
+			kryo.setRegistrationRequired(false);
+			kryo.register(Parameters.class);
+			kryo.register(StackTraceElement.class).setInstantiator(
+					(new SerializingInstantiatorStrategy())
+							.newInstantiatorOf(StackTraceElement.class));
 		}
+		
 	}
 
-	ThreadLocal<ThreadSafeVariables> threadSafeVariables = new ThreadLocal<ThreadSafeVariables>() {
-		protected ThreadSafeVariables initialValue() {
-			return new ThreadSafeVariables();
-		};
-	};
-
-	private ConcurrentHashMap<String, Broadcast> broadcastProxyByChannel = new ConcurrentHashMap<String, Broadcast>();
+	private ConcurrentHashMap<String, Object> broadcastProxyByChannel = new ConcurrentHashMap<String, Object>();
+	private ConcurrentHashMap<String, Method> methodByChannel = new ConcurrentHashMap<String, Method>();
 
 	private Thread thread;
 	private Jedis subscriberJedis;
 	private String thumbprint = UUID.randomUUID().toString();
-	private AtomicReference<String> methodBeingBroadcastedFromRedis = new AtomicReference<String>();
+	private AtomicReference<String> channelBeingBroadcastedFromRedis = new AtomicReference<String>();
 	private long latencyFromOthers;
 	private long broadcastsFromOthers;
 	private long latencyFromUs;
 	private long broadcastsFromUs;
-	private InitializeKryo initializeKryo;
 
 	MySubscriber subscriber = new MySubscriber();
 
@@ -120,7 +123,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 
 		@Override
 		public void onPUnsubscribe(byte[] pattern, int subscribedChannels) {
-			logger.info("RedisMessageBroker shutting down.");
+			log.info("RedisMessageBroker shutting down.");
 		}
 
 		@Override
@@ -129,7 +132,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 
 		public void onPMessage(byte[] pattern, byte[] _channel, byte[] message) {
 			String channel = SafeEncoder.encode(_channel);
-			Broadcast producerProxy = null;
+			Object producerProxy = null;
 			try {
 				int firstPeriod = channel.indexOf('.');
 				if (firstPeriod < 1)
@@ -139,10 +142,6 @@ public class RedisMessageBroker extends VMMessageBroker {
 				if (!getName().equals(redisMessageBrokerName))
 					return; // this channel does not belong to this message
 							// broker
-				int lastPeriod = channel.lastIndexOf('.');
-				if (lastPeriod < 1)
-					return; // we have an invalid channel
-				String methodName = channel.substring(lastPeriod + 1);
 
 				producerProxy = getRedisBroadcastProxy(channel);
 				if (producerProxy == null) // we don't have any Broadcast
@@ -161,10 +160,11 @@ public class RedisMessageBroker extends VMMessageBroker {
 				if (args == null)
 					System.out.println("Why is args null?");
 				if (!thumbprint.equals(args.getThumbprint())) {
-					methodBeingBroadcastedFromRedis.set(methodName);
+					channelBeingBroadcastedFromRedis.set(channel);
+					Method method = methodByChannel.get(channel);
 					RedisMessageBroker.super.broadcast(producerProxy,
-							args.getDeclaringClass(), methodName, args.getParameterTypes(), args.getArguments());
-					methodBeingBroadcastedFromRedis.set(null);
+							method, args.getArguments());
+					channelBeingBroadcastedFromRedis.set(null);
 					latencyFromOthers = System.currentTimeMillis()
 							- args.getTimeSent();
 					broadcastsFromOthers++;
@@ -176,7 +176,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 				}
 
 			} catch (Exception ex) {
-				logger.error("Unable to process the broadcast.", ex);
+				log.error("Unable to process the broadcast.", ex);
 				for (WeakReference<ErrorHandler> errorHandler : errorHandlers) {
 					if (errorHandler.get() != null)
 						errorHandler.get().error(
@@ -225,16 +225,6 @@ public class RedisMessageBroker extends VMMessageBroker {
 	protected RedisMessageBroker(String name, JedisPool jedisPool) {
 		this.name = name;
 		this.jedisPool = jedisPool;
-		this.initializeKryo = new InitializeKryo() {
-			@Override
-			public void initialize(Kryo kryo) {
-				kryo.setRegistrationRequired(false);
-				kryo.register(Parameters.class);
-				kryo.register(StackTraceElement.class).setInstantiator(
-						(new SerializingInstantiatorStrategy())
-								.newInstantiatorOf(StackTraceElement.class));
-			}
-		};
 	}
 
 	public long getLatencyFromUs() {
@@ -251,18 +241,19 @@ public class RedisMessageBroker extends VMMessageBroker {
 			return 0;
 	}
 
-	public void finishedBroadcasting(Broadcast producer, Class declaringClass, String methodName, Class[] parameterTypes,
+	public void finishedBroadcasting(Object producer, Method method,
 			Object[] params) {
 		try{
-		if (!methodName.equals(methodBeingBroadcastedFromRedis.get()))
-			broadcastToRedisServer(thumbprint, producer, declaringClass, methodName, parameterTypes, params);
+		String channel = createMethodSignatureKey(method);
+		if (!channel.equals(channelBeingBroadcastedFromRedis.get()))
+			broadcastToRedisServer(thumbprint, producer, method, params);
 		}catch(NoSuchMethodException ex){
-			logger.error("Unable to broadcast through Redis.", ex);
+			log.error("Unable to broadcast through Redis.", ex);
 		}
 	}
 
 	public byte[] marshall(Parameters args) throws IOException {
-		ThreadSafeVariables safe = threadSafeVariables.get();
+		ThreadSafeVariables safe = safeForKryo.get();
 		safe.output.clear();
 		boolean bufferIsNotBigEnough = true;
 		do {
@@ -284,36 +275,32 @@ public class RedisMessageBroker extends VMMessageBroker {
 
 	public Parameters unmarshall(byte[] message) throws IOException,
 			ClassNotFoundException {
-		ThreadSafeVariables safe = threadSafeVariables.get();
+		ThreadSafeVariables safe = safeForKryo.get();
 		safe.input.setBuffer(message);
 		return safe.kryo.readObject(safe.input, Parameters.class);
 	}
 
-	protected Broadcast getRedisBroadcastProxy(String channel) {
+	protected Object getRedisBroadcastProxy(String channel) {
 		return broadcastProxyByChannel.get(channel);
 	}
 
 	protected void broadcastToRedisServer(String thumbprint,
-			Broadcast producer, Class declaringClass, String methodName, Class[] parameterTypes, Object[] params) throws NoSuchMethodException{
+			Object producer, Method method, Object[] params) throws NoSuchMethodException{
 		// broadcast to Redis
-		Method m = producer.getClass().getDeclaredMethod(methodName, parameterTypes);
 		BroadcastConsumersForAGivenInterface b = interfacesByMethod
-				.get(m);
-		String channel = this.createChannelName(b.broadcastInterface.getName(),
-				methodName, parameterTypes);
+				.get(method);
+		String channel = this.createMethodSignatureKey(method);
 		Parameters args = new Parameters();
 		args.setTimeSent(System.currentTimeMillis());
 		args.setThumbprint(thumbprint);
-		args.setDeclaringClass(declaringClass);
-		args.setParameterTypes(parameterTypes);
 		args.setArguments(params);
-		args.setChannel(channel.toString());
 		Jedis jedis = null;
 		try {
 			byte[] _channel = SafeEncoder.encode(channel);
 			jedis = jedisPool.getResource();
 			jedis.publish(_channel, marshall(args));
 		} catch (Exception ex) {
+			log.error("Unable to broadcast.", ex);
 			for (WeakReference<ErrorHandler> errorHandler : errorHandlers) {
 				if (errorHandler.get() != null)
 					errorHandler.get().error(this.toString(), producer,
@@ -331,32 +318,38 @@ public class RedisMessageBroker extends VMMessageBroker {
 	}
 
 	@Override
-	public <T extends Broadcast> T createProducer(Class<? extends T> _class) {
-		ThreadSafeVariables safe = threadSafeVariables.get();
+	public <T extends Object> T createProducer(Class<? extends T> _class) {
+		ThreadSafeVariables safe = safeForKryo.get();
 		safe.kryo.register(_class);
 		return super.createProducer(_class);
 	}
 
 	@Override
-	public void addConsumer(Broadcast consumer) {
+	public void addConsumer(Object consumer) {
+		if(consumer == null)
+			throw new IllegalArgumentException("You cannot add null as a valid consumer.");
 		super.addConsumer(consumer);
 
-		ThreadSafeVariables safe = threadSafeVariables.get();
+		ThreadSafeVariables safe = safeForKryo.get();
 		safe.kryo.register(consumer.getClass());
 
 		// create a subscriber on Redis
-		Map<String, Class> channels = getAllBroadcastConsumerMethodNames(name,
-				consumer.getClass());
-		for (String channel : channels.keySet()) {
-			if (!broadcastProxyByChannel.contains(channel)) {
-				Class _interface = channels.get(channel);
-				safe.kryo.register(_interface);
-				Class[] broadcastInterfaces = new Class[] { _interface };
-				broadcastProxyByChannel.put(channel, BroadcastProducerProxy
-						.newInstance(this, broadcastInterfaces));
+		for (Class _interface : consumer.getClass().getInterfaces()) {
+			for(Method method : _interface.getMethods()){
+				if (Void.TYPE.equals(method.getReturnType())) {
+					String channel = this.createMethodSignatureKey(method);
+					if(!methodByChannel.containsKey(channel)){
+						safe.kryo.register(_interface);
+						Class[] broadcastInterfaces = new Class[] { _interface };
+						broadcastProxyByChannel.put(channel, BroadcastProducerProxy
+								.newInstance(this, broadcastInterfaces));
+						methodByChannel.put(channel, method);
+					}
+				}
 			}
 		}
 	}
+
 
 	public void start() {
 		super.start();
@@ -364,7 +357,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 			thread = new Thread() {
 				public void run() {
 					subscriberJedis = jedisPool.getResource();
-					logger.info("Watching pub/sub from " + name + ".*");
+					log.info("Watching pub/sub from " + name + ".*");
 					subscriberJedis.psubscribe(subscriber,
 							SafeEncoder.encodeMany(name + ".*"));
 				}
@@ -389,48 +382,28 @@ public class RedisMessageBroker extends VMMessageBroker {
 		return name;
 	}
 
-	public void setInitializeKryo(InitializeKryo initializeKryo) {
-		this.initializeKryo = initializeKryo;
-	}
-
 	private static StringBuffer builder = new StringBuffer();
 
-	protected String createChannelName(String interfaceName, String methodName, Class[] parameterTypes) {
+	protected String createMethodSignatureKey(Method method) {
+		Class _interface = method.getDeclaringClass();
+		String methodName = method.getName();
+		Class[] parameterTypes = method.getParameterTypes();
 		builder.setLength(0);
 		if (name != null) {
 			builder.append(name);
 			builder.append(".");
 		}
-		builder.append(interfaceName);
+		
+		builder.append(_interface.getName());
 		builder.append(".");
 		builder.append(methodName);
 		builder.append("(");
-		for(int i=0; i < parameterTypes.length; i++)
+		for(int i=0; i < parameterTypes.length; i++){
+			if(i != 0) builder.append(",");
 			builder.append(parameterTypes[i].getName());
+		}
 		builder.append(")");
 		return builder.toString();
-	}
-
-	private Map<String, Class> getAllBroadcastConsumerMethodNames(
-			String appendString, Class consumer) {
-		HashSet<String> broadcastConsumerMethods = new HashSet<String>();
-		for (Method method : consumer.getMethods()) {
-			broadcastConsumerMethods.add(method.getName());
-		}
-		HashMap<String, Class> readableMethodName = new HashMap<String, Class>();
-		for (Class _interface : consumer.getInterfaces()) {
-			if (Broadcast.class.isAssignableFrom(_interface)
-					&& Broadcast.class != _interface) {
-				for (Method method : _interface.getMethods()) {
-					if (broadcastConsumerMethods.contains(method.getName())) {
-						readableMethodName.put(
-								createChannelName(_interface.getName(),
-										method.getName(),method.getParameterTypes()), _interface);
-					}
-				}
-			}
-		}
-		return readableMethodName;
 	}
 
 	public static boolean isSettingRedisMessageBrokerForAll() {
@@ -444,7 +417,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 
 	// From here down we are providing a way to check a live Redis system.
 
-	protected static interface PingRedisMessageBroker extends Broadcast {
+	protected static interface PingRedisMessageBroker {
 		public void ping(String message, long timeSent);
 	}
 
@@ -492,9 +465,8 @@ public class RedisMessageBroker extends VMMessageBroker {
 			CountDownLatch latch = new CountDownLatch(totalPings);
 			WatchPingMessages consumer = new WatchPingMessages(latch);
 			broker.addConsumer(consumer);
-
-			String channel = broker.createChannelName(
-					PingRedisMessageBroker.class.getName(), "ping", new Class[]{String.class}); // this is
+			Method method = PingRedisMessageBroker.class.getDeclaredMethod("ping", new Class[]{String.class, long.class});
+			String channel = broker.createMethodSignatureKey(method); // this is
 																		// the
 																		// name
 																		// of
@@ -502,38 +474,36 @@ public class RedisMessageBroker extends VMMessageBroker {
 																		// method
 																		// in
 																		// PingRedisMessageBroker
-			Broadcast broadcastProxy = broker.getRedisBroadcastProxy(channel);
+			Object broadcastProxy = broker.getRedisBroadcastProxy(channel);
 
 			// simulate getting a broadcast from another virtual machine through
 			// Redis
 			String thumbprint = UUID.randomUUID().toString();
 			for (int i = 0; i < totalPings; i++) {
-				broker.broadcastToRedisServer(thumbprint, broadcastProxy,
-						PingRedisMessageBroker.class, "ping",
-						new Class[] {String.class},
+				broker.broadcastToRedisServer(thumbprint, broadcastProxy,method,
 						new Object[] { "Pong", System.currentTimeMillis() });
 			}
 			latch.await(5, TimeUnit.SECONDS);
 			if (latch.getCount() > 0) {
-				logger.error("Never received all the ping responses from Redis server.");
+				log.error("Never received all the ping responses from Redis server.");
 			}
 
 			boolean redisServerWorking = false;
 			String pingMessage = consumer.getMessage();
 			if ("Pong".equals(pingMessage)) {
-				logger.info("Average response time was "
+				log.info("Average response time was "
 						+ consumer.getAverageLatency() + " microseconds for "
 						+ (totalPings - latch.getCount()) + " pings.");
-				logger.info("Average response time from external messages was "
+				log.info("Average response time from external messages was "
 						+ broker.getLatencyFromOthers() + " microseconds.");
 				redisServerWorking = true;
 			} else {
-				logger.error("Redis server does not appear to be working.");
+				log.error("Redis server does not appear to be working.");
 			}
 
 			if (redisServerWorking)
 				checkInternalPing(broker);
-			logger.info("Finished testing redis.");
+			log.info("Finished testing redis.");
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		} finally {
@@ -553,18 +523,18 @@ public class RedisMessageBroker extends VMMessageBroker {
 				"Sending out a ping message", System.currentTimeMillis());
 		latch.await(5, TimeUnit.SECONDS);
 		if (latch.getCount() > 0) {
-			logger.error("Never received ping response internally.");
+			log.error("Never received ping response internally.");
 		} else {
 			if (consumer1.getCount() > 1 || consumer2.getCount() > 1) {
-				logger.error("We are getting too many ping messages internally.");
+				log.error("We are getting too many ping messages internally.");
 				throw new Exception(
 						"We are getting too many ping messages internally.");
 			} else if (consumer1.getCount() == 1 && consumer2.getCount() == 1) {
-				logger.info("Internal broadcasting looks OK.");
-				logger.info("Average response time from internal messages was "
+				log.info("Internal broadcasting looks OK.");
+				log.info("Average response time from internal messages was "
 						+ broker.getLatencyFromUs() + " microseconds.");
 			} else {
-				logger.error("There's something wrong with the internal broadcasting.");
+				log.error("There's something wrong with the internal broadcasting.");
 			}
 		}
 

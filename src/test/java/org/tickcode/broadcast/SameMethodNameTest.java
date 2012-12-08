@@ -37,7 +37,7 @@ public class SameMethodNameTest {
 		public void shouldNotBroadcast();
 	}
 
-	protected interface ArbitraryMethods extends Broadcast {
+	protected interface ArbitraryMethods{
 		public void sameMethodName();
 
 		public void sameMethodName(String message);

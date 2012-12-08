@@ -27,7 +27,6 @@
 package org.tickcode.broadcast;
 
 import org.apache.log4j.AppenderSkeleton;
-import org.apache.log4j.Level;
 import org.apache.log4j.spi.LoggingEvent;
 
 public class BroadcastAppender extends AppenderSkeleton{

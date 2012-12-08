@@ -26,7 +26,6 @@
  ******************************************************************************/
 package org.tickcode.example.swing;
 
-import org.tickcode.broadcast.Broadcast;
 
 
 /**
@@ -34,6 +33,6 @@ import org.tickcode.broadcast.Broadcast;
  * 
  * @author Eyon Land
  */
-public interface ShuttingDownBroadcast extends Broadcast{
+public interface ShuttingDownBroadcast{
 	  public void shuttingDown();
 }

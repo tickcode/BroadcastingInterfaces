@@ -26,10 +26,12 @@
  ******************************************************************************/
 package org.tickcode.broadcast;
 
+import java.lang.reflect.Method;
+
 /**
  * Provides the expected interface for any MessageBroker. The interface will be
  * most useful to classes that are trying to automatically provide the mix-in
- * for {@link Broadcast} behavior. For example {@link BroadcastProxy} and the
+ * for {@link Object} behavior. For example {@link BroadcastProxy} and the
  * aspect BroadcastImpl.aj.
  * 
  * @author Eyon Land
@@ -37,14 +39,13 @@ package org.tickcode.broadcast;
  */
 public interface MessageBroker {
 
-	public abstract void broadcast(Broadcast producer, Class declaringClass, String methodName,
-			Class[] parameterTypes, Object[] params) throws NoSuchMethodException;
+	public abstract void broadcast(Object producer, Method m, Object[] params) throws NoSuchMethodException;
 
-	public abstract void removeConsumer(Broadcast consumer);
+	public abstract void removeConsumer(Object consumer);
 
-	public abstract void addConsumer(Broadcast consumer);
+	public abstract void addConsumer(Object consumer);
 
-	public abstract <T extends Broadcast> T createProducer(
+	public abstract <T extends Object> T createProducer(
 			Class<? extends T> broadcastInterfaces);
 
 	public abstract void addErrorHandler(ErrorHandler handler);

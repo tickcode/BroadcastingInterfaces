@@ -38,14 +38,14 @@ public class BroadcastProducerProxy implements java.lang.reflect.InvocationHandl
 
 	private MessageBroker messageBroker;
 
-	public static Broadcast newInstance(MessageBroker broker, Class[] broadcastInterfaces) {
-		Broadcast proxy = (Broadcast)java.lang.reflect.Proxy.newProxyInstance(broker.getClass()
+	public static Object newInstance(MessageBroker broker, Class[] broadcastInterfaces) {
+		Object proxy = (Object)java.lang.reflect.Proxy.newProxyInstance(broker.getClass()
 				.getClassLoader(), broadcastInterfaces,
 				new BroadcastProducerProxy(broker));
 		return proxy;
 	}
 	
-	private BroadcastProducerProxy(MessageBroker broker) {
+	protected BroadcastProducerProxy(MessageBroker broker) {
 		this.messageBroker = broker;
 	}
 	
@@ -55,7 +55,7 @@ public class BroadcastProducerProxy implements java.lang.reflect.InvocationHandl
 
 	public Object invoke(Object proxy, Method m, Object[] args)
 			throws Throwable {
-		messageBroker.broadcast((Broadcast)proxy, m.getDeclaringClass(), m.getName(), m.getParameterTypes(), args);
+		messageBroker.broadcast((Object)proxy, m, args);
 		return null;
 	}
 

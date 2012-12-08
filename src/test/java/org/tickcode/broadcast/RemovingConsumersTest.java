@@ -31,7 +31,7 @@ import org.junit.Test;
 
 public class RemovingConsumersTest {
 
-	protected interface DoSomethingInterface extends Broadcast {
+	protected interface DoSomethingInterface{
 		public void doThis();
 	}
 

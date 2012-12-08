@@ -32,7 +32,7 @@ import org.tickcode.trace.BreadCrumbTrail;
 
 public class BroadcastsWithinBroadcastsTest {
 
-	protected interface InfiniteLoopInterface extends Broadcast {
+	protected interface InfiniteLoopInterface{
 		public void method1();
 
 		public void method2();
@@ -72,7 +72,7 @@ public class BroadcastsWithinBroadcastsTest {
 		String trailString;
 
 		@Override
-		public void error(String broker, Broadcast broadcast,
+		public void error(String broker, Object broadcast,
 				Throwable ex, BreadCrumbTrail trail) {
 			this.trailString = trail.toString();
 			this.trailSize = trail.size();

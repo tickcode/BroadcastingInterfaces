@@ -32,7 +32,7 @@ import org.tickcode.trace.BreadCrumbTrail;
 
 public class InterfaceThrowsExceptionTest {
 
-	protected interface DoSomethingInterface extends Broadcast {
+	protected interface DoSomethingInterface{
 		public void doSomething();
 	}
 
@@ -41,7 +41,7 @@ public class InterfaceThrowsExceptionTest {
 		int trailSize;
 		String trailString;
 
-		public void error(String broker, Broadcast broadcast,
+		public void error(String broker, Object broadcast,
 				Throwable ex, BreadCrumbTrail trail) {
 			this.ex = ex;
 			this.trailSize = trail.size();
