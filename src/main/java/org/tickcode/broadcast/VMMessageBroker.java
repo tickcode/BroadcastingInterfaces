@@ -68,7 +68,7 @@ public class VMMessageBroker implements MessageBroker {
 	}
 	
 	public VMMessageBroker(){
-		this(new MessageBrokerSignature(VMMessageBroker.class, "VMMessageBroker", "localhost", null));
+		this(new MessageBrokerSignature(VMMessageBroker.class.getName(), "VMMessageBroker", "localhost", 0));
 	}
 
 	public VMMessageBroker(MessageBrokerSignature signature) {

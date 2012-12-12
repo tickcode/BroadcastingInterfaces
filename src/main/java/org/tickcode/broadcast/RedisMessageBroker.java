@@ -195,12 +195,12 @@ public class RedisMessageBroker extends VMMessageBroker {
 	
 	public RedisMessageBroker(String messageBrokerName,
 			String host) {
-		this(new MessageBrokerSignature(RedisMessageBroker.class, messageBrokerName, host, 6379));
+		this(new MessageBrokerSignature(RedisMessageBroker.class.getName(), messageBrokerName, host, 6379));
 	}
 
 	public RedisMessageBroker(String messageBrokerName,
 			String host, int port) {
-		this(new MessageBrokerSignature(RedisMessageBroker.class, messageBrokerName, host, port));
+		this(new MessageBrokerSignature(RedisMessageBroker.class.getName(), messageBrokerName, host, port));
 	}
 	
 	public RedisMessageBroker(MessageBrokerSignature signature) {

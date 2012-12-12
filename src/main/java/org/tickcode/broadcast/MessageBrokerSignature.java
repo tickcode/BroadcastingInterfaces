@@ -4,25 +4,28 @@ public class MessageBrokerSignature {
 
 	private String name;
 	private String host;
-	private Integer port;
-	private Class _class;
+	private int port;
+	private String className;
 	
 	public MessageBrokerSignature(){
 	}
 
-	public MessageBrokerSignature(Class _class, String name, String host, Integer port){
-		this._class = _class;
+	public MessageBrokerSignature(String className, String name, String host, int port){
+		this.className = className;
 		this.name = name;
 		this.host = host;
 		this.port = port;
 	}
 	
+	
 	public MessageBrokerSignature(MessageBrokerSignature source){
 		this.name = source.getName();
 		this.host = source.getHost();
 		this.port = source.getPort();
-		this._class = source.getKlass();
+		this.className = source.getClassName();
 	}
+	
+	
 	
 	public String getName() {
 		return name;
@@ -48,22 +51,26 @@ public class MessageBrokerSignature {
 		this.port = port;
 	}
 
-	public Class getKlass() {
-		return _class;
+	public String getClassName() {
+		return className;
 	}
 
-	public void setKlass(Class _class) {
-		this._class = _class;
+	public void setClassName(String className) {
+		this.className = className;
+	}
+
+	public void setPort(int port) {
+		this.port = port;
 	}
 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((_class == null) ? 0 : _class.hashCode());
+		result = prime * result + ((className == null) ? 0 : className.hashCode());
 		result = prime * result + ((host == null) ? 0 : host.hashCode());
 		result = prime * result + ((name == null) ? 0 : name.hashCode());
-		result = prime * result + ((port == null) ? 0 : port.hashCode());
+		result = prime * result + (port);
 		return result;
 	}
 
@@ -76,10 +83,10 @@ public class MessageBrokerSignature {
 		if (getClass() != obj.getClass())
 			return false;
 		MessageBrokerSignature other = (MessageBrokerSignature) obj;
-		if (_class == null) {
-			if (other._class != null)
+		if (className == null) {
+			if (other.className != null)
 				return false;
-		} else if (!_class.equals(other._class))
+		} else if (!className.equals(other.className))
 			return false;
 		if (host == null) {
 			if (other.host != null)
@@ -91,19 +98,16 @@ public class MessageBrokerSignature {
 				return false;
 		} else if (!name.equals(other.name))
 			return false;
-		if (port == null) {
-			if (other.port != null)
+		if (port != other.port)
 				return false;
-		} else if (!port.equals(other.port))
-			return false;
 		return true;
 	}
 	
 	@Override
 	public String toString() {
 		StringBuffer buffer = new StringBuffer();
-		buffer.append(_class.getSimpleName()).append(" ").append(name).append("@").append(host);
-		if(port != null)
+		buffer.append(className).append("_").append(name).append("@").append(host);
+		if(port != 0)
 			buffer.append(":").append(port);
 		return buffer.toString();
 	}

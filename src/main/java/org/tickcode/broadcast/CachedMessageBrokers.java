@@ -10,7 +10,7 @@ public class CachedMessageBrokers {
 
 	public static MessageBroker findOrCreate(MessageBrokerSignature signature)
 			throws InvocationTargetException, NoSuchMethodException,
-			IllegalAccessException, InstantiationException {
+			IllegalAccessException, InstantiationException, ClassNotFoundException {
 
 		MessageBroker broker = cache.get(signature);
 		if (broker != null)
@@ -19,7 +19,7 @@ public class CachedMessageBrokers {
 		String name = signature.getName();
 		String host = signature.getHost();
 		Integer port = signature.getPort();
-		Class _class = signature.getKlass();
+		Class _class = Class.forName(signature.getClassName());
 		if (host != null && name != null && port != null) {
 			Class[] parameterTypes = new Class[3];
 			parameterTypes[0] = String.class;
