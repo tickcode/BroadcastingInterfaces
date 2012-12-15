@@ -98,7 +98,6 @@ public class RedisMessageBroker extends VMMessageBroker {
 
 	private Thread thread;
 	private Jedis subscriberJedis;
-	private String thumbprint = UUID.randomUUID().toString();
 	private AtomicReference<String> channelBeingBroadcastedFromRedis = new AtomicReference<String>();
 	private long latencyFromOthers;
 	private long broadcastsFromOthers;

@@ -32,6 +32,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -55,7 +56,9 @@ public class VMMessageBroker implements MessageBroker {
 
 	private static VMMessageBroker singleton;
     private MessageBrokerSignature signature;
-    
+
+	protected String thumbprint;
+
 	public static VMMessageBroker get() {
 		if (singleton == null)
 			singleton = new VMMessageBroker();
@@ -68,10 +71,13 @@ public class VMMessageBroker implements MessageBroker {
 	}
 	
 	public VMMessageBroker(){
-		this(new MessageBrokerSignature(VMMessageBroker.class.getName(), "VMMessageBroker", "localhost", 0));
+		this(null);
 	}
 
 	public VMMessageBroker(MessageBrokerSignature signature) {
+		thumbprint = UUID.randomUUID().toString();
+		if(signature == null)
+			signature = new MessageBrokerSignature(VMMessageBroker.class.getName(), thumbprint, "localhost", 0);
 		this.signature = signature;
 	}
 	
