@@ -39,7 +39,7 @@ import java.lang.reflect.Method;
  */
 public interface MessageBroker {
 
-	public abstract void broadcast(Object producer, Method m, Object[] params) throws NoSuchMethodException;
+	public abstract void broadcast(Object producer, Method m, Object[] params, String thumbprint) throws NoSuchMethodException;
 
 	public abstract void removeConsumer(Object consumer);
 
@@ -48,6 +48,9 @@ public interface MessageBroker {
 	public abstract <T extends Object> T createProducer(
 			Class<? extends T> broadcastInterfaces);
 
+	public abstract <T extends Object> T createServiceProducer(MessageBroker callbackBroker,
+			Class<? extends T> broadcastInterfaces);
+	
 	public abstract void addErrorHandler(ErrorHandler handler);
 
 	public abstract void removeErrorHandler(ErrorHandler handler);
@@ -61,5 +64,7 @@ public interface MessageBroker {
 	public void stop();
 
 	public MessageBrokerSignature getSignature();
+	
+	public String getThumbprint();
 
 }

@@ -25,8 +25,6 @@ public class MessageBrokerSignature {
 		this.className = source.getClassName();
 	}
 	
-	
-	
 	public String getName() {
 		return name;
 	}
@@ -106,7 +104,7 @@ public class MessageBrokerSignature {
 	@Override
 	public String toString() {
 		StringBuffer buffer = new StringBuffer();
-		buffer.append(className).append("_").append(name).append("@").append(host);
+		buffer.append(className).append(":").append(name).append("@").append(host);
 		if(port != 0)
 			buffer.append(":").append(port);
 		return buffer.toString();

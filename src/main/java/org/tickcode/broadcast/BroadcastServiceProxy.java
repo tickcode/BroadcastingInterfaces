@@ -34,23 +34,32 @@ import java.lang.reflect.Method;
  * @author Eyon Land
  *
  */
-public class BroadcastProducerProxy implements java.lang.reflect.InvocationHandler {
+public class BroadcastServiceProxy implements java.lang.reflect.InvocationHandler {
+
+	public static interface MessgeBrokerCallbackSignature{
+		public void useThisCallbackSignature(MessageBrokerSignature callbackSignature);
+	}
 
 	private MessageBroker messageBroker;
-
-	public static Object newInstance(MessageBroker broker, Class[] broadcastInterfaces) {
+	private MessageBroker callbackBroker;
+	private MessgeBrokerCallbackSignature registerCallback;
+	
+	public static Object newInstance(MessageBroker broker, MessageBroker callbackBroker, Class[] broadcastInterfaces) {
 		Object proxy = (Object)java.lang.reflect.Proxy.newProxyInstance(broker.getClass()
 				.getClassLoader(), broadcastInterfaces,
-				new BroadcastProducerProxy(broker));
+				new BroadcastServiceProxy(broker, callbackBroker));
 		return proxy;
 	}
 	
-	protected BroadcastProducerProxy(MessageBroker broker) {
+	protected BroadcastServiceProxy(MessageBroker broker, MessageBroker callbackBroker) {
 		this.messageBroker = broker;
+		this.callbackBroker = callbackBroker;
+		registerCallback = messageBroker.createProducer(MessgeBrokerCallbackSignature.class);
 	}
 	
 	public Object invoke(Object proxy, Method m, Object[] args)
 			throws Throwable {
+		registerCallback.useThisCallbackSignature(callbackBroker.getSignature());
 		messageBroker.broadcast((Object)proxy, m, args, messageBroker.getThumbprint());
 		return null;
 	}

@@ -29,7 +29,6 @@ package org.tickcode.broadcast;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -93,7 +92,22 @@ public class VMMessageBroker implements MessageBroker {
 			throw new UnsupportedOperationException("You may only create a producer from an interface.");
 		}
 	}
-
+	
+	@Override
+	public <T> T createServiceProducer(MessageBroker callbackBroker,
+			Class<? extends T> _class) {
+		if(_class.isInterface()){
+			return (T) BroadcastServiceProxy.newInstance(this, callbackBroker, new Class[]{_class});
+		}
+		Class[] interfaces = _class.getInterfaces();
+		if(interfaces != null && interfaces.length > 0){
+			return (T) BroadcastServiceProxy.newInstance(this, callbackBroker, interfaces);
+		}
+		else{
+			throw new UnsupportedOperationException("You may only create a producer from an interface.");
+		}
+	}
+	
 	/**
 	 * By using ThreadLocal, every set of method names will be unique per
 	 * thread. So while we allow another thread to broadcast on the same method,
@@ -288,7 +302,10 @@ public class VMMessageBroker implements MessageBroker {
 	 * .Broadcast, java.lang.String, java.lang.Object[])
 	 */
 	@Override
-	public void broadcast(Object producer, Method m, Object[] params) throws NoSuchMethodException{
+	public void broadcast(Object producer, Method m, Object[] params, String thumbprint) throws NoSuchMethodException{
+		BreadCrumbTrail trail = BreadCrumbTrail.get();
+		trail.setThumbprint(thumbprint);
+
 		if (loggingOn && logger.isDebugEnabled()) {
 			logger.debug(m.getName() + "(" + MethodUtil.getArguments(params)
 					+ ")");
@@ -496,6 +513,11 @@ public class VMMessageBroker implements MessageBroker {
 	@Override
 	public MessageBrokerSignature getSignature() {
 		return signature;
+	}
+	
+	@Override
+	public String getThumbprint() {
+		return thumbprint;
 	}
 
 

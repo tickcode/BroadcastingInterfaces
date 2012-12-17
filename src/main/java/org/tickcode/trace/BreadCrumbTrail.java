@@ -41,7 +41,10 @@ public class BreadCrumbTrail {
 		return activeTrail.get();
 	}
 	
+	String thumbprint;
+	
 	ArrayList<BreadCrumb> trail = new ArrayList<BreadCrumb>();
+	
 	public void add(BreadCrumb crumb){
 		trail.add(crumb);
 	}
@@ -51,6 +54,14 @@ public class BreadCrumbTrail {
 	}
 
 	
+	public String getThumbprint() {
+		return thumbprint;
+	}
+
+	public void setThumbprint(String thumbprint) {
+		this.thumbprint = thumbprint;
+	}
+
 	@Override
 	public String toString() {
 		StringBuffer buffer = new StringBuffer();

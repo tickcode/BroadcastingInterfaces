@@ -162,7 +162,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 					channelBeingBroadcastedFromRedis.set(channel);
 					Method method = methodByChannel.get(channel);
 					RedisMessageBroker.super.broadcast(producerProxy,
-							method, args.getArguments());
+							method, args.getArguments(), args.getThumbprint());
 					channelBeingBroadcastedFromRedis.set(null);
 					latencyFromOthers = System.currentTimeMillis()
 							- args.getTimeSent();
