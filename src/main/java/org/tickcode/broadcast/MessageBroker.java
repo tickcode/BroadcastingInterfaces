@@ -58,11 +58,7 @@ public interface MessageBroker {
 	public abstract void clear();
 
 	public abstract int size();
-
-	public void start();
-
-	public void stop();
-
+	
 	public MessageBrokerSignature getSignature();
 	
 	public String getThumbprint();

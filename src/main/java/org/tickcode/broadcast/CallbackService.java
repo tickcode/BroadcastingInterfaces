@@ -12,7 +12,8 @@ public class CallbackService<T> implements
 		BroadcastServiceProxy.MessgeBrokerCallbackSignature{
 	Logger log = Logger.getLogger(org.tickcode.broadcast.VMMessageBroker.class);
 	
-	ConcurrentHashMap<String, Object> cachedCallbackProxies = new ConcurrentHashMap<String, Object>();
+	ConcurrentHashMap<String, Object> callbackProxiesByThumbprint = new ConcurrentHashMap<String, Object>();
+	ConcurrentHashMap<String, MessageBroker> messageBrokersByThumbprint = new ConcurrentHashMap<String, MessageBroker>();
 	Class<? extends T> callbackInterface;
 	
 	public CallbackService() {
@@ -42,13 +43,19 @@ public class CallbackService<T> implements
 	protected T getCallbackProxy() {
 		BreadCrumbTrail trail = BreadCrumbTrail.get();
 		String thumbprint = trail.getThumbprint();
-		Object callbackProxy = cachedCallbackProxies.get(thumbprint);
+		Object callbackProxy = callbackProxiesByThumbprint.get(thumbprint);
 		if(callbackProxy==null){
 			return (T)null;
 		}
 		else{
 			return (T)callbackProxy;
 		}
+	}
+	
+	protected MessageBroker getCallbackMessageBroker(){
+		BreadCrumbTrail trail = BreadCrumbTrail.get();
+		String thumbprint = trail.getThumbprint();
+		return messageBrokersByThumbprint.get(thumbprint);
 	}
 
 
@@ -60,12 +67,13 @@ public class CallbackService<T> implements
 		String thumbprint = trail.getThumbprint();
 		
 		try {
-			MessageBroker callbackBroker = CachedMessageBrokers
-					.findOrCreate(callbackSignature);
-			Object callbackProxy = cachedCallbackProxies.get(thumbprint);
+			Object callbackProxy = callbackProxiesByThumbprint.get(thumbprint);
 			if (callbackProxy == null) {
+				MessageBroker callbackBroker = CachedMessageBrokers
+						.findOrCreate(callbackSignature);
+				messageBrokersByThumbprint.put(thumbprint, callbackBroker);
 				callbackProxy = callbackBroker.createProducer(callbackInterface);
-				cachedCallbackProxies.put(thumbprint, callbackProxy);
+				callbackProxiesByThumbprint.put(thumbprint, callbackProxy);
 			}
 
 		} catch (IllegalAccessException ex) {

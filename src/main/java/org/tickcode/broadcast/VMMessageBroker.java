@@ -511,14 +511,6 @@ public class VMMessageBroker implements MessageBroker {
 	}
 
 	@Override
-	public void start() {
-	}
-
-	@Override
-	public void stop() {
-	}
-	
-	@Override
 	public String toString() {
 		return signature.toString();
 	}
