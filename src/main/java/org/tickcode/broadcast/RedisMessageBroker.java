@@ -99,7 +99,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 	private ConcurrentHashMap<String, Method> methodByChannel = new ConcurrentHashMap<String, Method>();
 
 	private MyThread thread;
-	private AtomicReference<String> channelBeingBroadcastedFromRedis = new AtomicReference<String>();
+	private ThreadLocal<String> channelBeingBroadcastedFromRedis = new ThreadLocal<String>();
 	private long latencyFromOthers;
 	private long broadcastsFromOthers;
 	private long latencyFromUs;
@@ -422,8 +422,8 @@ public class RedisMessageBroker extends VMMessageBroker {
 			try {
 				if (thread.subscriber.isSubscribed())
 					thread.subscriber.punsubscribe();
-				log.info("We received a total of " + thread.subscriber.count
-						+ " messages.");
+//				log.info("We received a total of " + thread.subscriber.count
+//						+ " messages.");
 			} catch (Exception ex) {
 				log.error("Unable to close down the Redis connection.", ex);
 			}
