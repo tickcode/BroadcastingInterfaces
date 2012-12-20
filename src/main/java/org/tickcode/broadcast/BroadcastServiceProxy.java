@@ -29,8 +29,8 @@ package org.tickcode.broadcast;
 import java.lang.reflect.Method;
 
 /**
- * Used for creating a producer proxy for sending messages to all consumers using
- * the given MesssageBroker.
+ * Used for creating a service proxy for sending messages to {@link CallbackService} such that
+ * the callback will be on a different callback {@link MessageBroker}.
  * @author Eyon Land
  *
  */
