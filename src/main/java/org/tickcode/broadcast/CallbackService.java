@@ -1,23 +1,56 @@
 package org.tickcode.broadcast;
 
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Logger;
 import org.tickcode.trace.BreadCrumbTrail;
 
-public class CallbackService<R, C> implements
-		BroadcastServiceProxy.MessgeBrokerCallbackSignature {
+public class CallbackService<T> implements
+		BroadcastServiceProxy.MessgeBrokerCallbackSignature{
 	Logger log = Logger.getLogger(org.tickcode.broadcast.VMMessageBroker.class);
 	
-	ConcurrentHashMap<String, C> cachedCallbackProxies = new ConcurrentHashMap<String, C>();
-	Class<? extends C> callbackInteface;
-
-	public CallbackService(MessageBroker serviceMessageBroker,
-			Class<? extends C> callbackInteface, R request) {
-		this.callbackInteface = callbackInteface;
-		serviceMessageBroker.addConsumer(request);
+	ConcurrentHashMap<String, Object> cachedCallbackProxies = new ConcurrentHashMap<String, Object>();
+	Class<? extends T> callbackInterface;
+	
+	public CallbackService() {
+		callbackInterface = findInterface();
+		if(!callbackInterface.isInterface()){
+			throw new IllegalArgumentException("You must provide an interface for the callback.");
+		}
 	}
+	
+	public Class findInterface(){
+		Type type = this.getClass().getGenericSuperclass();
+		Class _class = null;
+		if (type instanceof ParameterizedType){
+		      ParameterizedType paramType = (ParameterizedType) type;
+		      Type[] arguments = paramType.getActualTypeArguments();
+		      if (arguments[0] instanceof Class) {
+		    	  _class = (Class)arguments[0];
+					if(!_class.isInterface())
+						_class = null;
+		      }
+		}
+		if(_class == null)
+				throw new IllegalArgumentException("CallbackService is a parameterized class that must be used with an interface.");
+		return _class;
+	}
+	
+	protected T getCallbackProxy() {
+		BreadCrumbTrail trail = BreadCrumbTrail.get();
+		String thumbprint = trail.getThumbprint();
+		Object callbackProxy = cachedCallbackProxies.get(thumbprint);
+		if(callbackProxy==null){
+			return (T)null;
+		}
+		else{
+			return (T)callbackProxy;
+		}
+	}
+
 
 	@Override
 	public void useThisCallbackSignature(
@@ -29,9 +62,9 @@ public class CallbackService<R, C> implements
 		try {
 			MessageBroker callbackBroker = CachedMessageBrokers
 					.findOrCreate(callbackSignature);
-			C callbackProxy = cachedCallbackProxies.get(thumbprint);
+			Object callbackProxy = cachedCallbackProxies.get(thumbprint);
 			if (callbackProxy == null) {
-				callbackProxy = callbackBroker.createProducer(callbackInteface);
+				callbackProxy = callbackBroker.createProducer(callbackInterface);
 				cachedCallbackProxies.put(thumbprint, callbackProxy);
 			}
 

@@ -51,6 +51,7 @@ public class BroadcastProducerProxy implements java.lang.reflect.InvocationHandl
 	
 	public Object invoke(Object proxy, Method m, Object[] args)
 			throws Throwable {
+		int size = messageBroker.size();
 		messageBroker.broadcast((Object)proxy, m, args, messageBroker.getThumbprint());
 		return null;
 	}

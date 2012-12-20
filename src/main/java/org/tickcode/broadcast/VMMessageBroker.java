@@ -78,6 +78,7 @@ public class VMMessageBroker implements MessageBroker {
 		if(signature == null)
 			signature = new MessageBrokerSignature(VMMessageBroker.class.getName(), thumbprint, "localhost", 0);
 		this.signature = signature;
+		CachedMessageBrokers.cache(this);
 	}
 	
 	public <T extends Object> T createProducer(Class<? extends T> _class) {
@@ -107,6 +108,7 @@ public class VMMessageBroker implements MessageBroker {
 			throw new UnsupportedOperationException("You may only create a producer from an interface.");
 		}
 	}
+	
 	
 	/**
 	 * By using ThreadLocal, every set of method names will be unique per
@@ -325,6 +327,10 @@ public class VMMessageBroker implements MessageBroker {
 	protected void finishedBroadcasting(Object producer, Method method, Object[] params) {
 		// available for subclasses
 	}
+	
+	protected int totalMethods(){
+		return interfacesByMethod.size();
+	}
 
 	@Override
 	public int size() {
@@ -428,9 +434,16 @@ public class VMMessageBroker implements MessageBroker {
 			}
 		}
 
-		for (Class _interface : consumer.getClass().getInterfaces()) {
+		addInterfaces(consumer.getClass(), consumer);
+	}
+	
+	protected void addInterfaces(Class _class, Object consumer){
+		if(_class == null || _class == Object.class)
+			return;
+		for (Class _interface : _class.getInterfaces()) {
 			addInterface(_interface, consumer);
 		}
+		addInterfaces(_class.getSuperclass(), consumer);
 	}
 
 	/*
