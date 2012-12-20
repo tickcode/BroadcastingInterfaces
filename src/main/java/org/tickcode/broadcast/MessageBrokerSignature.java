@@ -41,11 +41,11 @@ public class MessageBrokerSignature {
 		this.host = host;
 	}
 
-	public Integer getPort() {
+	public int getPort() {
 		return port;
 	}
 
-	public void setPort(Integer port) {
+	public void setPort(int port) {
 		this.port = port;
 	}
 
@@ -55,10 +55,6 @@ public class MessageBrokerSignature {
 
 	public void setClassName(String className) {
 		this.className = className;
-	}
-
-	public void setPort(int port) {
-		this.port = port;
 	}
 
 	@Override

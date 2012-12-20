@@ -56,7 +56,8 @@ public class VMMessageBroker implements MessageBroker {
 	private static VMMessageBroker singleton;
     private MessageBrokerSignature signature;
 
-	protected String thumbprint;
+	protected final String thumbprint = UUID.randomUUID().toString();
+
 
 	public static VMMessageBroker get() {
 		if (singleton == null)
@@ -74,7 +75,6 @@ public class VMMessageBroker implements MessageBroker {
 	}
 
 	public VMMessageBroker(MessageBrokerSignature signature) {
-		thumbprint = UUID.randomUUID().toString();
 		if(signature == null)
 			signature = new MessageBrokerSignature(VMMessageBroker.class.getName(), thumbprint, "localhost", 0);
 		this.signature = signature;
@@ -181,6 +181,10 @@ public class VMMessageBroker implements MessageBroker {
 			if (cleanOutWeakReferences) {
 				cleanOutWeakReferences();
 			}
+		}
+		
+		protected void removeAll(){
+			consumers.clear();
 		}
 
 		protected boolean weHave(Object consumer) {
@@ -312,19 +316,19 @@ public class VMMessageBroker implements MessageBroker {
 			logger.debug(m.getName() + "(" + MethodUtil.getArguments(params)
 					+ ")");
 		}
-		beginBroadcasting(producer, m, params);
+		beginBroadcasting(producer, m, params, thumbprint);
 		BroadcastConsumersForAGivenInterface b = interfacesByMethod
 				.get(m);
 		if (b != null)
 			b.broadcast(producer, params);
-		finishedBroadcasting(producer, m, params);
+		finishedBroadcasting(producer, m, params, thumbprint);
 	}
 
-	protected void beginBroadcasting(Object producer, Method method, Object[] params) {
+	protected void beginBroadcasting(Object producer, Method method, Object[] params, String thumbprint) {
 		// available for subclasses
 	}
 
-	protected void finishedBroadcasting(Object producer, Method method, Object[] params) {
+	protected void finishedBroadcasting(Object producer, Method method, Object[] params, String thumbprint) {
 		// available for subclasses
 	}
 	
@@ -356,6 +360,15 @@ public class VMMessageBroker implements MessageBroker {
 				.values()) {
 			imp.remove(consumer);
 		}
+	}
+	
+	@Override
+	public void removeAllConsumers() {
+		for (BroadcastConsumersForAGivenInterface imp : interfacesByMethod
+				.values()) {
+			imp.removeAll();
+		}
+		
 	}
 
 	protected void addInterface(Class _interface, Object consumer) {

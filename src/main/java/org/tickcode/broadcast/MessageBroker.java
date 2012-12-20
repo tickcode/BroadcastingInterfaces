@@ -42,6 +42,8 @@ public interface MessageBroker {
 	public abstract void broadcast(Object producer, Method m, Object[] params, String thumbprint) throws NoSuchMethodException;
 
 	public abstract void removeConsumer(Object consumer);
+	
+	public abstract void removeAllConsumers();
 
 	public abstract void addConsumer(Object consumer);
 
