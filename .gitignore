@@ -4,3 +4,4 @@ target/*
 *.lst
 
 target/classes/builddef.lst
+/.classpath

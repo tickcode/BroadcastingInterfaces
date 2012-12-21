@@ -26,7 +26,6 @@
  ******************************************************************************/
 package org.tickcode.broadcast;
 
-import java.lang.reflect.Method;
 
 /**
  * The {@link RedisMessageBroker} will use this class to send parameters to other {@link RedisMessageBroker}s
