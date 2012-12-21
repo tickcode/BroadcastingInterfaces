@@ -109,7 +109,7 @@ public class SanityCheckTest {
 	@Test
 	public void makeSureWeCanBroadcastWithoutEverAddingAConsuemr(){
 		VMMessageBroker broker = new VMMessageBroker();
-		((ArbitraryMethods)broker.createProducer(ArbitraryMethods.class)).sanityCheckMethod1();
+		((ArbitraryMethods)broker.createPublisher(ArbitraryMethods.class)).sanityCheckMethod1();
 	}
 
 	@Test
@@ -119,11 +119,11 @@ public class SanityCheckTest {
 		Assert.assertEquals(0, broker.size());
 
 		MySecondClass second = new MySecondClass();
-		broker.addConsumer(second);
+		broker.addSubscriber(second);
 		Assert.assertEquals(1, broker.size());
-		broker.addConsumer(first);
+		broker.addSubscriber(first);
 		
-		(broker.createProducer(ArbitraryMethods.class)).sanityCheckMethod1();
+		(broker.createPublisher(ArbitraryMethods.class)).sanityCheckMethod1();
 		Assert.assertEquals(2, broker.size());
 		Assert.assertEquals(1, first.countMethod1);
 		Assert.assertEquals(1, second.countMethod1);
@@ -138,7 +138,7 @@ public class SanityCheckTest {
 		Assert.assertNull(first.payload);
 		Assert.assertNull(second.payload);
 
-		(broker.createProducer(ArbitraryMethods.class)).sanityCheckMethod2("my message");
+		(broker.createPublisher(ArbitraryMethods.class)).sanityCheckMethod2("my message");
 		Assert.assertEquals(1, first.countMethod1);
 		Assert.assertEquals(1, second.countMethod1);
 		Assert.assertEquals(1, first.countMethod2);
@@ -152,7 +152,7 @@ public class SanityCheckTest {
 		Assert.assertNull(first.payload);
 		Assert.assertNull(second.payload);
 
-		(broker.createProducer(ArbitraryMethods.class)).sanityCheckMethod3(first);
+		(broker.createPublisher(ArbitraryMethods.class)).sanityCheckMethod3(first);
 		Assert.assertEquals(1, first.countMethod1);
 		Assert.assertEquals(1, second.countMethod1);
 		Assert.assertEquals(1, first.countMethod2);

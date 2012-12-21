@@ -75,7 +75,7 @@ public class MenuBar extends JMenuBar {
 	}
 	
 	public void shutDownGui(ActionEvent e){
-		((ShuttingDownBroadcast)VMMessageBroker.get().createProducer(ShuttingDownBroadcast.class)).shuttingDown();
+		((ShuttingDownBroadcast)VMMessageBroker.get().createPublisher(ShuttingDownBroadcast.class)).shuttingDown();
 		System.exit(0);
 	}
 	

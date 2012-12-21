@@ -81,7 +81,7 @@ public class VMMessageBroker implements MessageBroker {
 		CachedMessageBrokers.cache(this);
 	}
 	
-	public <T extends Object> T createProducer(Class<? extends T> _class) {
+	public <T extends Object> T createPublisher(Class<? extends T> _class) {
 		if(_class.isInterface()){
 			return (T) BroadcastProducerProxy.newInstance(this, new Class[]{_class});
 		}
@@ -95,7 +95,7 @@ public class VMMessageBroker implements MessageBroker {
 	}
 	
 	@Override
-	public <T> T createServiceProducer(MessageBroker callbackBroker,
+	public <T> T createCallbackPublisher(MessageBroker callbackBroker,
 			Class<? extends T> _class) {
 		if(_class.isInterface()){
 			return (T) BroadcastServiceProxy.newInstance(this, callbackBroker, new Class[]{_class});
@@ -354,7 +354,7 @@ public class VMMessageBroker implements MessageBroker {
 	 * )
 	 */
 	@Override
-	public void removeConsumer(Object consumer) {
+	public void removeSubscriber(Object consumer) {
 		// consumer = getBroadcastImplementation(consumer);
 		for (BroadcastConsumersForAGivenInterface imp : interfacesByMethod
 				.values()) {
@@ -363,7 +363,7 @@ public class VMMessageBroker implements MessageBroker {
 	}
 	
 	@Override
-	public void removeAllConsumers() {
+	public void removeAllSubscribers() {
 		for (BroadcastConsumersForAGivenInterface imp : interfacesByMethod
 				.values()) {
 			imp.removeAll();
@@ -431,7 +431,7 @@ public class VMMessageBroker implements MessageBroker {
 	 * )
 	 */
 	@Override
-	public void addConsumer(Object consumer) {
+	public void addSubscriber(Object consumer) {
 		if (!watchForDuplicatesOfUnderlyingImplementationFromProxies
 				.containsKey(consumer)) {
 			watchForDuplicatesOfUnderlyingImplementationFromProxies.put(

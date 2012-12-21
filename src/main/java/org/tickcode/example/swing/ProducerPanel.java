@@ -52,7 +52,7 @@ import org.tickcode.broadcast.VMMessageBroker;
  */
 public class ProducerPanel extends JPanel {
 
-	private TextChangedBroadcast producer = (TextChangedBroadcast)VMMessageBroker.get().createProducer(TextChangedBroadcast.class);
+	private TextChangedBroadcast producer = (TextChangedBroadcast)VMMessageBroker.get().createPublisher(TextChangedBroadcast.class);
 
 	private ScrollPane scrollPane = null;  //  @jve:decl-index=0:visual-constraint="312,149"
 	private JTextArea jTextArea = null;

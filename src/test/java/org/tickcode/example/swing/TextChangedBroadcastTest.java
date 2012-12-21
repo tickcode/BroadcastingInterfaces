@@ -63,9 +63,9 @@ public class TextChangedBroadcastTest {
 		//note that we do not add the producer to the broker because
 		// it should never consume messages
 		ProducerAndConsumer producerAndConsumer = new ProducerAndConsumer(); 
-		broker.addConsumer(producerAndConsumer);
+		broker.addSubscriber(producerAndConsumer);
 		Consumer consumer = new Consumer(); 
-		broker.addConsumer(consumer);
+		broker.addSubscriber(consumer);
 		
 
 		String expected = null;
@@ -74,14 +74,14 @@ public class TextChangedBroadcastTest {
 		
 		
 		expected = "Hello World from the Producer";
-		((TextChangedBroadcast)broker.createProducer(TextChangedBroadcast.class)).textChanged(expected);
+		((TextChangedBroadcast)broker.createPublisher(TextChangedBroadcast.class)).textChanged(expected);
 		Assert.assertEquals(expected, producerAndConsumer.messageReceived);
 		Assert.assertEquals(expected, consumer.messageReceived);
 		
 		String expectedForConsumer = "Hello World from the ProducerAndConsumer";
 		String expectedForProducerAndConsumer = expectedForConsumer;
 		producer.messageReceived = null;
-		((TextChangedBroadcast)broker.createProducer(TextChangedBroadcast.class)).textChanged(expectedForConsumer);
+		((TextChangedBroadcast)broker.createPublisher(TextChangedBroadcast.class)).textChanged(expectedForConsumer);
 		Assert.assertEquals(expectedForProducerAndConsumer, producerAndConsumer.messageReceived);
 		Assert.assertEquals(expectedForConsumer, consumer.messageReceived);
 		Assert.assertNull(producer.messageReceived);
@@ -96,14 +96,14 @@ public class TextChangedBroadcastTest {
 		
 		for(int i=0; i < 100; i++){
 			consumers.add(new Consumer());
-			broker.addConsumer(consumers.get(i));
+			broker.addSubscriber(consumers.get(i));
 		}
 		
 		for(int i=0; i < 100; i++){
 			Assert.assertNull(consumers.get(i).messageReceived);
 		}
 		
-		((TextChangedBroadcast)broker.createProducer(TextChangedBroadcast.class)).textChanged("Hello World");
+		((TextChangedBroadcast)broker.createPublisher(TextChangedBroadcast.class)).textChanged("Hello World");
 
 		for(int i=0; i < 100; i++){
 			Assert.assertEquals("Hello World",consumers.get(i).messageReceived);

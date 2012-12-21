@@ -67,29 +67,29 @@ public class InterfaceInheritanceTest {
 		Assert.assertEquals(0, broker.size());
 
 		ClassForChildInterface second = new ClassForChildInterface();
-		broker.addConsumer(second);
+		broker.addSubscriber(second);
 		Assert.assertEquals(1, broker.size());
-		broker.addConsumer(first);
+		broker.addSubscriber(first);
 		
-		(broker.createProducer(ChildInterface.class)).childMethod();
+		(broker.createPublisher(ChildInterface.class)).childMethod();
 		Assert.assertEquals(2, broker.size());
 		Assert.assertEquals(0, first.countParentMethod);
 		Assert.assertEquals(0, second.countParentMethod);
 		Assert.assertEquals(1, second.countChildMethod);
 		
-		(broker.createProducer(ChildInterface.class)).parentMethod();
+		(broker.createPublisher(ChildInterface.class)).parentMethod();
 		Assert.assertEquals(2, broker.size());
 		Assert.assertEquals(1, first.countParentMethod);
 		Assert.assertEquals(1, second.countParentMethod);
 		Assert.assertEquals(1, second.countChildMethod);
 		
-		(broker.createProducer(ParentInterface.class)).parentMethod();
+		(broker.createPublisher(ParentInterface.class)).parentMethod();
 		Assert.assertEquals(2, broker.size());
 		Assert.assertEquals(2, first.countParentMethod);
 		Assert.assertEquals(2, second.countParentMethod);
 		Assert.assertEquals(1, second.countChildMethod);
 
-		(broker.createProducer(ChildInterface.class)).childMethod();
+		(broker.createPublisher(ChildInterface.class)).childMethod();
 		Assert.assertEquals(2, broker.size());
 		Assert.assertEquals(2, first.countParentMethod);
 		Assert.assertEquals(2, second.countParentMethod);

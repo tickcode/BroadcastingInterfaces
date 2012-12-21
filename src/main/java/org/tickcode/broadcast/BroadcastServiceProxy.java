@@ -54,7 +54,7 @@ public class BroadcastServiceProxy implements java.lang.reflect.InvocationHandle
 	protected BroadcastServiceProxy(MessageBroker broker, MessageBroker callbackBroker) {
 		this.messageBroker = broker;
 		this.callbackBroker = callbackBroker;
-		registerCallback = messageBroker.createProducer(MessgeBrokerCallbackSignature.class);
+		registerCallback = messageBroker.createPublisher(MessgeBrokerCallbackSignature.class);
 	}
 	
 	public Object invoke(Object proxy, Method m, Object[] args)

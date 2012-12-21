@@ -27,7 +27,7 @@
 package org.tickcode.broadcast;
 
 /**
- * Thrown by {@link VMMessageBroker#addConsumer(Broadcast)} when one or more {@link java.lang.reflect.Proxy} actually 
+ * Thrown by {@link VMMessageBroker#addSubscriber(Broadcast)} when one or more {@link java.lang.reflect.Proxy} actually 
  * have the same underlying implementation (returned by {@link GetProxyImplementation}) and this implementation
  * has already been added.
  * @author Eyon Land

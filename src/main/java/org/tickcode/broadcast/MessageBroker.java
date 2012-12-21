@@ -41,16 +41,16 @@ public interface MessageBroker {
 
 	public abstract void broadcast(Object producer, Method m, Object[] params, String thumbprint) throws NoSuchMethodException;
 
-	public abstract void removeConsumer(Object consumer);
+	public abstract void removeSubscriber(Object consumer);
 	
-	public abstract void removeAllConsumers();
+	public abstract void removeAllSubscribers();
 
-	public abstract void addConsumer(Object consumer);
+	public abstract void addSubscriber(Object consumer);
 
-	public abstract <T extends Object> T createProducer(
+	public abstract <T extends Object> T createPublisher(
 			Class<? extends T> broadcastInterfaces);
 
-	public abstract <T extends Object> T createServiceProducer(MessageBroker callbackBroker,
+	public abstract <T extends Object> T createCallbackPublisher(MessageBroker callbackBroker,
 			Class<? extends T> broadcastInterfaces);
 	
 	public abstract void addErrorHandler(ErrorHandler handler);

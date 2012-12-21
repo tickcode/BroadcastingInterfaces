@@ -63,18 +63,18 @@ public class RemovingConsumersTest {
 	public void test() {
 		VMMessageBroker broker = new VMMessageBroker();
 		FirstImpl first = new FirstImpl();
-		broker.addConsumer(first);
+		broker.addSubscriber(first);
 		SecondImpl second = new SecondImpl();
-		broker.addConsumer(second);
+		broker.addSubscriber(second);
 		((DoSomethingInterface) broker
-				.createProducer(DoSomethingInterface.class)).doThis();
+				.createPublisher(DoSomethingInterface.class)).doThis();
 
 		Assert.assertEquals(1, first.getCount());
 		Assert.assertEquals(1, second.getCount());
 
-		broker.removeConsumer(second);
+		broker.removeSubscriber(second);
 		((DoSomethingInterface) broker
-				.createProducer(DoSomethingInterface.class)).doThis();
+				.createPublisher(DoSomethingInterface.class)).doThis();
 
 		Assert.assertEquals(2, first.getCount());
 		Assert.assertEquals(1, second.getCount());
@@ -87,20 +87,20 @@ public class RemovingConsumersTest {
 		broker.clear();
 		FirstImpl first = new FirstImpl();
 		SecondImpl second = new SecondImpl();
-		broker.addConsumer(first);
-		broker.addConsumer(second);
+		broker.addSubscriber(first);
+		broker.addSubscriber(second);
 
 		DoSomethingInterface firstProxy = broker
-				.createProducer(DoSomethingInterface.class);
+				.createPublisher(DoSomethingInterface.class);
 		DoSomethingInterface secondProxy = broker
-				.createProducer(DoSomethingInterface.class);
+				.createPublisher(DoSomethingInterface.class);
 
 		firstProxy.doThis();
 
 		Assert.assertEquals(1, first.getCount());
 		Assert.assertEquals(1, second.getCount());
 
-		broker.removeConsumer(secondProxy); // making sure we can unregister the
+		broker.removeSubscriber(secondProxy); // making sure we can unregister the
 											// proxy
 		firstProxy.doThis();
 

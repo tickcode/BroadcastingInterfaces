@@ -109,7 +109,7 @@ public class SameMethodNameTest {
 	@Test
 	public void makeSureWeCanBroadcastWithoutEverAddingAConsuemr(){
 		VMMessageBroker broker = new VMMessageBroker();
-		((ArbitraryMethods)broker.createProducer(ArbitraryMethods.class)).sameMethodName();
+		((ArbitraryMethods)broker.createPublisher(ArbitraryMethods.class)).sameMethodName();
 	}
 
 	@Test
@@ -119,11 +119,11 @@ public class SameMethodNameTest {
 		Assert.assertEquals(0, broker.size());
 
 		MySecondClass second = new MySecondClass();
-		broker.addConsumer(second);
+		broker.addSubscriber(second);
 		Assert.assertEquals(1, broker.size());
-		broker.addConsumer(first);
+		broker.addSubscriber(first);
 		
-		(broker.createProducer(ArbitraryMethods.class)).sameMethodName();
+		(broker.createPublisher(ArbitraryMethods.class)).sameMethodName();
 		Assert.assertEquals(2, broker.size());
 		Assert.assertEquals(1, first.countMethod1);
 		Assert.assertEquals(1, second.countMethod1);
@@ -138,7 +138,7 @@ public class SameMethodNameTest {
 		Assert.assertNull(first.payload);
 		Assert.assertNull(second.payload);
 
-		(broker.createProducer(ArbitraryMethods.class)).sameMethodName("my message");
+		(broker.createPublisher(ArbitraryMethods.class)).sameMethodName("my message");
 		Assert.assertEquals(1, first.countMethod1);
 		Assert.assertEquals(1, second.countMethod1);
 		Assert.assertEquals(1, first.countMethod2);
@@ -152,7 +152,7 @@ public class SameMethodNameTest {
 		Assert.assertNull(first.payload);
 		Assert.assertNull(second.payload);
 
-		(broker.createProducer(ArbitraryMethods.class)).sameMethodName(first);
+		(broker.createPublisher(ArbitraryMethods.class)).sameMethodName(first);
 		Assert.assertEquals(1, first.countMethod1);
 		Assert.assertEquals(1, second.countMethod1);
 		Assert.assertEquals(1, first.countMethod2);

@@ -338,21 +338,21 @@ public class RedisMessageBroker extends VMMessageBroker {
 	}
 
 	@Override
-	public <T extends Object> T createProducer(Class<? extends T> _class) {
+	public <T extends Object> T createPublisher(Class<? extends T> _class) {
 		ThreadSafeVariables safe = safeForKryo.get();
 		safe.kryo.register(_class);
-		return super.createProducer(_class);
+		return super.createPublisher(_class);
 	}
 
 	@Override
-	public void addConsumer(Object consumer) {
+	public void addSubscriber(Object consumer) {
 		if (consumer == null)
 			throw new IllegalArgumentException(
 					"You cannot add null as a valid consumer.");
 
 		start();
 
-		super.addConsumer(consumer);
+		super.addSubscriber(consumer);
 
 		ThreadSafeVariables safe = safeForKryo.get();
 		safe.kryo.register(consumer.getClass());
@@ -376,16 +376,16 @@ public class RedisMessageBroker extends VMMessageBroker {
 	}
 
 	@Override
-	public void removeConsumer(Object consumer) {
+	public void removeSubscriber(Object consumer) {
 		// TODO Auto-generated method stub
-		super.removeConsumer(consumer);
+		super.removeSubscriber(consumer);
 		if (this.size() == 0)
 			stop();
 	}
 
 	@Override
-	public void removeAllConsumers() {
-		super.removeAllConsumers();
+	public void removeAllSubscribers() {
+		super.removeAllSubscribers();
 		if (this.size() == 0)
 			stop();
 	}
@@ -528,7 +528,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 			int totalPings = 10000;
 			CountDownLatch latch = new CountDownLatch(totalPings);
 			WatchPingMessages consumer = new WatchPingMessages(latch);
-			broker.addConsumer(consumer);
+			broker.addSubscriber(consumer);
 			Method method = PingRedisMessageBroker.class
 					.getDeclaredMethod("ping", new Class[] { String.class,
 							long.class, int.class });
@@ -570,7 +570,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 				log.error("Redis server does not appear to be working.");
 			}
 
-			broker.removeConsumer(consumer);
+			broker.removeSubscriber(consumer);
 
 			if (redisServerWorking)
 				checkInternalPing(broker);
@@ -578,7 +578,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		} finally {
-			broker.removeAllConsumers();
+			broker.removeAllSubscribers();
 		}
 	}
 
@@ -587,10 +587,10 @@ public class RedisMessageBroker extends VMMessageBroker {
 		CountDownLatch latch = new CountDownLatch(2);
 		WatchPingMessages consumer1 = new WatchPingMessages(latch);
 		WatchPingMessages consumer2 = new WatchPingMessages(latch);
-		broker.addConsumer(consumer1);
-		broker.addConsumer(consumer2);
+		broker.addSubscriber(consumer1);
+		broker.addSubscriber(consumer2);
 		((PingRedisMessageBroker) broker
-				.createProducer(PingRedisMessageBroker.class)).ping(
+				.createPublisher(PingRedisMessageBroker.class)).ping(
 				"Sending out a ping message", System.currentTimeMillis(), 1);
 		latch.await(5, TimeUnit.SECONDS);
 		if (latch.getCount() > 0) {

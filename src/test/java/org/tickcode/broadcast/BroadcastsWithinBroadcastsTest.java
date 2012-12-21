@@ -49,7 +49,7 @@ public class BroadcastsWithinBroadcastsTest {
 		public MyFirstClass(String name, MessageBroker broker) {
 			this.name = name;
 			this.broker = broker;
-			broadcast = (InfiniteLoopInterface)broker.createProducer(InfiniteLoopInterface.class);
+			broadcast = (InfiniteLoopInterface)broker.createPublisher(InfiniteLoopInterface.class);
 		}
 
 		public void method1() {
@@ -87,8 +87,8 @@ public class BroadcastsWithinBroadcastsTest {
 		broker.addErrorHandler(handler);
 		MyFirstClass first = new MyFirstClass("first", broker);
 		MyFirstClass second = new MyFirstClass("second", broker);
-		broker.addConsumer(first);
-		broker.addConsumer(second);
+		broker.addSubscriber(first);
+		broker.addSubscriber(second);
 
 		Assert.assertEquals(0, first.method1);
 		Assert.assertEquals(0, first.method2);
@@ -96,8 +96,8 @@ public class BroadcastsWithinBroadcastsTest {
 		Assert.assertEquals(0, second.method2);
 
 		try {
-			broker.addConsumer(first);
-			(broker.createProducer(InfiniteLoopInterface.class)).method1();
+			broker.addSubscriber(first);
+			(broker.createPublisher(InfiniteLoopInterface.class)).method1();
 			/**
 			 * first.method1() first.method1 == 1 first.method2() first.method2
 			 * == 1 second.method2() (from broadcast) second.method2 == 1
@@ -142,10 +142,10 @@ public class BroadcastsWithinBroadcastsTest {
 
 		try {
 			broker.clear();
-			broker.addConsumer(second);
+			broker.addSubscriber(second);
 			broker.addErrorHandler(handler);
-			broker.addConsumer(first);
-			(broker.createProducer(InfiniteLoopInterface.class)).method1();
+			broker.addSubscriber(first);
+			(broker.createPublisher(InfiniteLoopInterface.class)).method1();
 		} finally {
 			broker.removeErrorHandler(handler);
 		}

@@ -119,10 +119,10 @@ public class InternalRedisTest {
 		MyFirstClass first = new MyFirstClass();
 		MySecondClass second = new MySecondClass();
 
-		broker.addConsumer(second);
-		broker.addConsumer(first);
+		broker.addSubscriber(second);
+		broker.addSubscriber(first);
 
-		(broker.createProducer(ArbitraryMethods.class)).sanityCheckMethod1();
+		(broker.createPublisher(ArbitraryMethods.class)).sanityCheckMethod1();
 		Assert.assertEquals(1, first.countMethod1);
 		Assert.assertEquals(1, second.countMethod1);
 		Assert.assertEquals(0, first.countMethod2);
@@ -136,7 +136,7 @@ public class InternalRedisTest {
 		Assert.assertNull(first.payload);
 		Assert.assertNull(second.payload);
 
-		(broker.createProducer(ArbitraryMethods.class))
+		(broker.createPublisher(ArbitraryMethods.class))
 				.sanityCheckMethod2("my message");
 		Assert.assertEquals(1, first.countMethod1);
 		Assert.assertEquals(1, second.countMethod1);
@@ -151,7 +151,7 @@ public class InternalRedisTest {
 		Assert.assertNull(first.payload);
 		Assert.assertNull(second.payload);
 
-		(broker.createProducer(ArbitraryMethods.class))
+		(broker.createPublisher(ArbitraryMethods.class))
 				.sanityCheckMethod3(first);
 		Assert.assertEquals(1, first.countMethod1);
 		Assert.assertEquals(1, second.countMethod1);
@@ -179,13 +179,13 @@ public class InternalRedisTest {
 		broker.clear();
 		MyFirstClass first = new MyFirstClass();
 		MySecondClass second = new MySecondClass();
-		broker.addConsumer(first);
-		broker.addConsumer(second);
+		broker.addSubscriber(first);
+		broker.addSubscriber(second);
 
 		ArbitraryMethods firstProxy = broker
-				.createProducer(ArbitraryMethods.class);
+				.createPublisher(ArbitraryMethods.class);
 		ArbitraryMethods secondProxy = broker
-				.createProducer(ArbitraryMethods.class);
+				.createPublisher(ArbitraryMethods.class);
 
 		firstProxy.sanityCheckMethod1();
 		Assert.assertEquals(1, first.countMethod1);

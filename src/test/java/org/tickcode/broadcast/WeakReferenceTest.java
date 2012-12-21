@@ -55,18 +55,18 @@ public class WeakReferenceTest {
 	public void test() {
 		VMMessageBroker broker = new VMMessageBroker();
 		MyTestClass consumer = new MyTestClass();
-		broker.addConsumer(consumer);
+		broker.addSubscriber(consumer);
 		MyTestClass2 producer = new MyTestClass2();
-		broker.addConsumer(producer);
+		broker.addSubscriber(producer);
 
 		Assert.assertEquals(0, consumer.count);
 		Assert.assertEquals(0, producer.count);
-		(broker.createProducer(WeakReferencesTestInterface.class)).whatAboutWeakReferences(); // broadcast
+		(broker.createPublisher(WeakReferencesTestInterface.class)).whatAboutWeakReferences(); // broadcast
 		Assert.assertEquals(1, consumer.count);
 		Assert.assertEquals(1, producer.count);
 
 		broker.setWeakReferencesToNull(consumer);
-		(broker.createProducer(WeakReferencesTestInterface.class)).whatAboutWeakReferences(); // broadcast
+		(broker.createPublisher(WeakReferencesTestInterface.class)).whatAboutWeakReferences(); // broadcast
 		Assert.assertEquals(1, consumer.count); // nothing should change
 		Assert.assertEquals(2, producer.count); // of course the producer
 												// changes

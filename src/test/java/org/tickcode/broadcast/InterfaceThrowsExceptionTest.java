@@ -86,9 +86,9 @@ public class InterfaceThrowsExceptionTest {
 		MyErrorHandler handler = new MyErrorHandler();
 		broker.addErrorHandler(handler);
 		ThisClassDoesNotThrowAnException wellBehaved = new ThisClassDoesNotThrowAnException();
-		broker.addConsumer(wellBehaved);
+		broker.addSubscriber(wellBehaved);
 		ThisClassThrowsAnException badBehavior = new ThisClassThrowsAnException();
-		broker.addConsumer(badBehavior);
+		broker.addSubscriber(badBehavior);
 		wellBehaved.doSomething();
 		// we are also testing the number of times a method get's invoked as
 		// expected here
@@ -113,7 +113,7 @@ public class InterfaceThrowsExceptionTest {
 		
 		try {
 			// now use the proxy and confirm the error handler knows about he exception
-			DoSomethingInterface badBehaviorProxy = broker.createProducer(DoSomethingInterface.class);
+			DoSomethingInterface badBehaviorProxy = broker.createPublisher(DoSomethingInterface.class);
 			badBehaviorProxy.doSomething();
 			Assert.assertTrue(handler.ex instanceof RuntimeException);
 		} finally {
@@ -136,15 +136,15 @@ public class InterfaceThrowsExceptionTest {
 		try {
 			ThisClassDoesNotThrowAnException wellBehaved = new ThisClassDoesNotThrowAnException();
 			ThisClassThrowsAnException badBehavior = new ThisClassThrowsAnException();
-			broker.addConsumer(badBehavior);
+			broker.addSubscriber(badBehavior);
 			broker.addErrorHandler(handler);
 			broker.addErrorHandler(handler2);
 
-			DoSomethingInterface badBehaviorProxy = broker.createProducer(DoSomethingInterface.class);
-			broker.addConsumer(badBehavior);
-			broker.addConsumer(wellBehaved);
+			DoSomethingInterface badBehaviorProxy = broker.createPublisher(DoSomethingInterface.class);
+			broker.addSubscriber(badBehavior);
+			broker.addSubscriber(wellBehaved);
 
-			(broker.createProducer(DoSomethingInterface.class)).doSomething();
+			(broker.createPublisher(DoSomethingInterface.class)).doSomething();
 			// we are also testing the number of times a method get's invoked as
 			// we expect here
 			Assert.assertEquals(1, wellBehaved.getCount());

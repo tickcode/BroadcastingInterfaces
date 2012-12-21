@@ -82,15 +82,15 @@ public class CallbackServiceTest {
 	@Test
 	public void helloWorldExample() {
 		MessageBroker client = new VMMessageBroker();
-		client.addConsumer(new Callback());
+		client.addSubscriber(new Callback());
 		VMMessageBroker server = new VMMessageBroker();
 		
 		QuestionService service = new QuestionService();
-		server.addConsumer(service);
+		server.addSubscriber(service);
 		Assert.assertEquals(1, server.size());
 		Assert.assertEquals(2, server.totalMethods());
 		
-		Question ask = server.createServiceProducer(client, Question.class);
+		Question ask = server.createCallbackPublisher(client, Question.class);
 		ask.question("What is the answer to the universe?");
 		Assert.assertEquals("42",answer);
 		

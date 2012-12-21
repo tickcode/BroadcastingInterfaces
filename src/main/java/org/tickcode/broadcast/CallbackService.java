@@ -98,7 +98,7 @@ public class CallbackService<T> implements
 				MessageBroker callbackBroker = CachedMessageBrokers
 						.findOrCreate(callbackSignature);
 				messageBrokersByThumbprint.put(thumbprint, callbackBroker);
-				callbackProxy = callbackBroker.createProducer(callbackInterface);
+				callbackProxy = callbackBroker.createPublisher(callbackInterface);
 				callbackProxiesByThumbprint.put(thumbprint, callbackProxy);
 			}
 

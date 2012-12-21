@@ -62,7 +62,7 @@ public class ConsumerPanel extends JPanel implements TextChangedBroadcast{
 	public ConsumerPanel() {
 		super();
 		initialize();
-		VMMessageBroker.get().addConsumer(this);
+		VMMessageBroker.get().addSubscriber(this);
 	}
 
 	/**
