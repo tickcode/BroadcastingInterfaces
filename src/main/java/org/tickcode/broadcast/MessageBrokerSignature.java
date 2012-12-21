@@ -25,6 +25,41 @@ public class MessageBrokerSignature {
 		this.className = source.getClassName();
 	}
 	
+	public MessageBrokerSignature(String signature){
+		int indexOfAt = signature.indexOf('@');
+		if(indexOfAt < 1)
+			throw new IllegalArgumentException("This is an invalid signature!");
+		String beforeAt = signature.substring(0, indexOfAt);
+		int colonBeforeAt = beforeAt.indexOf(':');
+		if(colonBeforeAt > 0){
+			this.name = beforeAt.substring(colonBeforeAt+1);
+			this.className = beforeAt.substring(0, colonBeforeAt);
+		}
+		else{
+			this.className = RedisMessageBroker.class.getName();
+			this.name = beforeAt;
+		}
+		String afterAt = signature.substring(indexOfAt+1);
+		int colonAfterAt = afterAt.indexOf(':');
+		if(colonAfterAt > 0){
+			this.port = Integer.valueOf(afterAt.substring(afterAt.indexOf(':') + 1));
+			this.host = afterAt.substring(0, colonAfterAt);
+		}else{
+			this.host = afterAt;
+		}
+		
+	}
+	
+	@Override
+	public String toString() {
+		StringBuffer buffer = new StringBuffer();
+		buffer.append(className).append(":").append(name).append("@").append(host);
+		if(port != 0)
+			buffer.append(":").append(port);
+		return buffer.toString();
+	}
+
+	
 	public String getName() {
 		return name;
 	}
@@ -97,13 +132,5 @@ public class MessageBrokerSignature {
 		return true;
 	}
 	
-	@Override
-	public String toString() {
-		StringBuffer buffer = new StringBuffer();
-		buffer.append(className).append(":").append(name).append("@").append(host);
-		if(port != 0)
-			buffer.append(":").append(port);
-		return buffer.toString();
-	}
 	
 }
