@@ -202,7 +202,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 
 	public RedisMessageBroker(String messageBrokerName, String host) {
 		this(new MessageBrokerSignature(RedisMessageBroker.class.getName(),
-				messageBrokerName, host, 6379));
+				messageBrokerName, host, 0));
 	}
 
 	public RedisMessageBroker(String messageBrokerName, String host, int port) {
@@ -225,6 +225,8 @@ public class RedisMessageBroker extends VMMessageBroker {
 		poolConfig.timeBetweenEvictionRunsMillis = 60000;
 		poolConfig.maxWait = 3000;
 		poolConfig.whenExhaustedAction = org.apache.commons.pool.impl.GenericObjectPool.WHEN_EXHAUSTED_GROW;
+		if(port == 0)
+			port = 6379;
 		return new JedisPool(poolConfig, host, port, 0);
 	}
 
