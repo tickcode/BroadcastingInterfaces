@@ -70,7 +70,6 @@ public class RedisMessageBroker extends VMMessageBroker {
 			.getLogger(org.tickcode.broadcast.RedisMessageBroker.class);
 	private static boolean settingRedisMessageBrokerForAll;
 
-	private String name;
 	private JedisPool jedisPool;
 
 	ThreadLocal<ThreadSafeVariables> safeForKryo = new ThreadLocal<ThreadSafeVariables>() {
@@ -123,12 +122,12 @@ public class RedisMessageBroker extends VMMessageBroker {
 
 		@Override
 		public void onPUnsubscribe(byte[] pattern, int subscribedChannels) {
-			log.info("No longer watching pub/sub from " + name + ".*");
+			log.info("No longer watching pub/sub from " + signature.getName() + ".*");
 		}
 
 		@Override
 		public void onPSubscribe(byte[] pattern, int subscribedChannels) {
-			log.info("Watching pub/sub from " + name + ".*");
+			log.info("Watching pub/sub from " + signature.getName() + ".*");
 		}
 
 		public void onPMessage(byte[] pattern, byte[] _channel, byte[] message) {
@@ -142,7 +141,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 				}
 				String redisMessageBrokerName = channel.substring(0,
 						firstPeriod);
-				if (!getName().equals(redisMessageBrokerName)) {
+				if (!signature.getName().equals(redisMessageBrokerName)) {
 					log.warn(channel);
 					return; // this channel does not belong to this message
 							// broker
@@ -200,19 +199,10 @@ public class RedisMessageBroker extends VMMessageBroker {
 
 	}
 
-	public RedisMessageBroker(String messageBrokerName, String host) {
-		this(new MessageBrokerSignature(RedisMessageBroker.class.getName(),
-				messageBrokerName, host, 0));
-	}
-
-	public RedisMessageBroker(String messageBrokerName, String host, int port) {
-		this(new MessageBrokerSignature(RedisMessageBroker.class.getName(),
-				messageBrokerName, host, port));
-	}
-
 	public RedisMessageBroker(MessageBrokerSignature signature) {
-		this(signature.getName(), createJedisPool(signature.getHost(),
-				signature.getPort()));
+		super(signature);
+		this.jedisPool = createJedisPool(signature.getHost(),
+				signature.getPort());
 	}
 
 	public static JedisPool createJedisPool(String host, int port) {
@@ -228,11 +218,6 @@ public class RedisMessageBroker extends VMMessageBroker {
 		if(port == 0)
 			port = 6379;
 		return new JedisPool(poolConfig, host, port, 0);
-	}
-
-	protected RedisMessageBroker(String name, JedisPool jedisPool) {
-		this.name = name;
-		this.jedisPool = jedisPool;
 	}
 
 	public long getLatencyFromUs() {
@@ -405,7 +390,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 					try {
 						subscriberJedis = jedisPool.getResource();
 						subscriberJedis.psubscribe(subscriber,
-								SafeEncoder.encodeMany(name + ".*"));
+								SafeEncoder.encodeMany(signature.getName() + ".*"));
 						jedisPool.returnResource(subscriberJedis);
 					} catch (JedisConnectionException ex) {
 						jedisPool.returnBrokenResource(subscriberJedis);
@@ -433,10 +418,6 @@ public class RedisMessageBroker extends VMMessageBroker {
 		}
 	}
 
-	public String getName() {
-		return name;
-	}
-
 	protected String createMethodSignatureKey(Method method) {
 		StringBuilder builder = new StringBuilder();
 
@@ -444,8 +425,8 @@ public class RedisMessageBroker extends VMMessageBroker {
 		String methodName = method.getName();
 		Class[] parameterTypes = method.getParameterTypes();
 		builder.setLength(0);
-		if (name != null) {
-			builder.append(name);
+		if (signature.getName() != null) {
+			builder.append(signature.getName());
 			builder.append(".");
 		}
 
@@ -525,7 +506,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 
 		RedisMessageBroker broker = null;
 		try {
-			broker = new RedisMessageBroker("LocalTest", "localhost");
+			broker = new RedisMessageBroker(new MessageBrokerSignature("LocalTest@localhost"));
 
 			int totalPings = 10000;
 			CountDownLatch latch = new CountDownLatch(totalPings);

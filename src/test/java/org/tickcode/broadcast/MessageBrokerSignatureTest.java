@@ -60,5 +60,8 @@ public class MessageBrokerSignatureTest {
 	public void shouldDefaultToRedisMessageBroker() {
 		MessageBrokerSignature actual = new MessageBrokerSignature("MyBrokerName@somehost");
 		Assert.assertEquals(RedisMessageBroker.class.getName(), actual.getClassName());
+		Assert.assertEquals("somehost", actual.getHost());
+		Assert.assertEquals("MyBrokerName", actual.getName());
 	}
+	
 }

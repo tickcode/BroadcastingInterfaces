@@ -54,7 +54,7 @@ public class VMMessageBroker implements MessageBroker {
 	private static boolean loggingOn;
 
 	private static VMMessageBroker singleton;
-    private MessageBrokerSignature signature;
+    protected MessageBrokerSignature signature;
 
 	protected final String thumbprint = UUID.randomUUID().toString();
 

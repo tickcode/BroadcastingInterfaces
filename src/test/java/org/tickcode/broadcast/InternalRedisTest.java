@@ -113,9 +113,7 @@ public class InternalRedisTest {
 	public void testSanityCheck() {
 		RedisMessageBroker.setSettingRedisMessageBrokerForAll(true);
 		JedisPoolConfig poolConfig = new JedisPoolConfig();
-		JedisPool jedisPool = new JedisPool(poolConfig, "localhost", 6379, 0);
-		RedisMessageBroker broker = new RedisMessageBroker("LocalTest",
-				jedisPool);
+		RedisMessageBroker broker = new RedisMessageBroker(new MessageBrokerSignature("LocalTest@localhost"));
 		MyFirstClass first = new MyFirstClass();
 		MySecondClass second = new MySecondClass();
 
@@ -173,9 +171,7 @@ public class InternalRedisTest {
 	@Test
 	public void testSanityCheckUsingProxy() {
 		JedisPoolConfig poolConfig = new JedisPoolConfig();
-		JedisPool jedisPool = new JedisPool(poolConfig, "localhost", 6379, 0);
-		RedisMessageBroker broker = new RedisMessageBroker("LocalTest",
-				jedisPool);
+		RedisMessageBroker broker = new RedisMessageBroker(new MessageBrokerSignature("LocalTest@localhost"));
 		broker.clear();
 		MyFirstClass first = new MyFirstClass();
 		MySecondClass second = new MySecondClass();

@@ -58,7 +58,7 @@ public class BroadcastAppender extends AppenderSkeleton{
 	
 	@Override
 	public void activateOptions() {
-		broker = new RedisMessageBroker(messageBrokerName, host, port);
+		broker = new RedisMessageBroker(new MessageBrokerSignature(RedisMessageBroker.class.getName(),messageBrokerName, host, port));
 		broadcastLogger = broker.createPublisher(BroadcastLogger.class);
 		broker.start();
 	}

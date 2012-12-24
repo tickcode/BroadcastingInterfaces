@@ -37,7 +37,7 @@ public class RedisMessageBrokerTest implements java.io.Serializable {
 
 	@Test
 	public void testMarshallingData() throws Exception {
-		RedisMessageBroker broker = new RedisMessageBroker("LocalTest","localhost");
+		RedisMessageBroker broker = new RedisMessageBroker(new MessageBrokerSignature("LocalTest@localhost"));
 		ThreadSafeVariables safe = broker.safeForKryo.get();
 		safe.buffer = new byte[3];
 		safe.output = new Output(safe.buffer);
@@ -57,7 +57,7 @@ public class RedisMessageBrokerTest implements java.io.Serializable {
 
 	@Test
 	public void testManyMarshallingDataCalls() throws Exception {
-		RedisMessageBroker broker = new RedisMessageBroker("LocalTest","localhost");
+		RedisMessageBroker broker = new RedisMessageBroker(new MessageBrokerSignature("LocalTest@localhost"));
 		Parameters expectedArgs = new Parameters();
 
 		for (int i = 0; i < 1000; i++) {
