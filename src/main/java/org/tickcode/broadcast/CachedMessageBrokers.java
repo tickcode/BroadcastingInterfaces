@@ -31,10 +31,17 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class CachedMessageBrokers {
+	
+	public static CachedMessageBrokers singleton;
+	public static CachedMessageBrokers get(){
+		if(singleton == null)
+			singleton = new CachedMessageBrokers();
+		return singleton;
+	}
 
-	public static volatile ConcurrentHashMap<MessageBrokerSignature, MessageBroker> cache = new ConcurrentHashMap<MessageBrokerSignature, MessageBroker>();
+	public volatile ConcurrentHashMap<MessageBrokerSignature, MessageBroker> cache = new ConcurrentHashMap<MessageBrokerSignature, MessageBroker>();
 
-	public static MessageBroker findOrCreate(MessageBrokerSignature signature)
+	public MessageBroker findOrCreate(MessageBrokerSignature signature)
 			throws InvocationTargetException, NoSuchMethodException,
 			IllegalAccessException, InstantiationException,
 			ClassNotFoundException {
@@ -55,7 +62,11 @@ public class CachedMessageBrokers {
 		return broker;
 	}
 	
-	public static void cache(MessageBroker broker){
+	public boolean exists(MessageBrokerSignature signature){
+		return cache.containsKey(signature);
+	}
+	
+	public void cache(MessageBroker broker){
 		cache.put(broker.getSignature(), broker);
 	}
 

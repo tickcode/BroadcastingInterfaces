@@ -78,7 +78,7 @@ public class VMMessageBroker implements MessageBroker {
 		if(signature == null)
 			signature = new MessageBrokerSignature(VMMessageBroker.class.getName(), thumbprint, "localhost", 0);
 		this.signature = signature;
-		CachedMessageBrokers.cache(this);
+		CachedMessageBrokers.get().cache(this);
 	}
 	
 	public <T extends Object> T createPublisher(Class<? extends T> _class) {
@@ -98,11 +98,11 @@ public class VMMessageBroker implements MessageBroker {
 	public <T> T createCallbackPublisher(MessageBroker callbackBroker,
 			Class<? extends T> _class) {
 		if(_class.isInterface()){
-			return (T) BroadcastServiceProxy.newInstance(this, callbackBroker, new Class[]{_class});
+			return (T) CallbackServiceProxy.newInstance(this, callbackBroker, new Class[]{_class});
 		}
 		Class[] interfaces = _class.getInterfaces();
 		if(interfaces != null && interfaces.length > 0){
-			return (T) BroadcastServiceProxy.newInstance(this, callbackBroker, interfaces);
+			return (T) CallbackServiceProxy.newInstance(this, callbackBroker, interfaces);
 		}
 		else{
 			throw new UnsupportedOperationException("You may only create a producer from an interface.");

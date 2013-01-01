@@ -35,7 +35,7 @@ import org.apache.log4j.Logger;
 import org.tickcode.trace.BreadCrumbTrail;
 
 public class CallbackService<T> implements
-		BroadcastServiceProxy.MessgeBrokerCallbackSignature{
+		CallbackServiceProxy.MessageBrokerCallbackSignature{
 	Logger log = Logger.getLogger(org.tickcode.broadcast.VMMessageBroker.class);
 	
 	ConcurrentHashMap<String, Object> callbackProxiesByThumbprint = new ConcurrentHashMap<String, Object>();
@@ -95,7 +95,7 @@ public class CallbackService<T> implements
 		try {
 			Object callbackProxy = callbackProxiesByThumbprint.get(thumbprint);
 			if (callbackProxy == null) {
-				MessageBroker callbackBroker = CachedMessageBrokers
+				MessageBroker callbackBroker = CachedMessageBrokers.get()
 						.findOrCreate(callbackSignature);
 				messageBrokersByThumbprint.put(thumbprint, callbackBroker);
 				callbackProxy = callbackBroker.createPublisher(callbackInterface);
