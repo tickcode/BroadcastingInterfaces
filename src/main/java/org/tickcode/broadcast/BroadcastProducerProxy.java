@@ -29,31 +29,49 @@ package org.tickcode.broadcast;
 import java.lang.reflect.Method;
 
 /**
- * Used for creating a producer proxy for sending messages to all consumers using
- * the given MesssageBroker.
+ * Used for creating a producer proxy for sending messages to all consumers
+ * using the given MesssageBroker.
+ * 
  * @author Eyon Land
- *
+ * 
  */
-public class BroadcastProducerProxy implements java.lang.reflect.InvocationHandler {
+public class BroadcastProducerProxy implements
+		java.lang.reflect.InvocationHandler {
 
 	private MessageBroker messageBroker;
+	private String interfaceName;
 
-	public static Object newInstance(MessageBroker broker, Class[] broadcastInterfaces) {
-		Object proxy = (Object)java.lang.reflect.Proxy.newProxyInstance(broker.getClass()
-				.getClassLoader(), broadcastInterfaces,
-				new BroadcastProducerProxy(broker));
-		return proxy;
+	public static Object newInstance(MessageBroker broker,
+			Class broadcastInterface) {
+
+		if (broadcastInterface.isInterface()) {
+			Object proxy = (Object) java.lang.reflect.Proxy.newProxyInstance(
+					broker.getClass().getClassLoader(),
+					new Class[] { broadcastInterface },
+					new BroadcastProducerProxy(broker, broadcastInterface.getName()));
+			return proxy;
+		} else {
+			throw new UnsupportedOperationException(
+					"You may only create a producer from an interface.");
+		}
 	}
-	
-	protected BroadcastProducerProxy(MessageBroker broker) {
+
+	protected BroadcastProducerProxy(MessageBroker broker, String interfaceName) {
 		this.messageBroker = broker;
+		this.interfaceName = interfaceName;
 	}
-	
+
 	public Object invoke(Object proxy, Method m, Object[] args)
 			throws Throwable {
 		int size = messageBroker.size();
-		messageBroker.broadcast((Object)proxy, m, args, messageBroker.getThumbprint());
+		messageBroker.broadcast((Object) proxy, m, args,
+				messageBroker.getThumbprint());
 		return null;
+	}
+	
+	@Override
+	public String toString() {
+		return interfaceName + "->" + messageBroker.toString();
 	}
 
 }

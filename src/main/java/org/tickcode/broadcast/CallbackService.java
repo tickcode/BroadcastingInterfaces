@@ -39,7 +39,6 @@ public class CallbackService<T> implements
 	Logger log = Logger.getLogger(org.tickcode.broadcast.VMMessageBroker.class);
 	
 	ConcurrentHashMap<String, Object> callbackProxiesByThumbprint = new ConcurrentHashMap<String, Object>();
-	ConcurrentHashMap<String, MessageBroker> messageBrokersByThumbprint = new ConcurrentHashMap<String, MessageBroker>();
 	Class<? extends T> callbackInterface;
 	
 	public CallbackService() {
@@ -78,13 +77,6 @@ public class CallbackService<T> implements
 		}
 	}
 	
-	protected MessageBroker getCallbackMessageBroker(){
-		BreadCrumbTrail trail = BreadCrumbTrail.get();
-		String thumbprint = trail.getThumbprint();
-		return messageBrokersByThumbprint.get(thumbprint);
-	}
-
-
 	@Override
 	public void useThisCallbackSignature(
 			MessageBrokerSignature callbackSignature) {
@@ -97,7 +89,6 @@ public class CallbackService<T> implements
 			if (callbackProxy == null) {
 				MessageBroker callbackBroker = CachedMessageBrokers.get()
 						.findOrCreate(callbackSignature);
-				messageBrokersByThumbprint.put(thumbprint, callbackBroker);
 				callbackProxy = callbackBroker.createPublisher(callbackInterface);
 				callbackProxiesByThumbprint.put(thumbprint, callbackProxy);
 			}

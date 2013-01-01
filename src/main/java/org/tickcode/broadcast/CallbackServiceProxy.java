@@ -28,40 +28,65 @@ package org.tickcode.broadcast;
 
 import java.lang.reflect.Method;
 
-/**
- * Used for creating a service proxy for sending messages to {@link CallbackService} such that
- * the callback will be on a different callback {@link MessageBroker}.
- * @author Eyon Land
- *
- */
-public class CallbackServiceProxy implements java.lang.reflect.InvocationHandler {
+import org.tickcode.trace.MethodUtil;
 
-	public static interface MessageBrokerCallbackSignature{
-		public void useThisCallbackSignature(MessageBrokerSignature callbackSignature);
+/**
+ * Used for creating a service proxy for sending messages to
+ * {@link CallbackService} such that the callback will be on a different
+ * callback {@link MessageBroker}.
+ * 
+ * @author Eyon Land
+ * 
+ */
+public class CallbackServiceProxy implements
+		java.lang.reflect.InvocationHandler {
+
+	public static interface MessageBrokerCallbackSignature {
+		public void useThisCallbackSignature(
+				MessageBrokerSignature callbackSignature);
 	}
 
 	private MessageBroker messageBroker;
 	private MessageBroker callbackBroker;
 	private MessageBrokerCallbackSignature registerCallback;
-	
-	public static Object newInstance(MessageBroker broker, MessageBroker callbackBroker, Class[] broadcastInterfaces) {
-		Object proxy = (Object)java.lang.reflect.Proxy.newProxyInstance(broker.getClass()
-				.getClassLoader(), broadcastInterfaces,
-				new CallbackServiceProxy(broker, callbackBroker));
-		return proxy;
+	private String interfaceName;
+
+	public static Object newInstance(MessageBroker broker,
+			MessageBroker callbackBroker, Class broadcastInterface) {
+		if (broadcastInterface.isInterface()) {
+
+			Object proxy = (Object) java.lang.reflect.Proxy.newProxyInstance(
+					broker.getClass().getClassLoader(),
+					new Class[] { broadcastInterface },
+					new CallbackServiceProxy(broker, callbackBroker, broadcastInterface.getName()));
+			return proxy;
+		} else {
+			throw new UnsupportedOperationException(
+					"You may only create a producer from an interface.");
+		}
 	}
-	
-	protected CallbackServiceProxy(MessageBroker broker, MessageBroker callbackBroker) {
+
+	protected CallbackServiceProxy(MessageBroker broker,
+			MessageBroker callbackBroker, String interfaceName) {
 		this.messageBroker = broker;
 		this.callbackBroker = callbackBroker;
-		registerCallback = messageBroker.createPublisher(MessageBrokerCallbackSignature.class);
+		this.interfaceName = interfaceName;
+		registerCallback = messageBroker
+				.createPublisher(MessageBrokerCallbackSignature.class);
 	}
-	
+
 	public Object invoke(Object proxy, Method m, Object[] args)
 			throws Throwable {
-		registerCallback.useThisCallbackSignature(callbackBroker.getSignature());
-		messageBroker.broadcast((Object)proxy, m, args, messageBroker.getThumbprint());
+		registerCallback
+				.useThisCallbackSignature(callbackBroker.getSignature());
+		messageBroker.broadcast((Object) proxy, m, args,
+				messageBroker.getThumbprint());
 		return null;
+	}
+
+	@Override
+	public String toString() {
+		return interfaceName + "->" + messageBroker.toString() + "->" + callbackBroker.toString();
 	}
 
 }

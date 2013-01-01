@@ -351,10 +351,9 @@ public class RedisMessageBroker extends VMMessageBroker {
 					String channel = this.createMethodSignatureKey(method);
 					if (!methodByChannel.containsKey(channel)) {
 						safe.kryo.register(_interface);
-						Class[] broadcastInterfaces = new Class[] { _interface };
 						broadcastProxyByChannel.put(channel,
 								BroadcastProducerProxy.newInstance(this,
-										broadcastInterfaces));
+										_interface));
 						methodByChannel.put(channel, method);
 					}
 				}

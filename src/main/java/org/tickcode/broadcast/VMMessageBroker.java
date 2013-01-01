@@ -54,10 +54,9 @@ public class VMMessageBroker implements MessageBroker {
 	private static boolean loggingOn;
 
 	private static VMMessageBroker singleton;
-    protected MessageBrokerSignature signature;
+	protected MessageBrokerSignature signature;
 
 	protected final String thumbprint = UUID.randomUUID().toString();
-
 
 	public static VMMessageBroker get() {
 		if (singleton == null)
@@ -69,47 +68,30 @@ public class VMMessageBroker implements MessageBroker {
 		logger = Logger.getLogger(org.tickcode.broadcast.VMMessageBroker.class);
 		loggingOn = (logger.getEffectiveLevel() != org.apache.log4j.Level.OFF);
 	}
-	
-	public VMMessageBroker(){
+
+	public VMMessageBroker() {
 		this(null);
 	}
 
 	public VMMessageBroker(MessageBrokerSignature signature) {
-		if(signature == null)
-			signature = new MessageBrokerSignature(VMMessageBroker.class.getName(), thumbprint, "localhost", 0);
+		if (signature == null)
+			signature = new MessageBrokerSignature(
+					VMMessageBroker.class.getName(), thumbprint, "localhost", 0);
 		this.signature = signature;
 		CachedMessageBrokers.get().cache(this);
 	}
-	
+
 	public <T extends Object> T createPublisher(Class<? extends T> _class) {
-		if(_class.isInterface()){
-			return (T) BroadcastProducerProxy.newInstance(this, new Class[]{_class});
-		}
-		Class[] interfaces = _class.getInterfaces();
-		if(interfaces != null && interfaces.length > 0){
-			return (T) BroadcastProducerProxy.newInstance(this, interfaces);
-		}
-		else{
-			throw new UnsupportedOperationException("You may only create a producer from an interface.");
-		}
+		return (T) BroadcastProducerProxy.newInstance(this, _class);
 	}
-	
+
 	@Override
 	public <T> T createCallbackPublisher(MessageBroker callbackBroker,
 			Class<? extends T> _class) {
-		if(_class.isInterface()){
-			return (T) CallbackServiceProxy.newInstance(this, callbackBroker, new Class[]{_class});
-		}
-		Class[] interfaces = _class.getInterfaces();
-		if(interfaces != null && interfaces.length > 0){
-			return (T) CallbackServiceProxy.newInstance(this, callbackBroker, interfaces);
-		}
-		else{
-			throw new UnsupportedOperationException("You may only create a producer from an interface.");
-		}
+		return (T) CallbackServiceProxy.newInstance(this, callbackBroker,
+				_class);
 	}
-	
-	
+
 	/**
 	 * By using ThreadLocal, every set of method names will be unique per
 	 * thread. So while we allow another thread to broadcast on the same method,
@@ -125,7 +107,7 @@ public class VMMessageBroker implements MessageBroker {
 	protected ConcurrentHashMap<Method, BroadcastConsumersForAGivenInterface> interfacesByMethod = new ConcurrentHashMap<Method, BroadcastConsumersForAGivenInterface>();
 	protected ConcurrentLinkedQueue<WeakReference<ErrorHandler>> errorHandlers = new ConcurrentLinkedQueue<WeakReference<ErrorHandler>>();
 	private ConcurrentHashMap<Object, Object> watchForDuplicatesOfUnderlyingImplementationFromProxies = new ConcurrentHashMap<Object, Object>();
-	
+
 	protected class BroadcastConsumersForAGivenInterface {
 		Class broadcastInterface;
 		Method method;
@@ -182,8 +164,8 @@ public class VMMessageBroker implements MessageBroker {
 				cleanOutWeakReferences();
 			}
 		}
-		
-		protected void removeAll(){
+
+		protected void removeAll() {
 			consumers.clear();
 		}
 
@@ -280,7 +262,8 @@ public class VMMessageBroker implements MessageBroker {
 						}
 						for (WeakReference<ErrorHandler> errorHandler : errorHandlers) {
 							if (errorHandler.get() != null)
-								errorHandler.get().error(VMMessageBroker.this.toString(),
+								errorHandler.get().error(
+										VMMessageBroker.this.toString(),
 										consumer, ex.getCause(), trail);
 							else {
 								errorHandlers.remove(errorHandler);
@@ -308,7 +291,8 @@ public class VMMessageBroker implements MessageBroker {
 	 * .Broadcast, java.lang.String, java.lang.Object[])
 	 */
 	@Override
-	public void broadcast(Object producer, Method m, Object[] params, String thumbprint) throws NoSuchMethodException{
+	public void broadcast(Object producer, Method m, Object[] params,
+			String thumbprint) throws NoSuchMethodException {
 		BreadCrumbTrail trail = BreadCrumbTrail.get();
 		trail.setThumbprint(thumbprint);
 
@@ -317,22 +301,23 @@ public class VMMessageBroker implements MessageBroker {
 					+ ")");
 		}
 		beginBroadcasting(producer, m, params, thumbprint);
-		BroadcastConsumersForAGivenInterface b = interfacesByMethod
-				.get(m);
+		BroadcastConsumersForAGivenInterface b = interfacesByMethod.get(m);
 		if (b != null)
 			b.broadcast(producer, params);
 		finishedBroadcasting(producer, m, params, thumbprint);
 	}
 
-	protected void beginBroadcasting(Object producer, Method method, Object[] params, String thumbprint) {
+	protected void beginBroadcasting(Object producer, Method method,
+			Object[] params, String thumbprint) {
 		// available for subclasses
 	}
 
-	protected void finishedBroadcasting(Object producer, Method method, Object[] params, String thumbprint) {
+	protected void finishedBroadcasting(Object producer, Method method,
+			Object[] params, String thumbprint) {
 		// available for subclasses
 	}
-	
-	protected int totalMethods(){
+
+	protected int totalMethods() {
 		return interfacesByMethod.size();
 	}
 
@@ -361,24 +346,23 @@ public class VMMessageBroker implements MessageBroker {
 			imp.remove(consumer);
 		}
 	}
-	
+
 	@Override
 	public void removeAllSubscribers() {
 		for (BroadcastConsumersForAGivenInterface imp : interfacesByMethod
 				.values()) {
 			imp.removeAll();
 		}
-		
+
 	}
 
 	protected void addInterface(Class _interface, Object consumer) {
 		if (Object.class.isAssignableFrom(_interface)
 				&& Object.class != _interface) { // you cannot just implement
 													// {@link Broadcast}.
-			if (consumer != null && loggingOn && logger.isDebugEnabled()){
-					logger.debug("Interface: " + _interface.getSimpleName()
-							+ " added for "
-							+ consumer.getClass().getSimpleName());
+			if (consumer != null && loggingOn && logger.isDebugEnabled()) {
+				logger.debug("Interface: " + _interface.getSimpleName()
+						+ " added for " + consumer.getClass().getSimpleName());
 			}
 			for (Method method : _interface.getMethods()) {
 				if (loggingOn && logger.isDebugEnabled()) {
@@ -393,26 +377,26 @@ public class VMMessageBroker implements MessageBroker {
 					BroadcastConsumersForAGivenInterface impl = interfacesByMethod
 							.get(method);
 					if (impl == null) {
-						impl = new BroadcastConsumersForAGivenInterface(_interface,
-								method);
+						impl = new BroadcastConsumersForAGivenInterface(
+								_interface, method);
 						if (consumer != null)
 							impl.addBroadcastReceiver(consumer);
 						interfacesByMethod.put(method, impl);
-//				} else if (impl.broadcastInterface != _interface) {
-//					logger.error("We cannot have two methods with the same name! Please look at "
-//							+ MethodUtil.getReadableMethodString(
-//									impl.broadcastInterface, impl.method)
-//							+ " and "
-//							+ MethodUtil.getReadableMethodString(_interface,
-//									method));
-//					throw new DuplicateMethodException(
-//							"We cannot have two methods from a Broadcast interface with the same name! Please look at "
-//									+ MethodUtil.getReadableMethodString(
-//											impl.broadcastInterface,
-//											impl.method)
-//									+ " and "
-//									+ MethodUtil.getReadableMethodString(
-//											_interface, method));
+						// } else if (impl.broadcastInterface != _interface) {
+						// logger.error("We cannot have two methods with the same name! Please look at "
+						// + MethodUtil.getReadableMethodString(
+						// impl.broadcastInterface, impl.method)
+						// + " and "
+						// + MethodUtil.getReadableMethodString(_interface,
+						// method));
+						// throw new DuplicateMethodException(
+						// "We cannot have two methods from a Broadcast interface with the same name! Please look at "
+						// + MethodUtil.getReadableMethodString(
+						// impl.broadcastInterface,
+						// impl.method)
+						// + " and "
+						// + MethodUtil.getReadableMethodString(
+						// _interface, method));
 					} else {
 						if (consumer != null)
 							impl.addBroadcastReceiver(consumer);
@@ -449,9 +433,9 @@ public class VMMessageBroker implements MessageBroker {
 
 		addInterfaces(consumer.getClass(), consumer);
 	}
-	
-	protected void addInterfaces(Class _class, Object consumer){
-		if(_class == null || _class == Object.class)
+
+	protected void addInterfaces(Class _class, Object consumer) {
+		if (_class == null || _class == Object.class)
 			return;
 		for (Class _interface : _class.getInterfaces()) {
 			addInterface(_interface, consumer);
@@ -527,16 +511,15 @@ public class VMMessageBroker implements MessageBroker {
 	public String toString() {
 		return signature.toString();
 	}
-	
+
 	@Override
 	public MessageBrokerSignature getSignature() {
 		return signature;
 	}
-	
+
 	@Override
 	public String getThumbprint() {
 		return thumbprint;
 	}
-
 
 }
