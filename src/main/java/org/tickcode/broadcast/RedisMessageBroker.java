@@ -122,7 +122,8 @@ public class RedisMessageBroker extends VMMessageBroker {
 
 		@Override
 		public void onPUnsubscribe(byte[] pattern, int subscribedChannels) {
-			log.info("No longer watching pub/sub from " + signature.getName() + ".*");
+			log.info("No longer watching pub/sub from " + signature.getName()
+					+ ".*");
 		}
 
 		@Override
@@ -136,13 +137,14 @@ public class RedisMessageBroker extends VMMessageBroker {
 			try {
 				int firstPeriod = channel.indexOf('.');
 				if (firstPeriod < 1) {
-					log.warn("We have an invalid channel \""+channel +"\"");
+					log.warn("We have an invalid channel \"" + channel + "\"");
 					return; // we have an invalid channel
 				}
 				String redisMessageBrokerName = channel.substring(0,
 						firstPeriod);
 				if (!signature.getName().equals(redisMessageBrokerName)) {
-					log.warn("This channel does not belong to this message broker...  \"" + channel + "\"");
+					log.warn("This channel does not belong to this message broker...  \""
+							+ channel + "\"");
 					return; // this channel does not belong to this message
 							// broker
 				}
@@ -150,7 +152,8 @@ public class RedisMessageBroker extends VMMessageBroker {
 				producerProxy = getRedisBroadcastProxy(channel);
 				if (producerProxy == null) { // we don't have any Broadcast
 												// consumers
-					log.warn("Someone requested a call to channel \"" + channel + "\" but no one is listening.");
+					log.warn("Someone requested a call to channel \"" + channel
+							+ "\" but no one is listening.");
 					return;
 				}
 				count++;
@@ -215,7 +218,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 		poolConfig.timeBetweenEvictionRunsMillis = 60000;
 		poolConfig.maxWait = 3000;
 		poolConfig.whenExhaustedAction = org.apache.commons.pool.impl.GenericObjectPool.WHEN_EXHAUSTED_GROW;
-		if(port == 0)
+		if (port == 0)
 			port = 6379;
 		return new JedisPool(poolConfig, host, port, 0);
 	}
@@ -333,35 +336,43 @@ public class RedisMessageBroker extends VMMessageBroker {
 
 	@Override
 	public void addSubscriber(Object consumer) {
-		log.info("Why do I not see this message? ");
 		if (consumer == null)
 			throw new IllegalArgumentException(
 					"You cannot add null as a valid consumer.");
 
-		log.info("Adding subscriber " + consumer.getClass().getName());
+		log.debug("Adding subscriber " + consumer.getClass().getName());
 		start();
 
 		super.addSubscriber(consumer);
 
+		addChannels(consumer.getClass(), consumer);
+
+	}
+
+	protected void addChannel(Class _interface, Object consumer) {
 		ThreadSafeVariables safe = safeForKryo.get();
 		safe.kryo.register(consumer.getClass());
-
-		// create a subscriber on Redis
-		for (Class _interface : consumer.getClass().getInterfaces()) {
-			for (Method method : _interface.getMethods()) {
-				if (Void.TYPE.equals(method.getReturnType())) {
-					String channel = this.createMethodSignatureKey(method);
-					if (!methodByChannel.containsKey(channel)) {
-						safe.kryo.register(_interface);
-						broadcastProxyByChannel.put(channel,
-								BroadcastProducerProxy.newInstance(this,
-										_interface));
-						methodByChannel.put(channel, method);
-						log.info("Watching channel \"" + channel + "\"");
-					}
+		for (Method method : _interface.getMethods()) {
+			if (Void.TYPE.equals(method.getReturnType())) {
+				String channel = this.createMethodSignatureKey(method);
+				if (!methodByChannel.containsKey(channel)) {
+					safe.kryo.register(_interface);
+					broadcastProxyByChannel.put(channel, BroadcastProducerProxy
+							.newInstance(this, _interface));
+					methodByChannel.put(channel, method);
+					log.info("Watching channel \"" + channel + "\"");
 				}
 			}
 		}
+	}
+
+	protected void addChannels(Class _class, Object consumer) {
+		if (_class == null || _class == Object.class)
+			return;
+		for (Class _interface : _class.getInterfaces()) {
+			addChannel(_interface, consumer);
+		}
+		addChannels(_class.getSuperclass(), consumer);
 	}
 
 	@Override
@@ -392,8 +403,10 @@ public class RedisMessageBroker extends VMMessageBroker {
 				public void run() {
 					try {
 						subscriberJedis = jedisPool.getResource();
-						subscriberJedis.psubscribe(subscriber,
-								SafeEncoder.encodeMany(signature.getName() + ".*"));
+						subscriberJedis.psubscribe(
+								subscriber,
+								SafeEncoder.encodeMany(signature.getName()
+										+ ".*"));
 						jedisPool.returnResource(subscriberJedis);
 					} catch (JedisConnectionException ex) {
 						jedisPool.returnBrokenResource(subscriberJedis);
@@ -412,8 +425,8 @@ public class RedisMessageBroker extends VMMessageBroker {
 			try {
 				if (thread.subscriber.isSubscribed())
 					thread.subscriber.punsubscribe();
-//				log.info("We received a total of " + thread.subscriber.count
-//						+ " messages.");
+				// log.info("We received a total of " + thread.subscriber.count
+				// + " messages.");
 			} catch (Exception ex) {
 				log.error("Unable to close down the Redis connection.", ex);
 			}
@@ -509,7 +522,8 @@ public class RedisMessageBroker extends VMMessageBroker {
 
 		RedisMessageBroker broker = null;
 		try {
-			broker = new RedisMessageBroker(new MessageBrokerSignature("LocalTest@localhost"));
+			broker = new RedisMessageBroker(new MessageBrokerSignature(
+					"LocalTest@localhost"));
 
 			int totalPings = 10000;
 			CountDownLatch latch = new CountDownLatch(totalPings);
