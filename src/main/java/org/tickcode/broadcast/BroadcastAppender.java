@@ -45,6 +45,7 @@ public class BroadcastAppender extends AppenderSkeleton{
 	
 	@Override
     protected void append(LoggingEvent event) {
+		try{
 		String exceptionMessage = null;
 		StackTraceElement[] elements = null;
 		if(event.getThrowableInformation() != null && event.getThrowableInformation().getThrowable() != null){
@@ -54,17 +55,18 @@ public class BroadcastAppender extends AppenderSkeleton{
 		}
 		if(event != null && event.getLevel()!=null && event.getMessage() != null)
 			broadcastLogger.logEvent(event.getLevel().getSyslogEquivalent(), event.getMessage().toString(), exceptionMessage, elements);
+		}catch(Exception ex){
+			ex.printStackTrace();
+		}
     }
 	
 	@Override
 	public void activateOptions() {
 		broker = new RedisMessageBroker(new MessageBrokerSignature(RedisMessageBroker.class.getName(),messageBrokerName, host, port));
 		broadcastLogger = broker.createPublisher(BroadcastLogger.class);
-		broker.start();
 	}
 
     public void close() {
-    	broker.stop();
     }
 
     public boolean requiresLayout() {

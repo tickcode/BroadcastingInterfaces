@@ -36,7 +36,7 @@ import org.tickcode.trace.BreadCrumbTrail;
 
 public class CallbackService<T> implements
 		CallbackServiceProxy.MessageBrokerCallbackSignature{
-	Logger log = Logger.getLogger(org.tickcode.broadcast.VMMessageBroker.class);
+	Logger log = Logger.getLogger(CallbackService.class);
 	
 	ConcurrentHashMap<String, Object> callbackProxiesByThumbprint = new ConcurrentHashMap<String, Object>();
 	Class<? extends T> callbackInterface;
@@ -66,8 +66,10 @@ public class CallbackService<T> implements
 	}
 	
 	protected T getCallbackProxy() {
+		log.info("Requesting proxy from " + this.getClass().getName());
 		BreadCrumbTrail trail = BreadCrumbTrail.get();
 		String thumbprint = trail.getThumbprint();
+		log.info("Looking for proxy for thumbprint " + thumbprint);
 		Object callbackProxy = callbackProxiesByThumbprint.get(thumbprint);
 		if(callbackProxy==null){
 			return (T)null;
@@ -83,7 +85,7 @@ public class CallbackService<T> implements
 		
 		BreadCrumbTrail trail = BreadCrumbTrail.get();
 		String thumbprint = trail.getThumbprint();
-		
+		log.info("Using + " + callbackSignature + " for thumbprint " + thumbprint);
 		try {
 			Object callbackProxy = callbackProxiesByThumbprint.get(thumbprint);
 			if (callbackProxy == null) {

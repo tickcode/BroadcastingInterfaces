@@ -136,13 +136,13 @@ public class RedisMessageBroker extends VMMessageBroker {
 			try {
 				int firstPeriod = channel.indexOf('.');
 				if (firstPeriod < 1) {
-					log.warn(channel);
+					log.warn("We have an invalid channel \""+channel +"\"");
 					return; // we have an invalid channel
 				}
 				String redisMessageBrokerName = channel.substring(0,
 						firstPeriod);
 				if (!signature.getName().equals(redisMessageBrokerName)) {
-					log.warn(channel);
+					log.warn("This channel does not belong to this message broker...  \"" + channel + "\"");
 					return; // this channel does not belong to this message
 							// broker
 				}
@@ -150,7 +150,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 				producerProxy = getRedisBroadcastProxy(channel);
 				if (producerProxy == null) { // we don't have any Broadcast
 												// consumers
-					log.warn(channel);
+					log.warn("Someone requested a call to channel \"" + channel + "\" but no one is listening.");
 					return;
 				}
 				count++;
@@ -333,10 +333,12 @@ public class RedisMessageBroker extends VMMessageBroker {
 
 	@Override
 	public void addSubscriber(Object consumer) {
+		log.info("Why do I not see this message? ");
 		if (consumer == null)
 			throw new IllegalArgumentException(
 					"You cannot add null as a valid consumer.");
 
+		log.info("Adding subscriber " + consumer.getClass().getName());
 		start();
 
 		super.addSubscriber(consumer);
@@ -355,6 +357,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 								BroadcastProducerProxy.newInstance(this,
 										_interface));
 						methodByChannel.put(channel, method);
+						log.info("Watching channel \"" + channel + "\"");
 					}
 				}
 			}
@@ -372,6 +375,7 @@ public class RedisMessageBroker extends VMMessageBroker {
 	@Override
 	public void removeAllSubscribers() {
 		super.removeAllSubscribers();
+		log.info("Removing all channels from " + this);
 		if (this.size() == 0)
 			stop();
 	}
