@@ -48,7 +48,8 @@ public class BroadcastProducerProxy implements
 			Object proxy = (Object) java.lang.reflect.Proxy.newProxyInstance(
 					broker.getClass().getClassLoader(),
 					new Class[] { broadcastInterface },
-					new BroadcastProducerProxy(broker, broadcastInterface.getName()));
+					new BroadcastProducerProxy(broker, broadcastInterface
+							.getName()));
 			return proxy;
 		} else {
 			throw new UnsupportedOperationException(
@@ -63,12 +64,24 @@ public class BroadcastProducerProxy implements
 
 	public Object invoke(Object proxy, Method m, Object[] args)
 			throws Throwable {
-		int size = messageBroker.size();
-		messageBroker.broadcast((Object) proxy, m, args,
-				messageBroker.getThumbprint());
+		if (Void.TYPE.equals(m.getReturnType())) {
+
+			messageBroker.broadcast((Object) proxy, m, args,
+					messageBroker.getThumbprint());
+			return null;
+		} else {
+			if (m.getName().equals("toString")) {
+				return this.toString();
+			} else if (m.getName().equals("hashCode")) {
+				return this.hashCode();
+			} else if (m.getName().equals("equals")) {
+				return this.equals(args[0]);
+			}
+
+		}
 		return null;
 	}
-	
+
 	@Override
 	public String toString() {
 		return interfaceName + "->" + messageBroker.toString();

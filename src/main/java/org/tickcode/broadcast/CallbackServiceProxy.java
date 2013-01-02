@@ -58,7 +58,8 @@ public class CallbackServiceProxy implements
 			Object proxy = (Object) java.lang.reflect.Proxy.newProxyInstance(
 					broker.getClass().getClassLoader(),
 					new Class[] { broadcastInterface },
-					new CallbackServiceProxy(broker, callbackBroker, broadcastInterface.getName()));
+					new CallbackServiceProxy(broker, callbackBroker,
+							broadcastInterface.getName()));
 			return proxy;
 		} else {
 			throw new UnsupportedOperationException(
@@ -77,16 +78,28 @@ public class CallbackServiceProxy implements
 
 	public Object invoke(Object proxy, Method m, Object[] args)
 			throws Throwable {
-		registerCallback
-				.useThisCallbackSignature(callbackBroker.getSignature());
-		messageBroker.broadcast((Object) proxy, m, args,
-				messageBroker.getThumbprint());
+		if (Void.TYPE.equals(m.getReturnType())) {
+			registerCallback.useThisCallbackSignature(callbackBroker
+					.getSignature());
+			messageBroker.broadcast((Object) proxy, m, args,
+					messageBroker.getThumbprint());
+			return null;
+		} else {
+			if (m.getName().equals("toString")) {
+				return this.toString();
+			} else if (m.getName().equals("hashCode")) {
+				return this.hashCode();
+			} else if (m.getName().equals("equals")) {
+				return this.equals(args[0]);
+			}
+		}
 		return null;
 	}
 
 	@Override
 	public String toString() {
-		return interfaceName + "->" + messageBroker.toString() + "->" + callbackBroker.toString();
+		return interfaceName + "->" + messageBroker.toString() + "->"
+				+ callbackBroker.toString();
 	}
 
 }
