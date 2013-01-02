@@ -35,76 +35,80 @@ import org.apache.log4j.Logger;
 import org.tickcode.trace.BreadCrumbTrail;
 
 public class CallbackService<T> implements
-		CallbackServiceProxy.MessageBrokerCallbackSignature{
+		CallbackServiceProxy.MessageBrokerCallbackSignature {
 	Logger log = Logger.getLogger(CallbackService.class);
-	
-	ConcurrentHashMap<String, Object> callbackProxiesByThumbprint = new ConcurrentHashMap<String, Object>();
+
+	ConcurrentHashMap<String, MessageBrokerSignature> callbackProxiesByThumbprint = new ConcurrentHashMap<String, MessageBrokerSignature>();
 	Class<? extends T> callbackInterface;
-	
+
 	public CallbackService() {
 		callbackInterface = findInterface();
-		if(!callbackInterface.isInterface()){
-			throw new IllegalArgumentException("You must provide an interface for the callback.");
+		if (!callbackInterface.isInterface()) {
+			throw new IllegalArgumentException(
+					"You must provide an interface for the callback.");
 		}
 	}
-	
-	public Class findInterface(){
+
+	public Class findInterface() {
 		Type type = this.getClass().getGenericSuperclass();
 		Class _class = null;
-		if (type instanceof ParameterizedType){
-		      ParameterizedType paramType = (ParameterizedType) type;
-		      Type[] arguments = paramType.getActualTypeArguments();
-		      if (arguments[0] instanceof Class) {
-		    	  _class = (Class)arguments[0];
-					if(!_class.isInterface())
-						_class = null;
-		      }
+		if (type instanceof ParameterizedType) {
+			ParameterizedType paramType = (ParameterizedType) type;
+			Type[] arguments = paramType.getActualTypeArguments();
+			if (arguments[0] instanceof Class) {
+				_class = (Class) arguments[0];
+				if (!_class.isInterface())
+					_class = null;
+			}
 		}
-		if(_class == null)
-				throw new IllegalArgumentException("CallbackService is a parameterized class that must be used with an interface.");
+		if (_class == null)
+			throw new IllegalArgumentException(
+					"CallbackService is a parameterized class that must be used with an interface.");
 		return _class;
 	}
 	
-	protected T getCallbackProxy() {
-		log.info("Requesting proxy from " + this.getClass().getName());
+	protected MessageBrokerSignature getCallbackSignature(){
 		BreadCrumbTrail trail = BreadCrumbTrail.get();
 		String thumbprint = trail.getThumbprint();
 		log.info("Looking for proxy for thumbprint " + thumbprint);
-		Object callbackProxy = callbackProxiesByThumbprint.get(thumbprint);
-		if(callbackProxy==null){
-			return (T)null;
-		}
-		else{
-			return (T)callbackProxy;
-		}
+		return callbackProxiesByThumbprint
+				.get(thumbprint);
 	}
-	
+
+	protected T getCallbackProxy() {
+		log.info("Requesting proxy from " + this.getClass().getName());
+		MessageBrokerSignature callbackSignature = getCallbackSignature();
+		try {
+			MessageBroker callbackBroker = CachedMessageBrokers.get()
+					.findOrCreate(callbackSignature);
+
+			return (T) callbackBroker.createPublisher(callbackInterface);
+		} catch (IllegalAccessException ex) {
+			log.error("Unable to recover the message broker "
+					+ callbackSignature, ex);
+		} catch (InstantiationException ex) {
+			log.error("Unable to recover the message broker "
+					+ callbackSignature, ex);
+		} catch (ClassNotFoundException ex) {
+			log.error("Unable to recover the message broker "
+					+ callbackSignature, ex);
+		} catch (InvocationTargetException ex) {
+			log.error("Unable to recover the message broker "
+					+ callbackSignature, ex);
+		} catch (NoSuchMethodException ex) {
+			log.error("Unable to recover the message broker "
+					+ callbackSignature, ex);
+		}
+		return (T) null;
+	}
+
 	@Override
 	public void useThisCallbackSignature(
 			MessageBrokerSignature callbackSignature) {
-		
 		BreadCrumbTrail trail = BreadCrumbTrail.get();
 		String thumbprint = trail.getThumbprint();
-		log.info("Using + " + callbackSignature + " for thumbprint " + thumbprint);
-		try {
-			Object callbackProxy = callbackProxiesByThumbprint.get(thumbprint);
-			if (callbackProxy == null) {
-				MessageBroker callbackBroker = CachedMessageBrokers.get()
-						.findOrCreate(callbackSignature);
-				callbackProxy = callbackBroker.createPublisher(callbackInterface);
-				callbackProxiesByThumbprint.put(thumbprint, callbackProxy);
-			}
+		log.info("Using " + callbackSignature + " for thumbprint " + thumbprint);
+		callbackProxiesByThumbprint.put(thumbprint, callbackSignature);
 
-		} catch (IllegalAccessException ex) {
-			log.error("Unable to recover the message broker " + callbackSignature, ex);
-		} catch (InstantiationException ex) {
-			log.error("Unable to recover the message broker " + callbackSignature, ex);
-		} catch (ClassNotFoundException ex) {
-			log.error("Unable to recover the message broker " + callbackSignature, ex);
-		} catch (InvocationTargetException ex) {
-			log.error("Unable to recover the message broker " + callbackSignature, ex);
-		} catch (NoSuchMethodException ex) {
-			log.error("Unable to recover the message broker " + callbackSignature, ex);
-		}
 	}
 }
