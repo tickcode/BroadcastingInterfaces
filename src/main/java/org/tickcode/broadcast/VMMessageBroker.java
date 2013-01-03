@@ -257,8 +257,7 @@ public class VMMessageBroker implements MessageBroker {
 													.getReadableMethodString(
 															broadcastInterface,
 															method, params)
-											+ " has thrown an exception!", ex
-											.getCause());
+											+ " has thrown an exception!", ex);
 						}
 						for (WeakReference<ErrorHandler> errorHandler : errorHandlers) {
 							if (errorHandler.get() != null)
