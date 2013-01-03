@@ -249,16 +249,29 @@ public class VMMessageBroker implements MessageBroker {
 						}
 					} catch (InvocationTargetException ex) {
 						if (loggingOn) {
-							logger.error(
-									"The consumer "
-											+ consumer.getClass().getName()
-											+ " on interface "
-											+ MethodUtil
-													.getReadableMethodString(
-															broadcastInterface,
-															method, params)
-											+ " has thrown an exception!", ex
-											.getCause().fillInStackTrace());
+							if(ex.getCause() != null){
+								logger.error(
+										"The consumer "
+												+ consumer.getClass().getName()
+												+ " on interface "
+												+ MethodUtil
+														.getReadableMethodString(
+																broadcastInterface,
+																method, params)
+												+ " has thrown an exception!", ex
+												.getCause());
+							}
+							else{
+								logger.error(
+										"The consumer "
+												+ consumer.getClass().getName()
+												+ " on interface "
+												+ MethodUtil
+														.getReadableMethodString(
+																broadcastInterface,
+																method, params)
+												+ " has thrown an exception but the cause is null!");
+							}
 						}
 						for (WeakReference<ErrorHandler> errorHandler : errorHandlers) {
 							if (errorHandler.get() != null)
