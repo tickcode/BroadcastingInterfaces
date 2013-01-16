@@ -70,7 +70,7 @@ public class CallbackService<T> implements
 	protected MessageBrokerSignature getCallbackSignature(){
 		BreadCrumbTrail trail = BreadCrumbTrail.get();
 		String thumbprint = trail.getThumbprint();
-		log.info("Looking for proxy for thumbprint " + thumbprint);
+		log.info("Looking for proxy "+callbackInterface.getSimpleName()+" on thumbprint " + thumbprint);
 		return callbackProxiesByThumbprint
 				.get(thumbprint);
 	}
